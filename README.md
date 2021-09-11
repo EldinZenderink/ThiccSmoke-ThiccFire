@@ -23,3 +23,9 @@ Basically this mod is just:
 Of course the side effect of this method is that objects broken through user actions, not related to fire would also spawn smoke. This is the unfortunate side effect of not actually being able to determine a state of a voxel/shape through the Teardown API. I have however implemented a method that should disable spawning smoke at the determined locations so long a user action is performed + a timeout.
 
 This will never be 100% perfect as the way it is, but I think the side effects are minimal and if you like fire and smoke, this is the mod for you!
+
+# Steam workshop
+
+Here you can find the mod on Steam:
+
+[Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2593750226)
