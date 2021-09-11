@@ -1,0 +1,3 @@
+name = ThiccSmoke
+author = Eldin Zenderink
+description = Generate (maybe unreasonable) large amount of smoke for voxels that are broken. Also smoke color and behavior is more or less depended on the type of voxel that is on fire. Smoke color and behavior can be configured per material.  Note however that due to limitations of the API it is currently not possible to detect if something is on fire, however, a workaround allows for disabling the mod when a click action is performed. This is not perfect but is configurable.
