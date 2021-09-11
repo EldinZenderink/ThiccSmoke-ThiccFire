@@ -105,7 +105,7 @@ local FireDetector_Options =
             option_note="A body can have multiple points of fire, limit those for more performance.",
             option_type="int",
             storage_key="max_fire_on_body",
-            min_max={0, 100}
+            min_max={0, 1000}
         },
         {
             option_parent_text="",
@@ -113,7 +113,7 @@ local FireDetector_Options =
             option_note="The maximum of fires that may be detected for spawning smoke",
             option_type="int",
             storage_key="max_total_fires",
-            min_max={0, 100}
+            min_max={0, 1000}
         },
         {
             option_parent_text="",
@@ -490,8 +490,11 @@ function FireDetector_FindFireLocations(time)
                     FireDetector_SPOF[shape]["fire_detected"] = false
                     FireDetector_DrawPoint(FireDetector_SPOF[shape]["location"],1,0,0)
                 end
+            elseif FireDetector_SPOF[shape]["fire"] == false and (FireDetector_LocalDB["time_elapsed"]  - FireDetector_SPOF[shape]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"] then
+                FireDetector_SPOF[shape] = nil
             elseif FireDetector_SPOF[shape]["fire"] == false then
                 FireDetector_DrawPoint(FireDetector_SPOF[shape]["location"],1,0,1)
+                FireDetector_SPOF[shape]["timestamp"] = FireDetector_LocalDB["time_elapsed"]
             end
             -- Limit the amount of fires detected
             if  FireDetector_LocalDB["fire_count"] > FireDetector_Properties["max_total_fires"] then

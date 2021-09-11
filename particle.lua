@@ -303,7 +303,6 @@ function Particle_EmitParticle(emitter, location, particle)
 
 	--Spawn particle into the world
 	-- body_pos[1] = body_pos[1] * -1
-	local loc =
 	SpawnParticle(location, v, l)
 	-- end
 end
