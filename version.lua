@@ -3,7 +3,7 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-local Version_Current = "v2"
+local Version_Current = "v2.0.2"
 local Version_Previous = ""
 local Version_ModName = ""
 

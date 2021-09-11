@@ -111,7 +111,6 @@ function Particle_UpdateSettingsFromStorage()
 		Storage_GetString("particle", "intensity"),
 		Storage_GetString("particle", "drag"),
 		Storage_GetString("particle", "gravity"),
-		Storage_GetString("particle", "amount"),
 		Storage_GetString("particle", "lifetime")
 	)
 end
@@ -281,7 +280,7 @@ function Particle_EmitParticle(emitter, location, particle)
 	ParticleReset()
 	ParticleType(type)
 	ParticleRadius(radius_start, radius, "linear", 0.001)
-	ParticleAlpha(alpha, alpha, "constant", 0.1/life, 0.5)	-- Ramp up fast, ramp down after 50%
+	ParticleAlpha(alpha, alpha, "constant", 0.1/life, 0.9)	-- Ramp up fast, ramp down after 50%
 	ParticleGravity(gravity * Generic_rnd(0.3, 2.5))				-- Slightly randomized gravity looks better
 	ParticleDrag(drag)
 	ParticleColor(red, green, blue, 0.9, 0.9, 0.9)			-- Animating color towards white
@@ -300,7 +299,6 @@ function Particle_EmitParticle(emitter, location, particle)
 
 	--Randomize lifetime
 	local l = Generic_rnd(life*0.5, life*1.5)
-
 	--Spawn particle into the world
 	-- body_pos[1] = body_pos[1] * -1
 	SpawnParticle(location, v, l)
