@@ -5,10 +5,6 @@
 
 -- Module config
 
--- Global storage
-local _EnabledParticleEmitters = nil
-local _DisabledParticleEmitters = nil
-
 -- Default Options and Settings
 -- Store everything needed to generate menu.
 local Particle_Options =
@@ -73,7 +69,18 @@ local Particle_Options =
 				"8x",
 				"16x"
 			}
-		}
+		},
+		{
+			option_parent_text="",
+			option_text="Fire Intensity Dependent",
+			option_note="Increases smoke intensity depending on fire amount.",
+			option_type="text",
+			storage_key="fire_intensity",
+			options={
+				"ON",
+				"OFF"
+			}
+		},
 	}
 }
 
@@ -82,6 +89,7 @@ local Particle_Intensity = ""
 local Particle_Drag = ""
 local Particle_Gravity = ""
 local Particle_Lifetime = ""
+local Particle_FireIntensity = ""
 
 -- Init function
 -- @param default = when set to true set the default values and store them.
@@ -111,15 +119,17 @@ function Particle_UpdateSettingsFromStorage()
 		Storage_GetString("particle", "intensity"),
 		Storage_GetString("particle", "drag"),
 		Storage_GetString("particle", "gravity"),
-		Storage_GetString("particle", "lifetime")
+		Storage_GetString("particle", "lifetime"),
+		Storage_GetString("particle", "fire_intensity")
 	)
 end
 
-function Particle_UpdateSettings(intensity, drag, gravity, lifetime)
+function Particle_UpdateSettings(intensity, drag, gravity, lifetime, fire_intensity)
 	Particle_Intensity = intensity
 	Particle_Drag = drag
 	Particle_Gravity = gravity
 	Particle_Lifetime = lifetime
+	Particle_FireIntensity = fire_intensity
 end
 
 function Particle_DefaultSettings()
@@ -127,6 +137,8 @@ function Particle_DefaultSettings()
 	Particle_Drag = Particle_Options["option_items"][2]["options"][1]
 	Particle_Gravity = Particle_Options["option_items"][3]["options"][1]
 	Particle_Lifetime = Particle_Options["option_items"][4]["options"][1]
+	Particle_FireIntensity = Particle_Options["option_items"][5]["options"][1]
+
 	Particle_StoreSettings()
 end
 
@@ -135,6 +147,7 @@ function Particle_StoreSettings()
 	Storage_SetString("particle", "drag", Particle_Drag)
 	Storage_SetString("particle", "gravity", Particle_Gravity)
 	Storage_SetString("particle", "lifetime", Particle_Lifetime)
+	Storage_SetString("particle", "fire_intensity", Particle_FireIntensity)
 end
 
 -- Clear list of possible left over shapes
@@ -146,7 +159,7 @@ function Particle_ClearDisabledEmitters()
 	end
 end
 
-function Particle_EmitParticle(emitter, location, particle)
+function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	if emitter == nil then
 		return
 	end
@@ -162,6 +175,8 @@ function Particle_EmitParticle(emitter, location, particle)
 	local blue = emitter["color"]["b"]
 	local alpha = emitter["color"]["a"] + random_alpha
 	local radius_start= 0.1
+	local radius_start_max = 1
+	local dynamic_radius_scaler = 12
 
 	if alpha > 1 then
 		alpha = 1
@@ -184,37 +199,28 @@ function Particle_EmitParticle(emitter, location, particle)
 	if Particle_Intensity == "Potato PC" then
 		radius = radius - 0.1
 		radius_start  = 0.1
-		if radius > 0.2 then
-			radius = 0.2
-		end
+		radius_start_max = 1
+		dynamic_radius_scaler = 50
 	elseif Particle_Intensity == "Somewhat Ok" then
 		radius = radius
 		radius_start  = 0.15
-		if radius > 0.3 then
-			radius = 0.3
-		end
+		radius_start_max = 2
+		dynamic_radius_scaler = 25
 	elseif Particle_Intensity == "Realistic" then
 		radius = radius + 0.5
 		radius_start  = 0.2
-		if radius > 0.5 then
-			radius = 0.5
-		end
+		radius_start_max = 4
+		dynamic_radius_scaler = 12
 	elseif Particle_Intensity == "This is fine (meme)" then
 		radius = radius + 1
 		radius_start  = 0.5
-		if radius > 5 then
-			radius = 5
-		end
+		radius_start_max = 8
+		dynamic_radius_scaler = 6
 	elseif Particle_Intensity == "Fry my PC" then
 		radius = radius + 2
 		radius_start  = 1
-		if radius > 5 then
-			radius = 5
-		end
-	end
-
-	if radius < radius_start then
-		radius = radius_start
+		radius_start_max = 16
+		dynamic_radius_scaler = 3
 	end
 
 	if Particle_Drag == "Low" then
@@ -276,6 +282,19 @@ function Particle_EmitParticle(emitter, location, particle)
 		life = life * 16
 	end
 
+	if Particle_FireIntensity == "ON" then
+		if fire_intensity < 1 then
+			fire_intensity = 1
+		end
+		radius_start = fire_intensity  / dynamic_radius_scaler + radius_start
+		radius = fire_intensity / dynamic_radius_scaler + radius
+		if radius_start > radius_start_max then
+			radius_start = radius_start_max
+		end
+
+		gravity = gravity + fire_intensity / 2
+	end
+
 	--Set up the particle state
 	ParticleReset()
 	ParticleType(type)
@@ -288,19 +307,11 @@ function Particle_EmitParticle(emitter, location, particle)
 	ParticleCollide(1, 1, "constant", 0.05)
 
 	--Emit particles
-	-- for i=1, count do
-	--Randomize velocity slightly
-	-- local v = VecAdd(body_dir, rndVec(vel / 100))
-	-- local v = Vec(VecAdd(body_dir, rndVec(0.002)), vel)
 	local v = {Generic_rnd(-1, vel), Generic_rnd(0,vel), Generic_rnd(-1, vel)}
-
-	--Include some of the movement of the attachment body
-	-- v = VecAdd(v,  vel / 10000)
 
 	--Randomize lifetime
 	local l = Generic_rnd(life*0.5, life*1.5)
 	--Spawn particle into the world
-	-- body_pos[1] = body_pos[1] * -1
 	SpawnParticle(location, v, l)
 	-- end
 end

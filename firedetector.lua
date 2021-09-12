@@ -17,10 +17,10 @@ local FireDetector_Default = {
     user_input_disable_timer=3,
     user_radius=200,
     max_mass_detection=10,
-    max_fire_detection_time=5,
-    max_distance_detection=5,
-    max_fire_on_body=10,
-    max_total_fires=15,
+    max_fire_detection_time=6,
+    max_distance_detection=8,
+    max_fire_on_body=15,
+    max_total_fires=30,
     visualize_fire_detection="OFF"
 }
 
@@ -30,10 +30,10 @@ local FireDetector_Properties = {
     user_input_disable_timer=3,
     user_radius=200,
     max_mass_detection=10,
-    max_fire_detection_time=5,
-    max_distance_detection=5,
-    max_fire_on_body=10,
-    max_total_fires=15,
+    max_fire_detection_time=6,
+    max_distance_detection=8,
+    max_fire_on_body=15,
+    max_total_fires=30,
     visualize_fire_detection="OFF"
 }
 
@@ -211,7 +211,7 @@ function Particle_UpdatePresetSettings()
             10,
             200,
             4,
-            10,
+            5,
             10,
             10,
             15
@@ -222,10 +222,10 @@ function Particle_UpdatePresetSettings()
             10,
             300,
             4,
-            10,
+            5,
             15,
             15,
-            20
+            30
         )
     elseif enabled_preset == "This is fine (meme)" then
         FireDetector_ApplySettings(
@@ -233,7 +233,7 @@ function Particle_UpdatePresetSettings()
             10,
             400,
             4,
-            10,
+            5,
             20,
             35,
             50
@@ -244,7 +244,7 @@ function Particle_UpdatePresetSettings()
             10,
             800,
             4,
-            15,
+            5,
             25,
             60,
             100
@@ -262,6 +262,7 @@ function FireDetector_Init(default)
 	else
 		Particle_UpdatePresetSettings()
 	end
+    FireDetector_LocalDB["time_input_disabled_elapsed"] = 0
 end
 
 ---Provide a table to build a option menu for this module
@@ -355,8 +356,8 @@ end
 ---@return boolean -- Returns true if it should be disabled, false if it should be enabled
 function FireDetector_Enabled(time)
     if FireDetector_Properties["user_input_disable"] == "YES" then
-        if FireDetector_LocalDB["time_elapsed"] == nil then
-            FireDetector_LocalDB["time_elapsed"] = 0
+        if FireDetector_LocalDB["time_input_disabled_elapsed"] == nil then
+            FireDetector_LocalDB["time_input_disabled_elapsed"] = 0
         end
         if FireDetector_LocalDB["human_input_disabled"] == nil then
             FireDetector_LocalDB["human_input_disabled"] = false
@@ -366,18 +367,18 @@ function FireDetector_Enabled(time)
         -- Reset the counter if the mouse action happens again within the timer
         if InputDown("lmb") or InputDown("rmb") then
             if FireDetector_LocalDB["human_input_disabled"] then
-                FireDetector_LocalDB["time_elapsed"] = 0
+                FireDetector_LocalDB["time_input_disabled_elapsed"] = 0
             else
                 FireDetector_LocalDB["human_input_disabled"] = true
             end
         end
 
         if FireDetector_LocalDB["human_input_disabled"] then
-            if FireDetector_LocalDB["time_elapsed"] > FireDetector_Properties["user_input_disable_timer"] then
-                FireDetector_LocalDB["time_elapsed"] = 0
+            if FireDetector_LocalDB["time_input_disabled_elapsed"] > FireDetector_Properties["user_input_disable_timer"] then
+                FireDetector_LocalDB["time_input_disabled_elapsed"] = 0
                 FireDetector_LocalDB["human_input_disabled"] = false
             end
-            FireDetector_LocalDB["time_elapsed"] = FireDetector_LocalDB["time_elapsed"] + time
+            FireDetector_LocalDB["time_input_disabled_elapsed"] = FireDetector_LocalDB["time_input_disabled_elapsed"] + time
         end
 
         if GeneralOptions_GetEnabled() == "YES" then
@@ -407,11 +408,19 @@ function FireDetector_Enabled(time)
     end
 end
 
----Calculate the a voxels body's center by bounds
----@param body number -- the bodies id
+---Calculate the a voxels shape's center by bounds
+---@param body number -- the shapes id
 ---@return any -- Vec  with the point location of the center of the body
 function FireDetector_ShapeCenter(shape)
     local min, max = GetShapeBounds(shape)
+    return VecLerp(min, max, 0.5)
+end
+
+---Calculate the a voxels body's center by bounds
+---@param body number -- the bodies id
+---@return any -- Vec  with the point location of the center of the body
+function FireDetector_BodyCenter(shape)
+    local min, max = GetBodyBounds(shape)
     return VecLerp(min, max, 0.5)
 end
 
@@ -420,6 +429,14 @@ function FireDetector_DrawPoint(point, r, g, b)
     if FireDetector_Properties["visualize_fire_detection"] == "ON" then
         DebugCross(point,  r, g, b)
     end
+end
+
+function FireDetector_CompareVec(a, b)
+    local sub = VecSub(a, b)
+    if sub[1] == 0 and sub[2] == 0 and sub[3] == 0 then
+        return true
+    end
+    return false
 end
 
 ---This function should be called in the tick(), it generates a list locations where
@@ -439,6 +456,20 @@ end
 --- If this was not stored globally, and the player looks away, it is no longer detected.
 ---@param timestamp number
 ---@return table
+local FireDetector_SOF = {}
+local random_query = {
+    "large",
+    "large",
+    "large",
+    "dynamic",
+    "dynamic",
+    "static",
+    "static",
+    "static",
+    "static",
+    "small"
+}
+
 function FireDetector_FindFireLocations(time)
     local broken_materials = {}
     FireDetector_LocalDB["fire_count"] = 0
@@ -453,11 +484,13 @@ function FireDetector_FindFireLocations(time)
         local shape_list = QueryAabbShapes(VecSub(player_t.pos, {user_radius,user_radius,user_radius}), VecAdd(player_t.pos,{user_radius,user_radius,user_radius}))
         for i=1, #shape_list do
             local shape = shape_list[i]
-            if IsShapeBroken(shape) and FireDetector_SPOF[shape] == nil then
+            local body = GetShapeBody(shape)
+            if IsShapeBroken(shape) and FireDetector_SPOF[body] == nil then
                 local mass = GetShapeVoxelCount(shape)
                 if mass < FireDetector_Properties["max_mass_detection"]  then
-                    local center = FireDetector_ShapeCenter(shape)
-                    FireDetector_SPOF[shape] = {location=center, timestamp=FireDetector_LocalDB["time_elapsed"], fire=true, fire_detected=false, material=nil, verified_timestamp=FireDetector_LocalDB["time_elapsed"], enabled=FireDetector_LocalDB["enabled"]}
+                    local center = FireDetector_BodyCenter(body)
+                    DrawBodyOutline(body, 0,0,1)
+                    FireDetector_SPOF[body] = {shape=shape, parent_body=body, location=center, timestamp=FireDetector_LocalDB["time_elapsed"], fire=true, fire_detected=false, material=nil, verified_timestamp=FireDetector_LocalDB["time_elapsed"], enabled=FireDetector_LocalDB["enabled"], fire_on_body=1}
                 end
             end
         end
@@ -466,58 +499,92 @@ function FireDetector_FindFireLocations(time)
     -- Store the shape that is on fire, store the ammount it has been detected
     -- This is to prevent to many points detected on the same shape, but can also be used to
     -- determine the intensity of the smoke spawning, many detections =  more smoke?
-    local FireDetector_SOF = {}
-    for shape, properties in pairs(FireDetector_SPOF) do
-        if FireDetector_SPOF[shape]["enabled"] == false then
-            FireDetector_DrawPoint(FireDetector_SPOF[shape]["location"],1,0,1)
-        elseif FireDetector_SPOF[shape]["fire"] and (FireDetector_LocalDB["time_elapsed"]  - FireDetector_SPOF[shape]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"] then
-            FireDetector_SPOF[shape]["fire"] = false
-        elseif FireDetector_SPOF[shape]["fire"] and FireDetector_SPOF[shape]["fire_detected"] then
-            local shape_mat = GetShapeMaterialAtPosition(shape, FireDetector_SPOF[shape]["location"])
+    for body, properties in pairs(FireDetector_SPOF) do
+        local shape = properties["shape"]
+        if FireDetector_SPOF[body]["enabled"] == false then
+            FireDetector_DrawPoint(FireDetector_SPOF[body]["location"],1,0,1)
+            FireDetector_SPOF[body]["fire"] = false
+        elseif FireDetector_SPOF[body]["fire"] and  FireDetector_SPOF[body]["fire_detected"] == false and (FireDetector_LocalDB["time_elapsed"]  - FireDetector_SPOF[body]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"] then
+            FireDetector_SPOF[body]["fire"] = not FireDetector_LocalDB["enabled"]
+            FireDetector_SPOF[body]["fire_detected"] = false
+        elseif FireDetector_SPOF[body]["fire"] and FireDetector_SPOF[body]["fire_detected"] then
+            local shape_mat = GetShapeMaterialAtPosition(shape, FireDetector_SPOF[body]["location"])
             if shape_mat ~= "" then
-                broken_materials[shape] = FireDetector_SPOF[shape]
-                FireDetector_DrawPoint(point, 0,1,0)
-                FireDetector_SPOF[shape]["fire_detected"] = FireDetector_LocalDB["enabled"]
-                FireDetector_LocalDB["fire_count"] =  FireDetector_LocalDB["fire_count"] + 1
-            else
-                if FireDetector_LocalDB["time_elapsed"] - FireDetector_SPOF[shape]["verified_timestamp"] > ( FireDetector_Properties["max_fire_detection_time"] / 4) then
-                    FireDetector_SPOF[shape]["verified_timestamp"] = FireDetector_LocalDB["time_elapsed"]
-                    FireDetector_SPOF[shape]["fire_detected"] = false
-                end
-                FireDetector_SPOF[shape]["fire_detected"] = FireDetector_LocalDB["enabled"]
-                broken_materials[shape] = FireDetector_SPOF[shape]
-                FireDetector_DrawPoint(FireDetector_SPOF[shape]["location"],1,0,0)
-                FireDetector_LocalDB["fire_count"] =  FireDetector_LocalDB["fire_count"] + 1
-            end
-        elseif FireDetector_SPOF[shape]["fire"] and FireDetector_SPOF[shape]["fire_detected"] == false then
-            -- Make sure it cant find it's own shape
-            QueryRejectShape(shape)
-            -- Find closest voxel point where the shape originate from. (dynamic means it broke from an object)
-            local hit, point, normal, shape_hit = QueryClosestPoint(FireDetector_SPOF[shape]["location"],  FireDetector_Properties["max_distance_detection"])
-            if hit then
-                -- Determine the material at this point
-                local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
-                -- Store the shape_hit that is actually on fire
-                if FireDetector_SOF[shape_hit] == nil then
-                    FireDetector_SOF[shape_hit] = 0
-                else
-                    FireDetector_SOF[shape_hit] = FireDetector_SOF[shape_hit] + 1
-                end
-                if FireDetector_SOF[shape_hit] <= FireDetector_Properties["max_fire_on_body"] then
-                    if FireDetector_LocalDB["fire_count"]  <= FireDetector_Properties["max_total_fires"] then
-                        FireDetector_SPOF[shape]["material"] = shape_mat
-                        FireDetector_SPOF[shape]["location"] = point
-                        FireDetector_SPOF[shape]["fire_detected"] = true
-                        broken_materials[shape] = FireDetector_SPOF[shape]
-                        FireDetector_DrawPoint(point, 0,1,0)
-                        FireDetector_LocalDB["fire_count"] = FireDetector_LocalDB["fire_count"] + 1
+                FireDetector_DrawPoint(FireDetector_SPOF[body]["location"], 0,0,1)
+                FireDetector_SPOF[body]["fire_detected"] = true
+
+                if (FireDetector_LocalDB["time_elapsed"] - FireDetector_SPOF[body]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"]  then
+                    if FireDetector_LocalDB["enabled"] then
+                        FireDetector_SPOF[body]["fire"] = false
                     else
-                        FireDetector_SPOF[shape]["fire_detected"] = false
+                        FireDetector_SPOF[body]["timestamp"] = FireDetector_LocalDB["time_elapsed"]
+                        FireDetector_SPOF[body]["fire_detected"] = false
                     end
+
+                end
+                FireDetector_LocalDB["fire_count"] =  FireDetector_LocalDB["fire_count"] + 1
+                broken_materials[body] = FireDetector_SPOF[body]
+            else
+                if (FireDetector_LocalDB["time_elapsed"] - FireDetector_SPOF[body]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"]  then
+                    FireDetector_SPOF[body]["fire_detected"] = false
+                end
+                FireDetector_DrawPoint(FireDetector_SPOF[body]["location"], 1,0,0)
+                FireDetector_LocalDB["fire_count"] =  FireDetector_LocalDB["fire_count"] + 1
+                broken_materials[body] = FireDetector_SPOF[body]
+            end
+        elseif FireDetector_SPOF[body]["fire"] and FireDetector_SPOF[body]["fire_detected"] == false then
+
+            if (FireDetector_LocalDB["time_elapsed"] - FireDetector_SPOF[body]["timestamp"]) > FireDetector_Properties["max_fire_detection_time"]  then
+                if FireDetector_LocalDB["enabled"] then
+                    FireDetector_SPOF[body]["fire"] = false
+                else
+                    FireDetector_SPOF[body]["timestamp"] = FireDetector_LocalDB["time_elapsed"]
+                    FireDetector_SPOF[body]["fire_detected"] = false
+                end
+            else
+                -- Make sure it cant find it's own shape
+                QueryRejectShape(FireDetector_SPOF[body]["shape"])
+
+                if FireDetector_LocalDB["enabled"] then
+                    QueryRequire(random_query[Generic_rnd(1, #random_query)])
+                else
+                    QueryRequire(random_query[4])
+                end
+
+                -- Find closest voxel point where the shape originate from. (dynamic means it broke from an object)
+                local hit, point, normal, shape_hit = QueryClosestPoint(FireDetector_SPOF[body]["location"],  FireDetector_Properties["max_distance_detection"])
+                if hit then
+                    -- Determine the material at this point
+                    local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
+                    -- Store the shape_hit that is actually on fire
+                    local shape_bod = GetShapeBody(shape_hit)
+                    if FireDetector_SOF[shape_bod] == nil then
+                        FireDetector_SOF[shape_bod] = 0
+                    end
+
+                    if FireDetector_SOF[shape_bod] <= FireDetector_Properties["max_fire_on_body"] then
+                        FireDetector_SOF[shape_bod] = FireDetector_SOF[shape_bod] + 1
+                        if FireDetector_LocalDB["fire_count"] <= FireDetector_Properties["max_total_fires"] then
+                            FireDetector_SPOF[body]["fire_on_body"] = FireDetector_SOF[shape_bod]
+                            FireDetector_SPOF[body]["material"] = shape_mat
+                            FireDetector_SPOF[body]["parent_body"] = shape_bod
+                            FireDetector_SPOF[body]["location"] = point
+                            FireDetector_SPOF[body]["shape"] = shape_hit
+                            FireDetector_SPOF[body]["fire_detected"] = true
+                            FireDetector_DrawPoint(FireDetector_SPOF[body]["location"], 0,1,0)
+                            FireDetector_LocalDB["fire_count"] = FireDetector_LocalDB["fire_count"] + 1
+                            broken_materials[body] = FireDetector_SPOF[body]
+                        end
+                    end
+                else
+                    FireDetector_SPOF[body]["fire_detected"] = true
                 end
             end
-        elseif FireDetector_SPOF[shape]["fire"] == false and FireDetector_SPOF[shape]["fire_detected"] == false then
-            FireDetector_SPOF[shape] = nil
+        elseif FireDetector_SPOF[body]["fire"] == false and FireDetector_SPOF[body]["fire_detected"]  == false then
+            if FireDetector_SOF[FireDetector_SPOF[body]["parent_body"]] ~= nil then
+                FireDetector_SOF[FireDetector_SPOF[body]["parent_body"]] = FireDetector_SOF[FireDetector_SPOF[body]["parent_body"]] - 1
+            end
+            FireDetector_SPOF[body] = nil
         end
         -- Limit the amount of fires detected
         if  FireDetector_LocalDB["fire_count"] > FireDetector_Properties["max_total_fires"] then
@@ -525,10 +592,9 @@ function FireDetector_FindFireLocations(time)
         end
     end
 
-
     --- Count the time
     FireDetector_LocalDB["time_elapsed"] = FireDetector_LocalDB["time_elapsed"] + time
-    return broken_materials
+    return {broken_materials, FireDetector_LocalDB["fire_count"]}
 end
 
 

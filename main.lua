@@ -40,11 +40,11 @@ local Main_TimerTick = 0
 local Main_BrokenBodies = nil
 
 function tick(dt)
-    if Main_BrokenBodies then
+    if Main_BrokenBodies and Main_BrokenBodies[1] then
         local count = 0
-        for body, info in pairs(Main_BrokenBodies) do
-            DebugPrinter(Main_TimerTick .. " - BODY[" .. body .. "] MATERIAL[" .. info["material"] .. "] TIME [" .. info["timestamp"] .. "]")
-            Particle_EmitParticle(Material_GetInfo(info["material"]), info["location"], "smoke")
+        for body, info in pairs(Main_BrokenBodies[1]) do
+            DebugPrinter(Main_TimerTick .. " - BODY[" .. body .. "] MATERIAL[" .. tostring(info["material"]) .. "] TIME [" .. info["timestamp"] .. "]" .. " FIRE [" .. info["fire_on_body"] .. "]")
+            Particle_EmitParticle(Material_GetInfo(info["material"]), info["location"], "smoke", info["fire_on_body"])
             count = count + 1
         end
     end
