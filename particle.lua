@@ -159,7 +159,7 @@ function Particle_ClearDisabledEmitters()
 	end
 end
 
-function Particle_EmitParticle(emitter, location, particle, fire_intensity)
+function Particle_EmitParticle(emitter, location, particle, fire_intensity, dynamic_radius_scaler)
 	if emitter == nil then
 		return
 	end
@@ -175,8 +175,6 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	local blue = emitter["color"]["b"]
 	local alpha = emitter["color"]["a"] + random_alpha
 	local radius_start= 0.1
-	local radius_start_max = 1
-	local dynamic_radius_scaler = 12
 
 	if alpha > 1 then
 		alpha = 1
@@ -197,31 +195,22 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	end
 
 	if Particle_Intensity == "Potato PC" then
-		radius = radius - 0.1
-		radius_start  = 0.1
-		radius_start_max = 1
-		dynamic_radius_scaler = 50
+		radius = radius - 2
+		radius_start  = 0.01
 	elseif Particle_Intensity == "Somewhat Ok" then
-		radius = radius
-		radius_start  = 0.15
-		radius_start_max = 2
-		dynamic_radius_scaler = 25
+		radius = radius - 1
+		radius_start = 0.06
 	elseif Particle_Intensity == "Realistic" then
-		radius = radius + 0.5
-		radius_start  = 0.2
-		radius_start_max = 4
-		dynamic_radius_scaler = 12
-	elseif Particle_Intensity == "This is fine (meme)" then
 		radius = radius + 1
-		radius_start  = 0.5
-		radius_start_max = 8
-		dynamic_radius_scaler = 6
-	elseif Particle_Intensity == "Fry my PC" then
+		radius_start  = 0.12
+	elseif Particle_Intensity == "This is fine (meme)" then
 		radius = radius + 2
-		radius_start  = 1
-		radius_start_max = 16
-		dynamic_radius_scaler = 3
+		radius_start  = 0.25
+	elseif Particle_Intensity == "Fry my PC" then
+		radius = radius + 4
+		radius_start  = 0.5
 	end
+
 
 	if Particle_Drag == "Low" then
 		drag = drag - 0.2
@@ -286,25 +275,20 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 		if fire_intensity < 1 then
 			fire_intensity = 1
 		end
-		radius_start = fire_intensity  / dynamic_radius_scaler + radius_start
-		radius = fire_intensity / dynamic_radius_scaler + radius
-		if radius_start > radius_start_max then
-			radius_start = radius_start_max
-		end
-
+		radius_start =  dynamic_radius_scaler / fire_intensity * radius_start / 10
+	    radius = dynamic_radius_scaler / fire_intensity * radius / 100
 		gravity = gravity + fire_intensity / 2
 	end
-
 	--Set up the particle state
 	ParticleReset()
 	ParticleType(type)
-	ParticleRadius(radius_start, radius, "linear", 0.001)
+	ParticleRadius(radius_start, radius)
 	ParticleAlpha(alpha, alpha, "constant", 0.1/life, 0.9)	-- Ramp up fast, ramp down after 50%
 	ParticleGravity(gravity * Generic_rnd(0.3, 2.5))				-- Slightly randomized gravity looks better
 	ParticleDrag(drag)
 	ParticleColor(red, green, blue, 0.9, 0.9, 0.9)			-- Animating color towards white
 	ParticleRotation(3, 1,"smooth", 1)
-	ParticleCollide(1, 1, "constant", 0.05)
+	ParticleCollide(0.9, 0.9, "constant", 0.005)
 
 	--Emit particles
 	local v = {Generic_rnd(-1, vel), Generic_rnd(0,vel), Generic_rnd(-1, vel)}

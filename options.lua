@@ -5,6 +5,7 @@
 #include "version.lua"
 #include "menu.lua"
 #include "material.lua"
+#include "particle_spawner.lua"
 #include "particle.lua"
 #include "firedetector.lua"
 

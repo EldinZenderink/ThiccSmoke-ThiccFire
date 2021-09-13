@@ -11,6 +11,7 @@
 #include "version.lua"
 #include "menu.lua"
 #include "material.lua"
+#include "particle_spawner.lua"
 #include "particle.lua"
 #include "firedetector.lua"
 
@@ -26,37 +27,29 @@ function init()
    GeneralOptions_Init(set_default)
    Debug_Init()
    FireDetector_Init(set_default)
+   ParticleSpawner_Init(set_default)
    Particle_Init(set_default)
    Material_Init(set_default)
    Menu_Init(set_default)
    Menu_AppendMenu(GeneralOptions_GetOptionsMenu())
    Menu_AppendMenu(FireDetector_GetOptionsMenu())
+   Menu_AppendMenu(ParticleSpawner_GetOptionsMenu())
    Menu_AppendMenu(Particle_GetOptionsMenu())
    Menu_AppendMenu(Material_GetOptionsMenu())
    DebugPrinter("version state: " .. version_state)
 end
 
-local Main_TimerTick = 0
-local Main_BrokenBodies = nil
-
 function tick(dt)
-    if Main_BrokenBodies and Main_BrokenBodies[1] then
-        local count = 0
-        for body, info in pairs(Main_BrokenBodies[1]) do
-            DebugPrinter(Main_TimerTick .. " - BODY[" .. body .. "] MATERIAL[" .. tostring(info["material"]) .. "] TIME [" .. info["timestamp"] .. "]" .. " FIRE [" .. info["fire_on_body"] .. "]")
-            Particle_EmitParticle(Material_GetInfo(info["material"]), info["location"], "smoke", info["fire_on_body"])
-            count = count + 1
-        end
-    end
-    Main_TimerTick = Main_TimerTick + dt
-    GeneralOptions_CheckEnabled()
+    ParticleSpawner_tick(dt)
 end
 
 function update(dt)
-    Main_BrokenBodies = FireDetector_FindFireLocations(dt)
+    ParticleSpawner_update(dt)
+    GeneralOptions_CheckEnabled()
+    FireDetector_ShowStatus()
+    ParticleSpawner_ShowStatus()
 end
 
 function draw()
-    FireDetector_ShowStatus()
     Menu_GenerateGameMenu()
 end

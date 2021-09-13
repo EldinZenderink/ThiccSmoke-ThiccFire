@@ -17,8 +17,8 @@
 local _MaterialDefaultConfiguration = {
     wood={
         color={r=0.15,g=0.15,b=0.15,a=0.7},
-        lifetime=15,
-        size=2,
+        lifetime=10,
+        size=10,
         gravity=2,
         speed=1,
         drag=0.9,
@@ -26,8 +26,8 @@ local _MaterialDefaultConfiguration = {
     },
     foliage={
         color={r=0.3,g=0.31,b=0.3,a=0.7},
-        lifetime=15,
-        size=2,
+        lifetime=10,
+        size=10,
         gravity=2,
         speed=1,
         drag=0.9,
@@ -35,8 +35,8 @@ local _MaterialDefaultConfiguration = {
     },
     plaster={
         color={r=0.2,g=0.2,b=0.22,a=0.8},
-        lifetime=20,
-        size=3,
+        lifetime=10,
+        size=10,
         gravity=2,
         speed=2,
         drag=0.9,
@@ -44,8 +44,8 @@ local _MaterialDefaultConfiguration = {
     },
     plastic={
         color={r=0.1,g=0.1,b=0.12,a=0.9},
-        lifetime=20,
-        size=3,
+        lifetime=10,
+        size=10,
         gravity=2,
         speed=2,
         drag=0.9,
@@ -53,8 +53,8 @@ local _MaterialDefaultConfiguration = {
     },
     masonery={
         color={r=0.4,g=0.4,b=0.4,a=0.7},
-        lifetime=15,
-        size=2,
+        lifetime=10,
+        size=10,
         gravity=2,
         speed=2,
         drag=0.9,
@@ -63,7 +63,7 @@ local _MaterialDefaultConfiguration = {
     metal={
         color={r=0.3,g=0.3,b=0.3,a=0.7},
         lifetime=10,
-        size=1,
+        size=10,
         gravity=2,
         speed=2,
         drag=0.9,

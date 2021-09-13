@@ -3,8 +3,8 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-local Version_Current = "v2.1.0"
-local Version_Previous = "v2.0.2"
+local Version_Current = "v3-bet"
+local Version_Previous = "v2"
 local Version_ModName = ""
 
 

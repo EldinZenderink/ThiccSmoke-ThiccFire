@@ -84,6 +84,7 @@ function Ui_FloatProperty(x, y, name, notes, min_max, module, key)
 	if current == nil then
 		current = 0
 	end
+	current = math.floor((current*(min_max[2] - min_max[1])+min_max[1])/steps+0.5)*steps;
 	local value = (current - min_max[1]) / (min_max[2] - min_max[1]);
 	local width = 150;
 	UiPush()
