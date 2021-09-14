@@ -3,8 +3,8 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-local Version_Current = "v3-bet"
-local Version_Previous = "v2"
+local Version_Current = "v3.0.1"
+local Version_Previous = "v3"
 local Version_ModName = ""
 
 
@@ -28,12 +28,13 @@ end
 function Version_Init(modname)
 	Version_ModName = modname
 	local storedVersion = Version_GetStored()
-	DebugPrinter("Stored version: " .. tostring(storedVersion))
-	DebugPrinter("Current version: " .. tostring(Version_Current))
+	DebugPrint("Stored version: " .. tostring(storedVersion))
+	DebugPrint("Current version: " .. tostring(Version_Current))
 
-	if storedVersion == "" then
+	if storedVersion == "" or storedVersion == nil then
 		SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
 		storedVersion = Version_GetCurrent()
+		return "store_default"
 	end
 
 	if storedVersion == Version_Current then

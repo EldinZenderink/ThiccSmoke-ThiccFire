@@ -5,34 +5,17 @@
 
 #include "ui.lua"
 
-local _Menu_Toggle_Key_Default = "u"
-local _Menu_Toggle_Key = "u"
 local _Menu_UI = false
 local _Menu_List = {}
 local _Menu_MenuActive = 1
 local _Menu_SubMenuActive = 1
 
 function Menu_Init(default)
-    if default then
-        Menu_DefaultSettings()
-    else
-        Menu_UpdateFromStorage()
-    end
     _Menu_UI = false
 end
 
 function Menu_AppendMenu(menu)
     table.insert(_Menu_List, menu)
-end
-
-function Menu_DefaultSettings()
-    _Menu_Toggle_Key = _Menu_Toggle_Key_Default
-    DebugPrinter("Menu key default: " .. _Menu_Toggle_Key_Default)
-end
-
-function Menu_UpdateFromStorage()
-    _Menu_Toggle_Key = GeneralOptions_GetToggleMenuKey()
-    DebugPrinter("Menu key stored: " .. _Menu_Toggle_Key_Default)
 end
 
 function Menu_GenerateSubMenuOptions(title, options, x, y)
