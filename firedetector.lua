@@ -14,7 +14,7 @@ local FireDetector_Default = {
     max_mass_detection=100,
     max_fire_detection_time=6,
     max_distance_detection=8,
-    max_fire_on_body=8,
+    max_fire_on_body=90,
     visualize_fire_detection="OFF"
 }
 
@@ -26,7 +26,7 @@ local FireDetector_Properties = {
     max_mass_detection=100,
     max_fire_detection_time=3,
     max_distance_detection=1,
-    max_fire_on_body=8,
+    max_fire_on_body=90,
     visualize_fire_detection="OFF"
 }
 
@@ -186,7 +186,7 @@ function Particle_UpdatePresetSettings()
             100,
             3,
             5,
-            100
+            90
         )
     elseif enabled_preset == "Somewhat Ok" then
         FireDetector_ApplySettings(
@@ -196,7 +196,7 @@ function Particle_UpdatePresetSettings()
             100,
             3,
             2,
-            75
+            90
         )
     elseif enabled_preset == "Realistic" then
         FireDetector_ApplySettings(
@@ -206,7 +206,7 @@ function Particle_UpdatePresetSettings()
             100,
             3,
             2,
-            75
+            90
         )
     elseif enabled_preset == "This is fine (meme)" then
         FireDetector_ApplySettings(
@@ -216,7 +216,7 @@ function Particle_UpdatePresetSettings()
             100,
             3,
             2,
-            75
+            90
         )
     elseif enabled_preset == "Fry my PC" then
         FireDetector_ApplySettings(
@@ -226,7 +226,7 @@ function Particle_UpdatePresetSettings()
             100,
             3,
             2,
-            50
+            90
         )
     end
     FireDetector_UpdateSettingsFromStorage()

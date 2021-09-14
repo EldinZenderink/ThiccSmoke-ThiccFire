@@ -194,23 +194,6 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity, dyna
 		blue = 0
 	end
 
-	if Particle_Intensity == "Potato PC" then
-		radius = radius - 2
-		radius_start  = 0.01
-	elseif Particle_Intensity == "Somewhat Ok" then
-		radius = radius - 1
-		radius_start = 0.06
-	elseif Particle_Intensity == "Realistic" then
-		radius = radius + 1
-		radius_start  = 0.12
-	elseif Particle_Intensity == "This is fine (meme)" then
-		radius = radius + 2
-		radius_start  = 0.25
-	elseif Particle_Intensity == "Fry my PC" then
-		radius = radius + 4
-		radius_start  = 0.5
-	end
-
 
 	if Particle_Drag == "Low" then
 		drag = drag - 0.2
@@ -239,28 +222,6 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity, dyna
 	end
 
 
-	if Particle_Gravity == "Downwards Low" then
-		gravity = gravity * -1 - 3
-		if gravity > -1 then
-			gravity = -1
-		end
-	elseif Particle_Gravity == "Downwards High" then
-		gravity = gravity * -1 - 6
-		if gravity > -1 then
-			gravity = -1
-		end
-	elseif Particle_Gravity == "Upwards Low" then
-		gravity = gravity * 1 + 3
-		if gravity < 1 then
-			gravity = 1
-		end
-	elseif Particle_Gravity == "Upwards High" then
-		gravity = gravity * 1 + 6
-		if gravity < 1 then
-			gravity = 1
-		end
-	end
-
 	if Particle_Lifetime == "2x" then
 		life = life * 2
 	elseif Particle_Lifetime == "4x" then
@@ -275,20 +236,72 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity, dyna
 		if fire_intensity < 1 then
 			fire_intensity = 1
 		end
-		radius_start =  dynamic_radius_scaler / fire_intensity * radius_start / 10
-	    radius = dynamic_radius_scaler / fire_intensity * radius / 100
-		gravity = gravity + fire_intensity / 2
+	    radius = (dynamic_radius_scaler * fire_intensity * radius) /  dynamic_radius_scaler
+		if radius > 10000 then
+			radius = radius / 1000
+		end
+		if radius > 1000 then
+			radius = radius / 100
+		end
+		if radius > 100 then
+			radius = radius / 10
+		end
+		gravity = (dynamic_radius_scaler * fire_intensity * gravity) /  dynamic_radius_scaler
+		if gravity > 10000 then
+			gravity = gravity / 2000
+		end
+		if gravity > 1000 then
+			gravity = gravity / 200
+		end
+		if gravity > 100 then
+			gravity = gravity / 20
+		end
+		if gravity > 10 then
+			gravity = gravity / 2
+		end
 	end
+
+
+	if Particle_Gravity == "Downwards Low" then
+		gravity = gravity * -1 - 3
+		if gravity > -1 then
+			gravity = -1
+		end
+	elseif Particle_Gravity == "Downwards High" then
+		gravity = gravity * -1 - 6
+		if gravity > -1 then
+			gravity = -1
+		end
+	elseif Particle_Gravity == "Upwards High" then
+		gravity = gravity * 2
+		if gravity < 1 then
+			gravity = 1
+		end
+	end
+
+	if Particle_Intensity == "Potato PC" then
+		radius = radius / 8
+	elseif Particle_Intensity == "Somewhat Ok" then
+		radius = radius / 4
+	elseif Particle_Intensity == "Realistic" then
+		radius = radius / 2
+	elseif Particle_Intensity == "This is fine (meme)" then
+		radius = radius * 2
+	elseif Particle_Intensity == "Fry my PC" then
+		radius = radius * 4
+	end
+
+
 	--Set up the particle state
 	ParticleReset()
 	ParticleType(type)
-	ParticleRadius(radius_start, radius)
+	ParticleRadius(radius / 8, radius, "smooth", 0.5/life)
 	ParticleAlpha(alpha, alpha, "constant", 0.1/life, 0.9)	-- Ramp up fast, ramp down after 50%
 	ParticleGravity(gravity * Generic_rnd(0.3, 2.5))				-- Slightly randomized gravity looks better
 	ParticleDrag(drag)
 	ParticleColor(red, green, blue, 0.9, 0.9, 0.9)			-- Animating color towards white
 	ParticleRotation(3, 1,"smooth", 1)
-	ParticleCollide(0.9, 0.9, "constant", 0.005)
+	ParticleCollide(1, 1, "constant", 0.005)
 
 	--Emit particles
 	local v = {Generic_rnd(-1, vel), Generic_rnd(0,vel), Generic_rnd(-1, vel)}

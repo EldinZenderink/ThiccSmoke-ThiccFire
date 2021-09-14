@@ -78,15 +78,14 @@ function Ui_KeySelector(x, y, name, notes, module, key)
     return update
 end
 
-function Ui_FloatProperty(x, y, name, notes, min_max, module, key)
-	local steps = 0.1
+function Ui_FloatProperty(x, y, name, notes, min_max_steps, module, key)
+	local steps = min_max_steps[3]
 	local current = Storage_GetFloat(module, key)
 	if current == nil then
 		current = 0
 	end
-	current = math.floor((current*(min_max[2] - min_max[1])+min_max[1])/steps+0.5)*steps;
-	local value = (current - min_max[1]) / (min_max[2] - min_max[1]);
-	local width = 150;
+	local value = (current - min_max_steps[1]) / (min_max_steps[2] - min_max_steps[1]);
+	local width = 300;
 	UiPush()
 	UiTranslate(x, y)
 	UiFont("bold.ttf", 11)
@@ -99,7 +98,7 @@ function Ui_FloatProperty(x, y, name, notes, min_max, module, key)
 	UiRect(width, 4)
 	UiTranslate(-6, -6)
 	value = UiSlider("ui/common/dot.png", "x", value*width, 0, width)/width;
-	value = math.floor((value*(min_max[2] - min_max[1])+min_max[1])/steps+0.5)*steps;
+	value = math.floor((value*(min_max_steps[2] - min_max_steps[1])+min_max_steps[1])/steps+0.5)*steps;
 	UiTranslate(width + 24, 14)
 	UiText(tostring(value))
 	UiPop()
@@ -117,7 +116,7 @@ function Ui_IntProperty(x, y, name, notes, min_max, module, key)
 		current = 0
 	end
 	local value = (current - min_max[1]) / (min_max[2] - min_max[1]);
-	local width = 150;
+	local width = 300;
 	UiPush()
 	UiTranslate(x, y)
 	UiFont("bold.ttf", 11)

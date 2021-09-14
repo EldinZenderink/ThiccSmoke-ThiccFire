@@ -17,56 +17,56 @@
 local _MaterialDefaultConfiguration = {
     wood={
         color={r=0.15,g=0.15,b=0.15,a=0.7},
-        lifetime=10,
+        lifetime=20,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=1,
-        drag=0.9,
+        drag=0.6,
         variation=0.4,
     },
     foliage={
         color={r=0.3,g=0.31,b=0.3,a=0.7},
-        lifetime=10,
+        lifetime=20,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=1,
-        drag=0.9,
+        drag=0.4,
         variation=0.4,
     },
     plaster={
         color={r=0.2,g=0.2,b=0.22,a=0.8},
-        lifetime=10,
+        lifetime=30,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=2,
-        drag=0.9,
+        drag=0.7,
         variation=0.5,
     },
     plastic={
-        color={r=0.1,g=0.1,b=0.12,a=0.9},
-        lifetime=10,
+        color={r=0.1,g=0.1,b=0.12,a=0.5},
+        lifetime=20,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=2,
-        drag=0.9,
+        drag=0.8,
         variation=0.1,
     },
     masonery={
         color={r=0.4,g=0.4,b=0.4,a=0.7},
-        lifetime=10,
+        lifetime=20,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=2,
-        drag=0.9,
+        drag=0.4,
         variation=0.1,
     },
     metal={
         color={r=0.3,g=0.3,b=0.3,a=0.7},
-        lifetime=10,
+        lifetime=20,
         size=10,
-        gravity=2,
+        gravity=1,
         speed=2,
-        drag=0.9,
+        drag=0.2,
         variation=0.1,
     },
 }
@@ -85,7 +85,7 @@ local Material_Options =
             option_note="Configure how red the smoke is.",
             option_type="float",
             storage_key="color.r",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -93,7 +93,7 @@ local Material_Options =
             option_note="Configure how green the smoke is.",
             option_type="float",
             storage_key="color.g",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -101,7 +101,7 @@ local Material_Options =
             option_note="Configure how blue the smoke is.",
             option_type="float",
             storage_key="color.b",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -109,7 +109,7 @@ local Material_Options =
             option_note="Configure how transparent the smoke is.",
             option_type="float",
             storage_key="color.a",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -125,7 +125,7 @@ local Material_Options =
             option_note="Configure how big a single smoke particle is.",
             option_type="float",
             storage_key="size",
-            min_max={0.0, 5.0}
+            min_max={0.0, 100.0, 1.0}
         },
         {
             option_parent_text="Particle Behavior",
@@ -149,7 +149,7 @@ local Material_Options =
             option_note="Configure drag it has on other smoke particles.",
             option_type="float",
             storage_key="drag",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -157,12 +157,12 @@ local Material_Options =
             option_note="Configure transparancy variation between smoke particles",
             option_type="float",
             storage_key="variation",
-            min_max={0.0, 1.0}
+            min_max={0.0, 1.0, 0.1}
         }
     }
 }
 -- To be filled in the Material_Init function
-local _MaterialConfiguration = {}
+local _MaterialConfiguration = _MaterialDefaultConfiguration
 
 -- Init function
 -- @param default = when set to true set the default values and store them.
@@ -171,7 +171,6 @@ function Material_Init(default)
         Material_DefaultSettingsAll()
         Material_StoreSettingsAll()
     else
-        Material_DefaultSettingsAll()
         Material_UpdateSettingsFromStorageAll()
     end
 end

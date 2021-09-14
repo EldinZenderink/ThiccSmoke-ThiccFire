@@ -8,32 +8,34 @@
 local ParticleSpawner_Default = {
     dynamic_fps = "ON",
     dynamic_fps_target = 40,
-    particle_count_max = 200,
+    particle_count_max = 300,
     particle_count_min = 50,
-    particle_refresh_max = 20,
-    particle_refresh_min = 1,
-    aggressivenes = 0.2,
-    particle_refresh_affect_count = 4
+    particle_refresh_max = 10,
+    particle_refresh_min = 2,
+    aggressivenes = 0.05,
+    particle_refresh_affect_count = 10
 }
 
 local ParticleSpawner_Properties = {
     dynamic_fps = "ON",
     dynamic_fps_target = 40,
-    particle_count_max = 200,
+    particle_count_max = 300,
     particle_count_min = 50,
-    particle_refresh_max = 20,
-    particle_refresh_min = 1,
-    aggressivenes = 0.2,
-    particle_refresh_affect_count = 4,
+    particle_refresh_max = 10,
+    particle_refresh_min = 2,
+    aggressivenes = 0.05,
+    particle_refresh_affect_count = 10,
 }
 
 local ParticleSpawner_ParticlesToSpawn = nil
 local ParticleSpawner_CurFPSTarget = nil
 local ParticleSpawner_CurFPS = nil
+local ParticleSpawner_FindNew = true
+local ParticleSpawner_UpdateTimer = 0
 
-local ParticleSpawner_UpdateCounter = 0
+local ParticleSpawner_TickRefreshCounter = 0
 local ParticleSpawner_ParticleCount = 300.0
-local ParticleSpawner_ParticleRefreshRate = 20.0
+local ParticleSpawner_ParticleRefreshRate = 10.0
 local ParticleSpawner_TimeElapsed = 0
 
 local ParticleSpawner_Options =
@@ -97,7 +99,7 @@ local ParticleSpawner_Options =
             option_note="How quick parameters should be adjusted after dipping below target.",
             option_type="float",
             storage_key="aggressivenes",
-            min_max={0.1, 1.0}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="",
@@ -174,19 +176,14 @@ function ParticleSpawner_tick(dt)
     end
 
 
-    if ParticleSpawner_UpdateCounter > ParticleSpawner_CurFPS / ParticleSpawner_ParticleRefreshRate or enabled == "OFF" then
+    if ParticleSpawner_TickRefreshCounter > ParticleSpawner_CurFPS / ParticleSpawner_ParticleRefreshRate or enabled == "OFF" then
         if enabled == "ON" then
-
-            if ParticleSpawner_CurFPS < ParticleSpawner_CurFPSTarget and ParticleSpawner_CurFPSTarget > 35 and ParticleSpawner_CurFPSTarget  > (FPS_Target - 10) then
-                ParticleSpawner_CurFPSTarget = ParticleSpawner_CurFPS - aggressivenes
-            elseif ParticleSpawner_CurFPS > ParticleSpawner_CurFPSTarget and ParticleSpawner_CurFPSTarget < FPS_Target  then
-                ParticleSpawner_CurFPSTarget = ParticleSpawner_CurFPS + aggressivenes
-            end
 
             local below_target = false
             if ParticleSpawner_CurFPS < ParticleSpawner_CurFPSTarget then
                 below_target = true
             end
+
             if below_target == true and ParticleSpawner_ParticleRefreshRate > Particle_RefreshMin then
                 ParticleSpawner_ParticleRefreshRate = ParticleSpawner_ParticleRefreshRate - aggressivenes
             elseif below_target == false and ParticleSpawner_ParticleRefreshRate < Particle_RefershMax then
@@ -203,7 +200,7 @@ function ParticleSpawner_tick(dt)
                 end
             end
 
-            if Particle_CountRefresh == 1 then
+            if Particle_CountRefresh == Particle_RefreshMin then
                 if below_target and (ParticleSpawner_CurFPSTarget > 35 or ParticleSpawner_CurFPSTarget > FPS_Target) then
                     ParticleSpawner_CurFPSTarget =  ParticleSpawner_CurFPSTarget - 5
                 elseif below_target == false and ParticleSpawner_CurFPSTarget < FPS_Target then
@@ -217,21 +214,28 @@ function ParticleSpawner_tick(dt)
                 -- DebugPrinter(ParticleSpawner_TimeElapsed .. " - Dynamic FPS ".. enabled .. " - BODY[" .. body .. "] MATERIAL[" .. tostring(info["material"]) .. "] TIME [" .. info["timestamp"] .. "]" .. " FIRE [" .. info["fire_on_body"] .. "]")
                 Particle_EmitParticle(Material_GetInfo(info["material"]), info["location"], "smoke", info["fire_on_body"], ParticleSpawner_ParticlesToSpawn[3])
             end
+            ParticleSpawner_FindNew = true
         end
-        ParticleSpawner_UpdateCounter = 0
+        ParticleSpawner_TickRefreshCounter = 0
     end
     ParticleSpawner_TimeElapsed = ParticleSpawner_TimeElapsed + dt
-    ParticleSpawner_UpdateCounter = ParticleSpawner_UpdateCounter + 1
+    ParticleSpawner_TickRefreshCounter = ParticleSpawner_TickRefreshCounter + 1
 end
 
 function ParticleSpawner_update(dt)
-    ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocations(dt, ParticleSpawner_ParticleCount)
+    if ParticleSpawner_FindNew then
+        ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocations(ParticleSpawner_UpdateTimer, ParticleSpawner_ParticleCount)
+        ParticleSpawner_UpdateTimer = 0
+    end
+    ParticleSpawner_FindNew = false
+    ParticleSpawner_UpdateTimer = ParticleSpawner_UpdateTimer + dt
 end
 
 function ParticleSpawner_ShowStatus()
     if GeneralOptions_GetShowUiInGame() == "YES" then
         DebugWatch("ParticleSpawner, FPS:", ParticleSpawner_CurFPS)
         DebugWatch("ParticleSpawner, FPS Target:", ParticleSpawner_CurFPSTarget)
+        DebugWatch("ParticleSpawner, Find Fire:", ParticleSpawner_FindNew)
         DebugWatch("ParticleSpawner, Particle Refresh Rate:", ParticleSpawner_ParticleRefreshRate)
         DebugWatch("ParticleSpawner, Max Particle Count:", ParticleSpawner_ParticleCount)
     end
