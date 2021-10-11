@@ -1,5 +1,4 @@
 local FireDetector_Default = {
-    user_radius=600,
     max_fire_spread_distance=6,
     fire_reaction_time=2,
     min_fire_distance=2,
@@ -27,7 +26,6 @@ local FireDetector_Default = {
 }
 
 local FireDetector_Properties = {
-    user_radius=600,
     max_fire_spread_distance=6,
     fire_reaction_time=2,
     min_fire_distance=2,
@@ -78,14 +76,6 @@ local FireDetector_OptionsDetection =
     },
 	update=function() FireDetector_ApplyCustomSettings() end,
 	option_items={
-        {
-            option_parent_text="",
-            option_text="Fire Detection Radius",
-            option_note="Area of the map it can detect fire in",
-            option_type="int",
-            storage_key="user_radius",
-            min_max={1, 800}
-        },
         {
             option_parent_text="",
             option_text="Max Box Size Fire Count",
@@ -341,7 +331,6 @@ end
 
 ---Store and apply default properties.
 function FireDetector_DefaultSettings()
-	Storage_SetInt("firedetector", "user_radius", FireDetector_Default["user_radius"])
 	Storage_SetInt("firedetector", "fire_reaction_time", FireDetector_Default["fire_reaction_time"])
 	Storage_SetInt("firedetector", "max_fire_spread_distance", FireDetector_Default["max_fire_spread_distance"])
     Storage_SetInt("firedetector", "max_fire", FireDetector_Default["max_fire"])
@@ -364,7 +353,6 @@ end
 
 ---Retrieve properties from storage and apply them
 function FireDetector_UpdateSettingsFromStorage()
-	FireDetector_Properties["user_radius"] = Storage_GetInt("firedetector", "user_radius")
     FireDetector_Properties["fire_reaction_time"] = Storage_GetInt("firedetector", "fire_reaction_time")
     FireDetector_Properties["max_fire_spread_distance"] = Storage_GetInt("firedetector", "max_fire_spread_distance")
     FireDetector_Properties["max_fire"] = Storage_GetInt("firedetector", "max_fire")
@@ -544,7 +532,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
 
         -- Search fire locations, onfire = lists with actual fires
         local onfire = {}
-        FireDetector_RecursiveBinarySearchFire({0,0,0}, FireDetector_Properties["user_radius"], max_group_fire_distance, min_fire_distance , max_fires, onfire, 1)
+        FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 1)
 
         -- Parse all fires
         for i=1, #onfire do
