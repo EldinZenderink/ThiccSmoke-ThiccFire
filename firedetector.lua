@@ -600,6 +600,14 @@ function FireDetector_VecMidPoint(vec1, vec2)
     return VecLerp(vec1, vec2, 0.5)
 end
 
+--- Determine fire locations by recursively searching for fires in bounding boxes. Thanks to @Thomasims on the official Teardown discord for additional help and input.
+---@param vecstart Location to start searching from
+---@param size Size of the bounding box
+---@param size_fire_count Size of the bouding box minimum, if reached it will count all the fires in that bounding box.
+---@param min_size any Minimum size before it should stop searching
+---@param max_fires any Maximum fires it can detected before it stops searching
+---@param onfire any The list with fires detected.
+---@param intensity any The intensity, calculated until size_fire_count is  reached and passed along till min_size is reached.
 function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count, min_size, max_fires, onfire, intensity)
 
     -- Draw bounding box

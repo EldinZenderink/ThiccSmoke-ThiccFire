@@ -99,7 +99,7 @@ function Menu_GenerateMenu()
     -- Setup UI
     UiFont("regular.ttf", 44)
     UiTranslate(66, 100)
-    UiText("ThiccSmoke Settings")
+    UiText("ThiccSmoke & ThiccFire")
     UiFont("regular.ttf", 22)
     -- Every menu item contains a list of different menus
     -- The menu will be broken in a left section, containing the top level menu buttons
