@@ -515,7 +515,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                     Explosion(fire["location"], (4 / 100) * fire["fire_intensity"])
                 end
                 if fire_damage == "YES" then
-                    MakeHole(fire["location"], fire_damage_soft * intensity, fire_damage_medium * intensity, fire_damage_hard * intensity)
+                    MakeHole(fire["location"], fire_damage_soft * intensity, fire_damage_medium * intensity, fire_damage_hard * intensity, false)
                 end
                 if spawn_fire == "YES" then
                     QueryRejectShape(fire["shape"])
