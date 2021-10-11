@@ -1,7 +1,7 @@
 -- material.lua
 -- @date 2021-09-06
 -- @author Eldin Zenderink
--- @brief Configure material types
+-- @brief Configure smoke material types
 
 -- Contain the material default configuration
 -- Material should contain the following properties
@@ -14,67 +14,58 @@
 --      drag=[float],                                       <= How much the particle affects other particle movements (0 .. 1)
 --      transparancy_variation=[float],                     <= How much variation in transparancy there can be (0 .. 1)
 
-local _MaterialDefaultConfiguration = {
+local _SmokeMaterialDefaultConfiguration = {
     wood={
-        color={r=0.15,g=0.15,b=0.15,a=0.7},
-        lifetime=20,
-        size=10,
-        gravity=1,
-        speed=1,
-        drag=0.6,
-        variation=0.4,
+        color={r=0.15,g=0.15,b=0.15,a=0.8},
+        lifetime=8,
+        size=1,
+        gravity=3,
+        speed=2.5,
+        drag=0.4,
+        variation=1,
     },
     foliage={
-        color={r=0.3,g=0.31,b=0.3,a=0.7},
-        lifetime=20,
-        size=10,
-        gravity=1,
-        speed=1,
-        drag=0.4,
-        variation=0.4,
+        color={r=0.3,g=0.31,b=0.3,a=0.8},
+        lifetime=8,
+        size=1,
+        gravity=2,
+        speed=1.5,
+        drag=0.7,
+        variation=0.8,
     },
     plaster={
         color={r=0.2,g=0.2,b=0.22,a=0.8},
-        lifetime=30,
-        size=10,
-        gravity=1,
-        speed=2,
-        drag=0.7,
-        variation=0.5,
+        lifetime=8,
+        size=1,
+        gravity=2,
+        speed=1,
+        drag=0.9,
+        variation=0.4,
     },
     plastic={
-        color={r=0.1,g=0.1,b=0.12,a=0.5},
-        lifetime=20,
-        size=10,
+        color={r=0.1,g=0.1,b=0.12,a=0.8},
+        lifetime=8,
+        size=1,
         gravity=1,
-        speed=2,
-        drag=0.8,
+        speed=0.5,
+        drag=1,
         variation=0.1,
     },
     masonery={
-        color={r=0.4,g=0.4,b=0.4,a=0.7},
-        lifetime=20,
-        size=10,
-        gravity=1,
+        color={r=0.4,g=0.4,b=0.4,a=0.8},
+        lifetime=8,
+        size=1,
+        gravity=2,
         speed=2,
-        drag=0.4,
-        variation=0.1,
-    },
-    metal={
-        color={r=0.3,g=0.3,b=0.3,a=0.7},
-        lifetime=20,
-        size=10,
-        gravity=1,
-        speed=2,
-        drag=0.2,
-        variation=0.1,
+        drag=0.6,
+        variation=0.3,
     },
 }
 
 -- Material settings menu
-local Material_Options =
+local SmokeMaterial_Options =
 {
-    storage_module="material",
+    storage_module="smoke_material",
     storage_prefix_key=nil,
     default=nil,
     update=nil,
@@ -115,9 +106,9 @@ local Material_Options =
             option_parent_text="Particle Behavior",
             option_text="Life Time",
             option_note="Configure how long a single smoke particle exists.",
-            option_type="int",
+            option_type="float",
             storage_key="lifetime",
-            min_max={0, 100}
+            min_max={1, 100, 0.5}
         },
         {
             option_parent_text="Particle Behavior",
@@ -125,23 +116,23 @@ local Material_Options =
             option_note="Configure how big a single smoke particle is.",
             option_type="float",
             storage_key="size",
-            min_max={0.0, 100.0, 1.0}
+            min_max={0.0, 10.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
             option_text="Gravity",
             option_note="Configure how gravity affects the smoke particles.",
-            option_type="int",
+            option_type="float",
             storage_key="gravity",
-            min_max={-20, 20}
+            min_max={-20.0, 20.0, 0.5}
         },
         {
             option_parent_text="Particle Behavior",
             option_text="Speed",
             option_note="Configure the speed at which the smoke particle shoots away.",
-            option_type="int",
+            option_type="float",
             storage_key="speed",
-            min_max={0, 100}
+            min_max={0.1, 10, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -161,36 +152,40 @@ local Material_Options =
         }
     }
 }
--- To be filled in the Material_Init function
-local _MaterialConfiguration = _MaterialDefaultConfiguration
+-- To be filled in the SmokeMaterial_Init function
+local _SmokeMaterialConfiguration = {}
 
 -- Init function
 -- @param default = when set to true set the default values and store them.
-function Material_Init(default)
+function SmokeMaterial_Init(default)
+    _SmokeMaterialConfiguration = Generic_deepCopy(_SmokeMaterialDefaultConfiguration)
     if default then
-        Material_DefaultSettingsAll()
-        Material_StoreSettingsAll()
-    else
-        Material_UpdateSettingsFromStorageAll()
+        SmokeMaterial_DefaultSettingsAll()
+        SmokeMaterial_StoreSettingsAll()
     end
+    SmokeMaterial_UpdateSettingsFromStorageAll()
 end
 
 ---Provide a table to build a option menu for this module
 ---@return table
-function Material_GetOptionsMenu()
+function SmokeMaterial_GetOptionsMenu()
     local materialMenus = {
-        menu_title="Materials",
+        menu_title="Smoke Materials",
         sub_menus={}
     }
-    for material, properties in pairs(_MaterialConfiguration) do
-        local materialOptions = Generic_deepCopy(Material_Options)
+    for material, properties in pairs(_SmokeMaterialConfiguration) do
+        local materialOptions = Generic_deepCopy(SmokeMaterial_Options)
         materialOptions["storage_prefix_key"] = material
-        materialOptions["default"] = function()Material_DefaultSettings(material)end
-        materialOptions["update"] = function()Material_UpdateSettingsFromStorage(material)end
+        local buttons = {{
+            text="Set default",
+            callback=function()SmokeMaterial_DefaultSettings(material)end
+        }}
+        materialOptions["buttons"] = buttons
+        materialOptions["update"] = function()SmokeMaterial_UpdateSettingsFromStorage(material)end
         table.insert(materialMenus["sub_menus"], {
             sub_menu_title=material,
             options=materialOptions,
-         })
+        })
 	end
 	return materialMenus
 end
@@ -206,72 +201,74 @@ end
 ---  These properties are used by the particle generator
 ---@param material any
 ---@return table
-function Material_GetSettings(material)
-    return _MaterialConfiguration[material]
+function SmokeMaterial_GetSettings(material)
+    return _SmokeMaterialConfiguration[material]
 end
 
 ---Configure the materials default settings.
 ---@param material string - the material
-function Material_DefaultSettings(material)
-    _MaterialConfiguration[material] = _MaterialDefaultConfiguration[material]
-    Material_StoreSettingsAll()
+function SmokeMaterial_DefaultSettings(material)
+    _SmokeMaterialConfiguration[material] = Generic_deepCopy(_SmokeMaterialDefaultConfiguration[material])
+    SmokeMaterial_StoreSettings(material)
+    SmokeMaterial_UpdateSettingsFromStorageAll()
 end
 
 ---Store default settings for all materials
-function Material_DefaultSettingsAll()
-    for material, properties in pairs(_MaterialDefaultConfiguration) do
-        _MaterialConfiguration[material] = properties
+function SmokeMaterial_DefaultSettingsAll()
+    for material, properties in pairs(_SmokeMaterialDefaultConfiguration) do
+        _SmokeMaterialConfiguration[material] = Generic_deepCopy(properties)
+        SmokeMaterial_StoreSettings(material)
 	end
-    Material_StoreSettingsAll()
+    SmokeMaterial_UpdateSettingsFromStorageAll()
 end
 
 --- Apply material configuration stored in storage to a specific material
 ---@param material string -- the material to store the data for
-function Material_UpdateSettingsFromStorage(material)
-    _MaterialConfiguration[material]["color"]["r"] = Storage_GetFloat("material", material .. ".color.r")
-    _MaterialConfiguration[material]["color"]["g"] = Storage_GetFloat("material", material .. ".color.g")
-    _MaterialConfiguration[material]["color"]["b"] = Storage_GetFloat("material", material .. ".color.b")
-    _MaterialConfiguration[material]["color"]["a"] = Storage_GetFloat("material", material .. ".color.a")
-    _MaterialConfiguration[material]["lifetime"] = Storage_GetInt("material", material .. ".lifetime")
-    _MaterialConfiguration[material]["size"] = Storage_GetFloat("material", material .. ".size")
-    _MaterialConfiguration[material]["gravity"] = Storage_GetInt("material", material .. ".gravity")
-    _MaterialConfiguration[material]["speed"] = Storage_GetInt("material", material .. ".speed")
-    _MaterialConfiguration[material]["drag"] = Storage_GetFloat("material", material .. ".drag")
-    _MaterialConfiguration[material]["variation"] = Storage_GetFloat("material", material .. ".variation")
+function SmokeMaterial_UpdateSettingsFromStorage(material)
+    _SmokeMaterialConfiguration[material]["color"]["r"] = Storage_GetFloat("smoke_material", material .. ".color.r")
+    _SmokeMaterialConfiguration[material]["color"]["g"] = Storage_GetFloat("smoke_material", material .. ".color.g")
+    _SmokeMaterialConfiguration[material]["color"]["b"] = Storage_GetFloat("smoke_material", material .. ".color.b")
+    _SmokeMaterialConfiguration[material]["color"]["a"] = Storage_GetFloat("smoke_material", material .. ".color.a")
+    _SmokeMaterialConfiguration[material]["lifetime"] = Storage_GetFloat("smoke_material", material .. ".lifetime")
+    _SmokeMaterialConfiguration[material]["size"] = Storage_GetFloat("smoke_material", material .. ".size")
+    _SmokeMaterialConfiguration[material]["gravity"] = Storage_GetFloat("smoke_material", material .. ".gravity")
+    _SmokeMaterialConfiguration[material]["speed"] = Storage_GetFloat("smoke_material", material .. ".speed")
+    _SmokeMaterialConfiguration[material]["drag"] = Storage_GetFloat("smoke_material", material .. ".drag")
+    _SmokeMaterialConfiguration[material]["variation"] = Storage_GetFloat("smoke_material", material .. ".variation")
 end
 
 --- Update the configuration for all materials from storage at once
-function Material_UpdateSettingsFromStorageAll()
-    for material, properties in pairs(_MaterialDefaultConfiguration) do
-        Material_UpdateSettingsFromStorage(material)
+function SmokeMaterial_UpdateSettingsFromStorageAll()
+    for material, properties in pairs(_SmokeMaterialDefaultConfiguration) do
+        SmokeMaterial_UpdateSettingsFromStorage(material)
 	end
 end
 
 ---Store configuration from materials configured during run time to storage
 ---@param material string - the material to store
-function Material_StoreSettings(material)
-    Storage_SetFloat("material", material .. ".color.r", _MaterialConfiguration[material]["color"]["r"])
-    Storage_SetFloat("material", material .. ".color.g", _MaterialConfiguration[material]["color"]["g"])
-    Storage_SetFloat("material", material .. ".color.b", _MaterialConfiguration[material]["color"]["b"])
-    Storage_SetFloat("material", material .. ".color.a", _MaterialConfiguration[material]["color"]["a"])
-    Storage_SetInt("material", material .. ".lifetime", _MaterialConfiguration[material]["lifetime"])
-    Storage_SetFloat("material", material .. ".size", _MaterialConfiguration[material]["size"])
-    Storage_SetInt("material", material .. ".gravity", _MaterialConfiguration[material]["gravity"])
-    Storage_SetInt("material", material .. ".speed", _MaterialConfiguration[material]["speed"])
-    Storage_SetFloat("material", material .. ".drag", _MaterialConfiguration[material]["drag"])
-    Storage_SetFloat("material", material .. ".variation", _MaterialConfiguration[material]["variation"])
+function SmokeMaterial_StoreSettings(material)
+    Storage_SetFloat("smoke_material", material .. ".color.r", _SmokeMaterialConfiguration[material]["color"]["r"])
+    Storage_SetFloat("smoke_material", material .. ".color.g", _SmokeMaterialConfiguration[material]["color"]["g"])
+    Storage_SetFloat("smoke_material", material .. ".color.b", _SmokeMaterialConfiguration[material]["color"]["b"])
+    Storage_SetFloat("smoke_material", material .. ".color.a", _SmokeMaterialConfiguration[material]["color"]["a"])
+    Storage_SetFloat("smoke_material", material .. ".lifetime", _SmokeMaterialConfiguration[material]["lifetime"])
+    Storage_SetFloat("smoke_material", material .. ".size", _SmokeMaterialConfiguration[material]["size"])
+    Storage_SetFloat("smoke_material", material .. ".gravity", _SmokeMaterialConfiguration[material]["gravity"])
+    Storage_SetFloat("smoke_material", material .. ".speed", _SmokeMaterialConfiguration[material]["speed"])
+    Storage_SetFloat("smoke_material", material .. ".drag", _SmokeMaterialConfiguration[material]["drag"])
+    Storage_SetFloat("smoke_material", material .. ".variation", _SmokeMaterialConfiguration[material]["variation"])
 end
 
 --- Store configuration for all materials configured during run time at once
-function Material_StoreSettingsAll()
-    for material, properties in pairs(_MaterialDefaultConfiguration) do
-        Material_StoreSettings(material)
+function SmokeMaterial_StoreSettingsAll()
+    for material, properties in pairs(_SmokeMaterialConfiguration) do
+        SmokeMaterial_StoreSettings(material)
 	end
 end
 
 ---Reetrieve specific material configuration as table.
 ---@param material string - the material to get the configuration for
 ---@return table - the table containing the materials configuration
-function Material_GetInfo(material)
-    return _MaterialConfiguration[material]
+function SmokeMaterial_GetInfo(material)
+    return _SmokeMaterialConfiguration[material]
 end

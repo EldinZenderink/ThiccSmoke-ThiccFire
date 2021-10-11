@@ -4,15 +4,17 @@
 #include "storage.lua"
 #include "version.lua"
 #include "menu.lua"
-#include "material.lua"
+#include "smoke_material.lua"
+#include "fire_material.lua"
 #include "particle_spawner.lua"
 #include "particle.lua"
 #include "firedetector.lua"
 
+
 function init()
     Debug_ClearDebugPrinter()
     -- Determine version and if maybe the previous stored data should be transferred
-    local version_state = Version_Init("ThiccSmoke")
+    local version_state = Version_Init("ThiccFire")
     local set_default = false
     if version_state == "store_default" or version_state == "transfer_stored" then
         set_default = true
@@ -23,13 +25,15 @@ function init()
     FireDetector_Init(set_default)
     ParticleSpawner_Init(set_default)
     Particle_Init(set_default)
-    Material_Init(set_default)
+    FireMaterial_Init(set_default)
+    SmokeMaterial_Init(set_default)
     Menu_Init(set_default)
     Menu_AppendMenu(GeneralOptions_GetOptionsMenu())
     Menu_AppendMenu(FireDetector_GetOptionsMenu())
     Menu_AppendMenu(ParticleSpawner_GetOptionsMenu())
     Menu_AppendMenu(Particle_GetOptionsMenu())
-    Menu_AppendMenu(Material_GetOptionsMenu())
+    Menu_AppendMenu(FireMaterial_GetOptionsMenu())
+    Menu_AppendMenu(SmokeMaterial_GetOptionsMenu())
     DebugPrinter("version state: " .. version_state)
 end
 

@@ -5,7 +5,6 @@
 
 local GeneralOptions_Default = {
     toggle_menu_key="U",
-    toggle_mod_key="Y",
     ui_in_game="NO",
     debug="NO",
     enabled="YES"
@@ -13,7 +12,6 @@ local GeneralOptions_Default = {
 
 local GeneralOptions = {
     toggle_menu_key="U",
-    toggle_mod_key="Y",
     ui_in_game="NO",
     debug="NO",
     enabled="YES"
@@ -23,7 +21,16 @@ local GeneralOptions_Options =
 {
 	storage_module="general",
 	storage_prefix_key=nil,
-	default=function() GeneralOptions_DefaultSettings() end,
+	buttons={
+		{
+			text = "Set All Default",
+			callback=function() GeneralOptions_DefaultSettingsAll() end,
+		},
+		{
+			text = "Set Default",
+			callback=function() GeneralOptions_DefaultSettings() end,
+		},
+	},
 	update=function() GeneralOptions_UpdateSettingsFromStorage() end,
 	option_items={
 		{
@@ -32,13 +39,6 @@ local GeneralOptions_Options =
 			option_note="Set key to show or hide the menu while in game. Click on the letter and press key to change.",
 			option_type="input_key",
 			storage_key="toggle_menu_key",
-		},
-		{
-			option_parent_text="",
-			option_text="Enable or Disable Key",
-			option_note="Set key to enable or disable the mod while in game. Click on the letter and press key to change.",
-			option_type="input_key",
-			storage_key="toggle_mod_key",
 		},
 		{
 			option_parent_text="",
@@ -62,31 +62,12 @@ local GeneralOptions_Options =
 				"NO"
 			}
 		},
-		{
-			option_parent_text="",
-			option_text="Mod Enabled",
-			option_note="Disables the mod, if you dont want it active all the time.",
-			option_type="text",
-			storage_key="enabled",
-			options={
-				"YES",
-				"NO"
-			}
-		},
 	}
 }
 
 
-function GeneralOptions_GetEnabled()
-    return GeneralOptions["enabled"]
-end
-
 function GeneralOptions_GetToggleMenuKey()
     return GeneralOptions["toggle_menu_key"]
-end
-
-function GeneralOptions_GetToggleModKey()
-    return GeneralOptions["toggle_mod_key"]
 end
 
 function GeneralOptions_GetDebug()
@@ -120,30 +101,25 @@ end
 
 function GeneralOptions_DefaultSettings()
 	Storage_SetString("general", "toggle_menu_key", GeneralOptions_Default["toggle_menu_key"])
-	Storage_SetString("general", "toggle_mod_key", GeneralOptions_Default["toggle_mod_key"])
 	Storage_SetString("general", "debug", GeneralOptions_Default["debug"])
 	Storage_SetString("general", "ui_in_game", GeneralOptions_Default["ui_in_game"])
-	Storage_SetString("general", "enabled", GeneralOptions_Default["enabled"])
 	GeneralOptions_UpdateSettingsFromStorage()
+end
+
+function GeneralOptions_DefaultSettingsAll()
+	GeneralOptions_DefaultSettings()
+	FireDetector_DefaultSettings()
+	SmokeMaterial_DefaultSettingsAll()
+	FireMaterial_DefaultSettingsAll()
+	FireDetector_DefaultSettings()
+	Particle_DefaultSettings()
+	ParticleSpawner_DefaultSettings()
 end
 
 function GeneralOptions_UpdateSettingsFromStorage()
     DebugPrinter("Updating GeneralOptions from storage")
 	GeneralOptions["toggle_menu_key"] = Storage_GetString("general", "toggle_menu_key")
-	GeneralOptions["toggle_mod_key"] = Storage_GetString("general", "toggle_mod_key")
 	GeneralOptions["debug"] = Storage_GetString("general", "debug")
 	GeneralOptions["ui_in_game"] = Storage_GetString("general", "ui_in_game")
-	GeneralOptions["enabled"] = Storage_GetString("general", "enabled")
 end
 
-
-function GeneralOptions_CheckEnabled()
-	if InputPressed(GeneralOptions_GetToggleModKey()) then
-		if GeneralOptions["enabled"] == "YES" then
-			GeneralOptions["enabled"] = "NO"
-		else
-			GeneralOptions["enabled"] = "YES"
-		end
-		Storage_SetString("general", "enabled", GeneralOptions["enabled"])
-	end
-end

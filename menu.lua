@@ -53,9 +53,15 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             end
         end
 
-        if UI_Button(0, 44 * (count ) + 44, "Set to Default") then
-            options["default"]()
-            DebugPrinter("Called setting to default for sub menu " .. title )
+        local offset_y = count * 44
+        UiTranslate(0, offset_y)
+
+        for o=1, #options["buttons"] do
+            local button = options["buttons"][o]
+            if UI_Button(0, 44 * o, button["text"]) then
+                button["callback"]()
+                DebugPrinter("Called setting to default for sub menu " .. title )
+            end
         end
     UiPop()
 end
@@ -154,9 +160,7 @@ function Menu_GenerateGameMenu()
             UiTextShadow(0, 0, 0, 0.5, 0.5)
             UiFont("regular.ttf", 22)
             UiText("Press "  .. GeneralOptions_GetToggleMenuKey() .. " to show menu!")
-            UiTranslate(0, 33)
-            UiText("Press "  .. GeneralOptions_GetToggleModKey() .. " to disable or enable!")
-            UiTranslate(-UiWidth() + 300, -66)
+            UiTranslate(-UiWidth() + 300, -33)
         end
     end
 end
