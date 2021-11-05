@@ -5,6 +5,9 @@
 --        Every module will have their properties  stored and accessed from here. Menus will also be generated from here. Presets will be created in separated modules based on this module. Catagorizing settings will be done through here.
 
 local Settings_Template = {
+    Settings  = {
+        ActivePreset="default"
+    },
     GeneralOptions = {
         toggle_menu_key="U",
         ui_in_game="NO",
@@ -230,10 +233,25 @@ function Settings_GetValue(module, keys)
         local keys = Generic_SplitString(keys, ".")
         local value = _LoadedSettings[module]
         for i=1, #keys do
-            module = module[keys[i]]
+            value = module[keys[i]]
         end
         return value
     else
+        return _LoadedSettings[module][keys]
+    end
+end
+
+function Settings_SetValue(module, keys, new)
+    if string.find(keys, ".") then
+        local keys = Generic_SplitString(keys, ".")
+        local value = _LoadedSettings[module]
+        for i=1, #keys do
+            value = module[keys[i]]
+        end
+        value = new
+        return value
+    else
+        _LoadedSettings[module][keys] = new
         return _LoadedSettings[module][keys]
     end
 end
@@ -373,13 +391,37 @@ end
 
 
 -- FireMaterial Module settings
-local FireMaterial_Options =
+local Settings_FireMaterial_Options =
 {
     storage_module="fire_material",
     storage_prefix_key=nil,
     buttons={},
     update=nil,
     option_items={
+        {
+            option_parent_text="Particle Color",
+            option_text="Red",
+            option_note="Configure how red the fire is.",
+            option_type="float",
+            storage_key="color.r",
+            min_max={0.0, 1.0, 0.1}
+        },
+        {
+            option_parent_text="Particle Color",
+            option_text="Green",
+            option_note="Configure how green the fire is.",
+            option_type="float",
+            storage_key="color.g",
+            min_max={0.0, 1.0, 0.1}
+        },
+        {
+            option_parent_text="Particle Color",
+            option_text="Blue",
+            option_note="Configure how transparent the fire is.",
+            option_type="float",
+            storage_key="color.b",
+            min_max={0.0, 1.0, 0.1}
+        },
         {
             option_parent_text="Particle Color",
             option_text="Transparancy",
@@ -439,20 +481,53 @@ local FireMaterial_Options =
     }
 }
 
+function Settings_FireMaterial_Update(material)
+    Settings_SetValue("FireMaterial", material .. ".color.r", Storage_GetFloat("firematerial", material .. ".color.r"))
+    Settings_SetValue("FireMaterial", material .. ".color.g", Storage_GetFloat("firematerial", material .. ".color.g"))
+    Settings_SetValue("FireMaterial", material .. ".color.b", Storage_GetFloat("firematerial", material .. ".color.b"))    
+    Settings_SetValue("FireMaterial", material .. ".color.a", Storage_GetFloat("firematerial", material .. ".color.a"))  
+    Settings_SetValue("FireMaterial", material .. ".lifetime", Storage_GetFloat("firematerial", material .. ".lifetime"))
+    Settings_SetValue("FireMaterial", material .. ".size", Storage_GetFloat("firematerial", material .. ".size"))
+    Settings_SetValue("FireMaterial", material .. ".gravity", Storage_GetFloat("firematerial", material .. ".gravity"))
+    Settings_SetValue("FireMaterial", material .. ".speed", Storage_GetFloat("firematerial", material .. ".speed"))
+    Settings_SetValue("FireMaterial", material .. ".drag", Storage_GetFloat("firematerial", material .. ".drag"))
+    Settings_SetValue("FireMaterial", material .. ".variation", Storage_GetFloat("firematerial", material .. ".variation"))
+end
+
+function Settings_FireMaterial_Store()
+    for material, val in pairs(_LoadedSettings["FireMaterial"]) do 
+        Storage_SetFloat("firematerial", material .. ".color.r", Settings_GetValue("FireMaterial", material .. ".color.r"))
+        Storage_SetFloat("firematerial", material .. ".color.g", Settings_GetValue("FireMaterial", material .. ".color.g"))
+        Storage_SetFloat("firematerial", material .. ".color.b", Settings_GetValue("FireMaterial", material .. ".color.b"))    
+        Storage_SetFloat("firematerial", material .. ".color.a", Settings_GetValue("FireMaterial", material .. ".color.a"))  
+        Storage_SetFloat("firematerial", material .. ".lifetime", Settings_GetValue("FireMaterial", material .. ".lifetime"))
+        Storage_SetFloat("firematerial", material .. ".size", Settings_GetValue("FireMaterial", material .. ".size"))
+        Storage_SetFloat("firematerial", material .. ".gravity", Settings_GetValue("FireMaterial", material .. ".gravity"))
+        Storage_SetFloat("firematerial", material .. ".speed", Settings_GetValue("FireMaterial", material .. ".speed"))
+        Storage_SetFloat("firematerial", material .. ".drag", Settings_GetValue("FireMaterial", material .. ".drag"))
+        Storage_SetFloat("firematerial", material .. ".variation", Settings_GetValue("FireMaterial", material .. ".variation"))
+    end
+end
+
+function Settings_FireMaterial_Default(material)
+    _LoadedSettings["FireMaterial"][material] = Settings_Template["FireMaterial"][material]
+    Settings_FireMaterial_Store()
+end
+
 function Settings_FireMaterial_GetOptionsMenu()
     local materialMenus = {
         menu_title="Fire Materials",
         sub_menus={}
     }
-    for material, properties in pairs(_FireMaterialConfiguration) do
-        local materialOptions = Generic_deepCopy(FireMaterial_Options)
+    for material, properties in pairs(_LoadedSettings["FireMaterial"]) do
+        local materialOptions = Generic_deepCopy(Settings_FireMaterial_Options)
         materialOptions["storage_prefix_key"] = material
         local buttons = {{
             text="Set default",
-            callback=function()FireMaterial_DefaultSettings(material)end
+            callback=function()Settings_FireMaterial_Default(material)end
         }}
         materialOptions["buttons"] = buttons
-        materialOptions["update"] = function()FireMaterial_UpdateSettingsFromStorage(material)end
+        materialOptions["update"] = function()Settings_FireMaterial_Update(material)end
         table.insert(materialMenus["sub_menus"], {
             sub_menu_title=material,
             options=materialOptions,
@@ -477,7 +552,31 @@ local Settings_FireDetector_OptionsDetection =
 	option_items={
         {
             option_parent_text="",
-            option_text="Max Box Size Fire Count",
+            option_text="Max Fires",
+            option_note="How many fires may be detected at once.",
+            option_type="int",
+            storage_key="max_fire",
+            min_max={1, 1000}
+        },
+        {
+            option_parent_text="",
+            option_text="Teardown Max Fire",
+            option_note="Set the max fires of non mod related fires from teardown that can spawn.",
+            option_type="int",
+            storage_key="teardown_max_fires",
+            min_max={1, 10000}
+        },
+        {
+            option_parent_text="",
+            option_text="Teardown Fire Spread",
+            option_note="Set the max fire spread of non mod related fire from teardown.",
+            option_type="int",
+            storage_key="teardown_fire_spread",
+            min_max={1, 10}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Group Size Fire Count",
             option_note="The max distance between fires that could be connected to the same fire.",
             option_type="float",
             storage_key="max_group_fire_distance",
@@ -493,7 +592,7 @@ local Settings_FireDetector_OptionsDetection =
         },
         {
             option_parent_text="",
-            option_text="Trigger Update Time",
+            option_text="Detecion Rate (per second)",
             option_note="Update fire detection/locations.",
             option_type="float",
             storage_key="fire_update_time",
@@ -516,14 +615,6 @@ local Settings_FireDetector_OptionsFireBehavior =
 	option_items={
         {
             option_parent_text="",
-            option_text="Max Fires",
-            option_note="How many fires may be detected at once.",
-            option_type="int",
-            storage_key="max_fire",
-            min_max={1, 1000}
-        },
-        {
-            option_parent_text="",
             option_text="Trigger Fire Reaction Time",
             option_note="Will trigger fire damage and spreading after x seconds (note the smaller the harder it is to extinguish)",
             option_type="int",
@@ -532,7 +623,7 @@ local Settings_FireDetector_OptionsFireBehavior =
         },
         {
             option_parent_text="",
-            option_text="Max fire spread distance",
+            option_text="Max Fire Spread Distance",
             option_note="How far at max intensity a fire can spread.",
             option_type="int",
             storage_key="max_fire_spread_distance",
@@ -594,22 +685,6 @@ local Settings_FireDetector_OptionsFireBehavior =
             option_type="float",
             storage_key="fire_damage_hard",
             min_max={0.01, 1, 0.01}
-        },
-        {
-            option_parent_text="",
-            option_text="Teardown Max Fire",
-            option_note="Set the max fires of non mod related fires (from teardown) that can spawn.",
-            option_type="int",
-            storage_key="teardown_max_fires",
-            min_max={1, 10000}
-        },
-        {
-            option_parent_text="",
-            option_text="Teardown Fire Spread",
-            option_note="Set the max fire spread of non mod related fire from teardown.",
-            option_type="int",
-            storage_key="teardown_fire_spread",
-            min_max={1, 10}
         },
 	}
 }
@@ -682,3 +757,40 @@ local Settings_FireDetector_OptionsDebugging =
 		}
 	}
 }
+
+function Settings_FireDetector_Update()
+    Settings_SetValue("FireDetector", ".color.r", Storage_GetFloat("firematerial", ".color.r"))
+
+end
+
+function Settings_FireDetector_Store()
+
+end
+
+function Settings_FireDetector_Default()
+
+end
+
+function Settings_FireDetector_GetOptionsMenu()
+    return {
+        menu_title = "Fire Settings",
+        sub_menus={
+            {
+                sub_menu_title="Detection",
+                options=FireDetector_OptionsDetection,
+            },
+            {
+                sub_menu_title="Fire Behavior",
+                options=FireDetector_OptionsFireBehavior,
+            },
+            {
+                sub_menu_title="Fire Intensity",
+                options=FireDetector_OptionsFireIntensity,
+            },
+            {
+                sub_menu_title="Debugging",
+                options=FireDetector_OptionsDebugging,
+            }
+        }
+    }
+end
