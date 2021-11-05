@@ -8,6 +8,7 @@
 #include "generaloptions.lua"
 #include "debug.lua"
 #include "storage.lua"
+#include "settings.lua"
 #include "version.lua"
 #include "menu.lua"
 #include "smoke_material.lua"
@@ -25,6 +26,7 @@ function init()
        set_default = true
    end
    Storage_Init(Version_GetName(), Version_GetCurrent())
+   Settings_Init(set_default)
    GeneralOptions_Init(set_default)
    Debug_Init()
    FireDetector_Init(set_default)
@@ -39,6 +41,7 @@ function init()
    Menu_AppendMenu(Particle_GetOptionsMenu())
    Menu_AppendMenu(FireMaterial_GetOptionsMenu())
    Menu_AppendMenu(SmokeMaterial_GetOptionsMenu())
+   Menu_AppendMenu(Settings_GetPresetMenu())
    DebugPrinter("version state: " .. version_state)
 end
 

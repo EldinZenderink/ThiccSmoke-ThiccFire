@@ -61,3 +61,31 @@ end
 function Generic_number_to_bool(value)
 	return value and true or false
 end
+
+function Generic_SplitString(inputstr, sep)
+	if sep == nil then
+			sep = "%s"
+	end
+	local t={}
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			table.insert(t, str)
+	end
+	return t
+end
+
+
+function Generic_TableContains(t1,contains)
+    for i=1,#t1 do
+        if t1[i] == contains then
+			return true
+		end
+    end
+    return false
+end
+function Generic_TableConcat(t1,t2)
+    for i=1,#t2 do
+        t1[#t1+1] = t2[i]
+    end
+    return t1
+end
+

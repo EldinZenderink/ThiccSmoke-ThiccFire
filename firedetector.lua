@@ -1,6 +1,7 @@
 local FireDetector_Default = {
     max_fire_spread_distance=6,
     fire_reaction_time=2,
+    fire_update_time=1,
     min_fire_distance=2,
     max_group_fire_distance=4,
     max_fire=150,
@@ -28,6 +29,7 @@ local FireDetector_Default = {
 local FireDetector_Properties = {
     max_fire_spread_distance=6,
     fire_reaction_time=2,
+    fire_update_time=1,
     min_fire_distance=2,
     max_group_fire_distance=4,
     max_fire=150,
@@ -56,7 +58,9 @@ local FireDetector_Properties = {
 local FireDetector_LocalDB = {
     time_elapsed = 0,
     fire_count=0,
-    fire_intensity=0
+    fire_intensity=0,
+    timer=0,
+    random_timer=0
 }
 
 -- Store all shapes that could potentially be detached from shapes on fire (BPOF = shapes potentially on fire)
@@ -92,6 +96,14 @@ local FireDetector_OptionsDetection =
             storage_key="min_fire_distance",
             min_max={0.1, 5, 0.1}
         },
+        {
+            option_parent_text="",
+            option_text="Trigger Update Time",
+            option_note="Update fire detection/locations.",
+            option_type="float",
+            storage_key="fire_update_time",
+            min_max={0.1, 10, 0.1}
+        },
 	}
 }
 
@@ -121,7 +133,7 @@ local FireDetector_OptionsFireBehavior =
             option_note="Will trigger fire damage and spreading after x seconds (note the smaller the harder it is to extinguish)",
             option_type="int",
             storage_key="fire_reaction_time",
-            min_max={1, 20}
+            min_max={1, 100}
         },
         {
             option_parent_text="",
@@ -332,6 +344,7 @@ end
 ---Store and apply default properties.
 function FireDetector_DefaultSettings()
 	Storage_SetInt("firedetector", "fire_reaction_time", FireDetector_Default["fire_reaction_time"])
+    Storage_SetFloat("firedetector", "fire_update_time", FireDetector_Default["fire_update_time"])
 	Storage_SetInt("firedetector", "max_fire_spread_distance", FireDetector_Default["max_fire_spread_distance"])
     Storage_SetInt("firedetector", "max_fire", FireDetector_Default["max_fire"])
     Storage_SetString("firedetector", "visualize_fire_detection", FireDetector_Default["visualize_fire_detection"])
@@ -355,6 +368,7 @@ end
 function FireDetector_UpdateSettingsFromStorage()
     FireDetector_Properties["fire_reaction_time"] = Storage_GetInt("firedetector", "fire_reaction_time")
     FireDetector_Properties["max_fire_spread_distance"] = Storage_GetInt("firedetector", "max_fire_spread_distance")
+    FireDetector_Properties["fire_update_time"] = Storage_GetFloat("firedetector", "fire_update_time")
     FireDetector_Properties["max_fire"] = Storage_GetInt("firedetector", "max_fire")
     FireDetector_Properties["min_fire_distance"] = Storage_GetFloat("firedetector", "min_fire_distance")
     FireDetector_Properties["max_group_fire_distance"] = Storage_GetFloat("firedetector", "max_group_fire_distance")
@@ -490,12 +504,13 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     local spawn_fire = FireDetector_Properties["spawn_fire"]
     local fire_intensity_enabled = FireDetector_Properties["fire_intensity"]
     local fire_reaction_time = FireDetector_Properties["fire_reaction_time"]
+    local fire_update_time = FireDetector_Properties["fire_update_time"]
     local max_fire_spread_distance = FireDetector_Properties["max_fire_spread_distance"] / 100 -- take procentile to multiply times intensity
     local material_allowed = FireDetector_Properties["material_allowed"]
 
     local time_elapsed =  FireDetector_LocalDB["time_elapsed"]
+    local timer = FireDetector_LocalDB["timer"]
 
-    local fires = {}
     local max_intensity = 0
     if refresh then
         local max_fires = FireDetector_Properties["max_fire"]
@@ -506,81 +521,83 @@ function FireDetector_FindFireLocationsV2(time, refresh)
 
 
         -- Perform fire spread, damage/explosion after timeouts
-        if time_elapsed > fire_reaction_time then
+
+        if FireDetector_LocalDB["random_timer"] == 0 then
+            local randomActionTime  = Generic_rndInt(fire_reaction_time, fire_reaction_time * 2)
+            FireDetector_LocalDB["random_timer"] = randomActionTime + timer
+        end
+
+        if #FireDetector_SPOF > 4 and timer > FireDetector_LocalDB["random_timer"] then
             for i=1, #FireDetector_SPOF do
                 local fire = FireDetector_SPOF[i]
-
                 local intensity = fire["fire_intensity"]
                 if fire_explosion == "YES" then
                     Explosion(fire["location"], (4 / 100) * fire["fire_intensity"])
                 end
                 if fire_damage == "YES" then
-                    MakeHole(fire["location"], fire_damage_soft * intensity, fire_damage_medium * intensity, fire_damage_hard * intensity, false)
+                    MakeHole(fire["location"], fire_damage_soft * intensity, fire_damage_medium * intensity, fire_damage_hard * intensity, true)
                 end
                 if spawn_fire == "YES" then
-                    QueryRejectShape(fire["shape"])
-                    local direction = Generic_rndVec(1)
-                    local hit, dist = QueryRaycast(fire["location"], direction, max_fire_spread_distance * intensity)
-                    if hit then
-                        local newpoint = VecAdd(fire["location"], VecScale(direction, dist))
-                        SpawnFire(newpoint)
+                    for x=0, intensity / 10  do
+                        local direction = Generic_rndVec(1)
+                        local hit, dist = QueryRaycast(fire["location"], direction, max_fire_spread_distance * intensity + fire_damage_soft * intensity)
+                        if hit then
+                            local newpoint = VecAdd(fire["location"], VecScale(direction, dist))
+                            SpawnFire(newpoint)
+                            fire["location"] = newpoint
+                        end
                     end
                 end
             end
+            FireDetector_LocalDB["random_timer"] = 0
+        end
+
+        if time_elapsed > fire_update_time or #FireDetector_SPOF < 2 then
             time_elapsed = 0
-        end
+                -- Search fire locations, onfire = lists with actual fires
+            local onfire = {}
+            FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 1)
 
-        -- Search fire locations, onfire = lists with actual fires
-        local onfire = {}
-        FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 1)
+            -- Parse all fires
+            FireDetector_SPOF = {}
+            for i=1, #onfire do
+                local intensity = onfire[i][2] * fire_intensity_multiplier
 
-        -- Parse all fires
-        for i=1, #onfire do
-            local intensity = onfire[i][2] * fire_intensity_multiplier
+                if intensity > 100 or fire_intensity_enabled == false then
+                    intensity = 100
+                elseif intensity < min_fire_intensity then
+                    intensity = min_fire_intensity
+                end
 
-            if intensity > 100 or fire_intensity_enabled == false then
-                intensity = 100
-            elseif intensity < min_fire_intensity then
-                intensity = min_fire_intensity
-            end
-
-            local hit, point, normal, shape_hit = QueryClosestPoint(onfire[i][1], min_fire_distance)
-            if hit then
-                local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
-                if material_allowed[shape_mat] then
-                    fires[#fires+1] = {location=point, material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i]}
-                    if max_intensity < intensity then
-                        max_intensity = intensity
+                local hit, point, normal, shape_hit = QueryClosestPoint(onfire[i][1], min_fire_distance)
+                if hit then
+                    local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
+                    if material_allowed[shape_mat] then
+                        FireDetector_SPOF[#FireDetector_SPOF + 1] = {location=point, material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i]}
+                        if max_intensity < intensity then
+                            max_intensity = intensity
+                        end
+                        FireDetection_DrawDetectedFire(onfire[i])
                     end
-                    FireDetection_DrawDetectedFire(onfire[i])
                 end
             end
+            FireDetector_LocalDB["fire_intensity"] = max_intensity
         end
 
-        FireDetector_LocalDB["fire_intensity"] = max_intensity
-        FireDetector_LocalDB["fire_count"] = #fires
-    else
-        -- Return previously detected fires
-        fires = FireDetector_SPOF
-        for i=1, #fires do
-            local fire = fires[i]
-            FireDetector_DrawPoint(fire["location"], 1,1,0)
-            if max_intensity < fire["fire_intensity"] then
-                max_intensity = fire["fire_intensity"]
-            end
-            if max_intensity < fire["fire_intensity"] then
-                max_intensity = fire["fire_intensity"]
-            end
-            FireDetection_DrawDetectedFire(fire["original"])
-
-        end
-        FireDetector_LocalDB["fire_intensity"] = max_intensity
-        FireDetector_LocalDB["fire_count"] = #fires
     end
 
+    if FireDetector_Properties["visualize_fire_detection"] == "ON" then
+        for i=1, #FireDetector_SPOF do
+            local fire = FireDetector_SPOF[i]
+            FireDetection_DrawDetectedFire(fire["original"])
+        end
+    end
+
+    FireDetector_LocalDB["fire_count"] = #FireDetector_SPOF
     FireDetector_LocalDB["time_elapsed"] = time_elapsed + time
-    FireDetector_SPOF = fires
-    return fires
+    FireDetector_LocalDB["timer"] = timer + time
+
+    return FireDetector_SPOF
 end
 
 function FireDetector_VecMidPoint(vec1, vec2)
@@ -673,6 +690,8 @@ function FireDetector_ShowStatus()
         DebugWatch("FireDetector, Fire count:", FireDetector_LocalDB["fire_count"])
         DebugWatch("FireDetector, time elapsed:", tostring(FireDetector_LocalDB["time_elapsed"]))
         DebugWatch("FireDetector, intensity:", tostring(FireDetector_LocalDB["fire_intensity"]))
+        DebugWatch("FireDetector, randomtimer:", tostring(FireDetector_LocalDB["random_timer"]))
+        DebugWatch("FireDetector, timer:", tostring(FireDetector_LocalDB["timer"]))
 
     end
 end

@@ -77,6 +77,18 @@ local Particle_Options =
 		},
 		{
 			option_parent_text="",
+			option_text="Embers",
+			option_note="Amount of embers fire can produce.",
+			option_type="text",
+			storage_key="embers",
+			options={
+				"OFF",
+				"LOW",
+				"HIGH",
+			}
+		},
+		{
+			option_parent_text="",
 			option_text="Smoke Fade In (%)",
 			option_note="Percentage of time it takes to fade in smoke",
 			option_type="int",
@@ -138,6 +150,7 @@ local Particle_Default_SmokeFadeOut = 10
 local Particle_Default_FireFadeIn = 35
 local Particle_Default_FireFadeOut = 20
 local Particle_Default_FireEmissive = 4
+local Particle_Default_Embers = "LOW"
 
 -- Global particle relevant settings
 local Particle_Intensity = ""
@@ -150,8 +163,9 @@ local Particle_SmokeFadeOut = 5
 local Particle_FireFadeIn = 5
 local Particle_FireFadeOut = 5
 local Particle_FireEmissive = 4
+local Particle_Embers = "LOW"
 
-local Particle_Type = {8, 3, 5, 8, 13, 14}
+local Particle_Type = {3, 5, 5, 13, 14, 8}
 -- Init function
 -- @param default = when set to true set the default values and store them.
 function Particle_Init(default)
@@ -186,11 +200,12 @@ function Particle_UpdateSettingsFromStorage()
 		Storage_GetInt("particle", "smoke_fadeout"),
 		Storage_GetInt("particle", "fire_fadein"),
 		Storage_GetInt("particle", "fire_fadeout"),
-		Storage_GetInt("particle", "fire_emissive")
+		Storage_GetInt("particle", "fire_emissive"),
+		Storage_GetString("particle", "embers")
 	)
 end
 
-function Particle_UpdateSettings(intensity, drag, gravity, lifetime, intensity_scale, smokefadein, smokefadeout, firefadein, firefadeout, fireemissive)
+function Particle_UpdateSettings(intensity, drag, gravity, lifetime, intensity_scale, smokefadein, smokefadeout, firefadein, firefadeout, fireemissive, embers)
 	Particle_Intensity = intensity
 	Particle_Drag = drag
 	Particle_Gravity = gravity
@@ -201,6 +216,7 @@ function Particle_UpdateSettings(intensity, drag, gravity, lifetime, intensity_s
 	Particle_FireFadeIn = firefadein
 	Particle_FireFadeOut = firefadeout
 	Particle_FireEmissive = fireemissive
+	Particle_Embers = embers
 	Particle_StoreSettings()
 end
 
@@ -215,6 +231,8 @@ function Particle_DefaultSettings()
 	Particle_FireFadeIn = Particle_Default_FireFadeIn
 	Particle_FireFadeOut = Particle_Default_FireFadeOut
 	Particle_FireEmissive = Particle_Default_FireEmissive
+	Particle_Embers = Particle_Default_Embers
+
 	Particle_StoreSettings()
 end
 
@@ -229,9 +247,19 @@ function Particle_StoreSettings()
 	Storage_SetInt("particle", "fire_fadein", Particle_FireFadeIn)
 	Storage_SetInt("particle", "fire_fadeout", Particle_FireFadeOut)
 	Storage_SetInt("particle", "fire_emissive", Particle_FireEmissive)
+	Storage_SetString("particle", "embers", Particle_Embers)
+
+	if Particle_Embers == "LOW" then
+		Particle_Type = {3, 5, 5, 13, 14, 8}
+	elseif Particle_Embers == "HIGH" then
+		Particle_Type = {3, 5, 8, 13, 14, 8}
+	else
+		Particle_Type = {3, 5, 5, 13, 14, 5}
+	end
 end
 
 
+local togglePlainSmoke = false
 function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	if emitter == nil or fire_intensity == nil or location == nil then
 		-- DebugPrinter("Not spawning particle: emitter:" .. tostring(emitter) .. ", location: " .. tostring(location) .. ", intensity: " .. tostring(fire_intensity))
@@ -257,7 +285,7 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	local alpha = emitter["color"]["a"]
 	local variation = emitter["variation"]
 	alpha = alpha +  Generic_rnd(variation / 2 * - 1, variation * 2)
-	gravity = gravity + Generic_rnd(gravity / 2 , gravity * 2)
+	-- gravity = gravity + Generic_rnd(gravity / 2 , gravity * 2)
 	if alpha > 1 then
 		alpha = 1
 	end
@@ -350,11 +378,17 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 
 	--Set up the particle state
 	ParticleReset()
+
 	ParticleType("smoke")
 	if type == "fire" then
 		-- 3 - 5 - 13 -  14
 		-- 8 = fire emblems
+
+		local original_life = life * 2
 		life = ((life / (100 / Particle_FireIntensityScale)) * average_intensity)
+		if life > original_life then
+			life = original_life
+		end
 
 		if life < 0.5 then
 			life = 0.5
@@ -370,8 +404,8 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 		if particle_type == 5 then
 
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
-			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_SmokeFadeIn / 100) * Generic_rnd(variation , variation * 3))
-			ParticleRadius(radius, radius, "easein", life *(Particle_SmokeFadeIn / 100), life * (Particle_SmokeFadeOut / 100))
+			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_FireFadeIn / 100) * Generic_rnd(variation , variation * 3))
+			ParticleRadius(radius, radius, "easein", life *(Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
 			-- life = radius * life * 2
 		elseif particle_type == 8 then
 			life = life * 8
@@ -379,23 +413,28 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 			vel = vel + Generic_rnd(2 , 4)
 			ParticleStretch(10)
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
-			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_SmokeFadeIn / 100) * Generic_rnd(variation , variation * 3))
-			ParticleRadius(radius, radius, "easein", life * (Particle_SmokeFadeIn / 100), life * (Particle_SmokeFadeOut / 100))
+			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_FireFadeIn / 100) * Generic_rnd(variation , variation * 3))
+			ParticleRadius(radius, radius, "easein", life * (Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
 		else
 			-- life = radius * life * 2
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
-			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_SmokeFadeIn / 100) * Generic_rnd(variation , variation * 3))
-			ParticleRadius(radius, radius, "easein", life * (Particle_SmokeFadeIn / 100), life * (Particle_SmokeFadeOut / 100))
+			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_FireFadeIn / 100) * Generic_rnd(variation , variation * 3))
+			ParticleRadius(radius, radius, "easein", life * (Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
 		end
 	else
-		ParticleAlpha(alpha, alpha, "easein", life * (Particle_SmokeFadeIn / 100), life * (Particle_SmokeFadeOut / 100))	-- Ramp up fast, ramp down after 50%
-		ParticleRadius(radius, radius, "easein",life * (Particle_SmokeFadeIn / 100), life * (Particle_SmokeFadeOut / 100))
-		ParticleColor(red, green, blue, 0.9, 0.9, 0.9)
+
+		ParticleAlpha(alpha, alpha, "easein", life * (Particle_SmokeFadeIn / 1000), life * (Particle_FireFadeOut / 1000))	-- Ramp up fast, ramp down after 50%
+		ParticleRadius(radius, radius, "easein",life * (Particle_SmokeFadeIn / 1000), life * (Particle_FireFadeOut / 1000))
+		ParticleColor(red, green, blue, 0.4, 0.4, 0.4)
 	end		-- Animating color towards fire color from near white
 	--Randomize lifetime
 
 	ParticleGravity(gravity)		-- Slightly randomized gravity looks better
-	ParticleDrag(drag)
+	if togglePlainSmoke then
+		ParticleDrag(1)
+	else
+		ParticleDrag(drag)
+	end
 	ParticleCollide(1, 1, "constant", 0.01)
 
 	ParticleRotation(Generic_rnd(vel * -1, vel), 1, "smooth", 0.5/life)

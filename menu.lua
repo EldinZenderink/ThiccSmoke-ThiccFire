@@ -30,6 +30,7 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
         -- DebugPrinter("Generate option menu for sub menu " .. title .. " or module " .. module .. " with prefix key " .. key_prefix)
         local count = 1
         local update = false
+        local offset = 0
         for o=1, #options["option_items"] do
             local option = options["option_items"][o]
             local key = option["storage_key"]
@@ -38,13 +39,21 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             end
             -- DebugPrinter("Generate option item: " .. option["option_type"])
             if option["option_type"] == "text" then
-                update = Ui_StringProperty(0 , 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
+                update = Ui_StringProperty(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
             elseif option["option_type"] == "input_key" then
-                update = Ui_KeySelector(0 , 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+                update = Ui_KeySelector(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+            elseif option["option_type"] == "text_input" then
+                update = UI_TextInput(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
             elseif option["option_type"] == "float" then
-                update = Ui_FloatProperty(0, 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+                update = Ui_FloatProperty(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
             elseif option["option_type"] == "int" then
-                update = Ui_IntProperty(0, 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+                update = Ui_IntProperty(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+            elseif option["option_type"] == "toggle_button" then
+                update = UI_ToggleButton(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+            elseif option["option_type"] == "multi_select" then
+                local temp_update = Ui_MultiSelector(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
+                update = temp_update[1]
+                offset = offset + temp_update[2]
             end
             count = o
             if update then
@@ -53,7 +62,7 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             end
         end
 
-        local offset_y = count * 44
+        local offset_y = count * 44 + offset
         UiTranslate(0, offset_y)
 
         for o=1, #options["buttons"] do
