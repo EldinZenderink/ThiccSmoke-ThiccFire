@@ -14,7 +14,7 @@
 function init()
     Debug_ClearDebugPrinter()
     -- Determine version and if maybe the previous stored data should be transferred
-    local version_state = Version_Init("ThiccFire")
+    local version_state = Version_Init("ThiccSmoke&ThiccFire")
     local set_default = false
     if version_state == "store_default" or version_state == "transfer_stored" then
         set_default = true

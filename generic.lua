@@ -64,15 +64,14 @@ end
 
 function Generic_SplitString(inputstr, sep)
 	if sep == nil then
-			sep = "%s"
+		sep = "%s"
 	end
 	local t={}
 	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-			table.insert(t, str)
+		table.insert(t, str)
 	end
 	return t
 end
-
 
 function Generic_TableContains(t1,contains)
     for i=1,#t1 do
@@ -82,6 +81,16 @@ function Generic_TableContains(t1,contains)
     end
     return false
 end
+
+function Generic_TableContainsTable(t1,contains)
+    for i=1,#t1 do
+        if table.concat(t1[i]) == table.concat(contains)  then
+			return true
+		end
+    end
+    return false
+end
+
 function Generic_TableConcat(t1,t2)
     for i=1,#t2 do
         t1[#t1+1] = t2[i]
@@ -89,3 +98,25 @@ function Generic_TableConcat(t1,t2)
     return t1
 end
 
+function Generic_TableToStr(t1, prefix)
+	local str = ""
+	if prefix == nil then
+		prefix = ""
+	end
+	for key, value in pairs(t1) do
+		if i == 1 then
+			if type(value) == "table" then
+				str = prefix .. "key: " .. tostring(key) .. " => "
+			else
+				str = prefix .. tostring(value)
+			end
+		else
+			if type(value) == "table" then
+				str = str .. "; key: " .. tostring(key) .. " => "
+			else
+				str = str .. ',' .. tostring(value)
+			end
+		end
+	end
+    return str
+end

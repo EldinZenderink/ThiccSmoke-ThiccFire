@@ -3,155 +3,6 @@
 -- @author Eldin Zenderink
 -- @brief Helper module for generating particles
 
--- Module config
-
--- Default Options and Settings
--- Store everything needed to generate menu.
-local Particle_Options =
-{
-	storage_module="particle",
-	storage_prefix_key=nil,
-	buttons={
-		{
-			text="Set default",
-			callback=function() Particle_DefaultSettings() end,
-		}
-	},
-	update=function() Particle_UpdateSettingsFromStorage() end,
-	option_items={
-		{
-			option_parent_text="",
-			option_text="Intensity",
-			option_note="Applies offset to radius on all materials.",
-			option_type="text",
-			storage_key="intensity",
-			options={
-				"Use Material Property",
-				"Potato PC",
-				"Somewhat Ok",
-				"Realistic",
-				"This is fine (meme)",
-				"Fry my PC"
-			}
-		},
-		{
-			option_parent_text="",
-			option_text="Drag",
-			option_note="Applies offset to drag on all materials.",
-			option_type="text",
-			storage_key="drag",
-			options={
-				"Use Material Property",
-				"Low",
-				"Medium",
-				"High"
-			}
-		},
-		{
-			option_parent_text="",
-			option_text="Gravity",
-			option_note="Applies offset to gravity on all materials.",
-			option_type="text",
-			storage_key="gravity",
-			options={
-				"Use Material Property",
-				"Upwards Low",
-				"Upwards High",
-				"Downwards Low",
-				"Downwards High"
-			}
-		},
-		{
-			option_parent_text="",
-			option_text="Lifetime",
-			option_note="Multiples configured lifetime per material.",
-			option_type="text",
-			storage_key="lifetime",
-			options={
-				"1x",
-				"2x",
-				"4x",
-				"8x",
-				"16x"
-			}
-		},
-		{
-			option_parent_text="",
-			option_text="Embers",
-			option_note="Amount of embers fire can produce.",
-			option_type="text",
-			storage_key="embers",
-			options={
-				"OFF",
-				"LOW",
-				"HIGH",
-			}
-		},
-		{
-			option_parent_text="",
-			option_text="Smoke Fade In (%)",
-			option_note="Percentage of time it takes to fade in smoke",
-			option_type="int",
-			storage_key="smoke_fadein",
-			min_max={0, 100}
-		},
-		{
-			option_parent_text="",
-			option_text="Smoke Fade Out (%)",
-			option_note="Percentage of time it takes to fade in smoke",
-			option_type="int",
-			storage_key="smoke_fadeout",
-			min_max={0, 100}
-		},
-		{
-			option_parent_text="",
-			option_text="Fire Fade In (%)",
-			option_note="Percentage of time it takes to fade in fire",
-			option_type="int",
-			storage_key="fire_fadein",
-			min_max={0, 100}
-		},
-		{
-			option_parent_text="",
-			option_text="Fire Fade Out (%)",
-			option_note="Percentage of time it takes to fade in fire",
-			option_type="int",
-			storage_key="fire_fadeout",
-			min_max={0, 100}
-		},
-		{
-			option_parent_text="",
-			option_text="Fire Emissiveness",
-			option_note="Sets how emissive the fire starts out",
-			option_type="int",
-			storage_key="fire_emissive",
-			min_max={1, 10}
-		},
-        {
-            option_parent_text="",
-            option_text="Intensity modifier",
-            option_note="Configure how the fire intensity (see fire detection settings) affects particles (size and gravity).",
-            option_type="float",
-            storage_key="intensity_scale",
-            min_max={1, 10.0, 0.05}
-        },
-	}
-}
-
-
--- Default particle relevant settings
-local Particle_Default_Intensity = "Use Material Property"
-local Particle_Default_Drag = "Use Material Property"
-local Particle_Default_Gravity = "Use Material Property"
-local Particle_Default_Lifetime = "1x"
-local Particle_Default_FireIntensityScale = 1
-local Particle_Default_SmokeFadeIn = 0
-local Particle_Default_SmokeFadeOut = 10
-local Particle_Default_FireFadeIn = 35
-local Particle_Default_FireFadeOut = 20
-local Particle_Default_FireEmissive = 4
-local Particle_Default_Embers = "LOW"
-
 -- Global particle relevant settings
 local Particle_Intensity = ""
 local Particle_Drag = ""
@@ -166,89 +17,24 @@ local Particle_FireEmissive = 4
 local Particle_Embers = "LOW"
 
 local Particle_Type = {3, 5, 5, 13, 14, 8}
--- Init function
--- @param default = when set to true set the default values and store them.
-function Particle_Init(default)
-	if default then
-		Particle_DefaultSettings()
-	else
-		Particle_UpdateSettingsFromStorage()
-	end
+
+function Particle_Init()
+    Settings_RegisterUpdateSettingsCallback(Particle_UpdateSettingsFromSettings)
 end
 
 -- Make it easier to generate menus
-function Particle_GetOptionsMenu()
-	return {
-		menu_title = "Particle Settings",
-		sub_menus={
-			{
-				sub_menu_title="Particle Options",
-				options=Particle_Options,
-			}
-		}
-	}
-end
-
-function Particle_UpdateSettingsFromStorage()
-	Particle_UpdateSettings(
-		Storage_GetString("particle", "intensity"),
-		Storage_GetString("particle", "drag"),
-		Storage_GetString("particle", "gravity"),
-		Storage_GetString("particle", "lifetime"),
-		Storage_GetFloat("particle", "intensity_scale"),
-		Storage_GetInt("particle", "smoke_fadein"),
-		Storage_GetInt("particle", "smoke_fadeout"),
-		Storage_GetInt("particle", "fire_fadein"),
-		Storage_GetInt("particle", "fire_fadeout"),
-		Storage_GetInt("particle", "fire_emissive"),
-		Storage_GetString("particle", "embers")
-	)
-end
-
-function Particle_UpdateSettings(intensity, drag, gravity, lifetime, intensity_scale, smokefadein, smokefadeout, firefadein, firefadeout, fireemissive, embers)
-	Particle_Intensity = intensity
-	Particle_Drag = drag
-	Particle_Gravity = gravity
-	Particle_Lifetime = lifetime
-	Particle_FireIntensityScale = intensity_scale
-	Particle_SmokeFadeIn = smokefadein
-	Particle_SmokeFadeOut = smokefadeout
-	Particle_FireFadeIn = firefadein
-	Particle_FireFadeOut = firefadeout
-	Particle_FireEmissive = fireemissive
-	Particle_Embers = embers
-	Particle_StoreSettings()
-end
-
-function Particle_DefaultSettings()
-	Particle_Intensity = Particle_Default_Intensity
-	Particle_Drag = Particle_Default_Drag
-	Particle_Gravity = Particle_Default_Gravity
-	Particle_Lifetime = Particle_Default_Lifetime
-	Particle_FireIntensityScale = Particle_Default_FireIntensityScale
-	Particle_SmokeFadeIn = Particle_Default_SmokeFadeIn
-	Particle_SmokeFadeOut = Particle_Default_SmokeFadeOut
-	Particle_FireFadeIn = Particle_Default_FireFadeIn
-	Particle_FireFadeOut = Particle_Default_FireFadeOut
-	Particle_FireEmissive = Particle_Default_FireEmissive
-	Particle_Embers = Particle_Default_Embers
-
-	Particle_StoreSettings()
-end
-
-function Particle_StoreSettings()
-	Storage_SetString("particle", "intensity", Particle_Intensity)
-	Storage_SetString("particle", "drag", Particle_Drag)
-	Storage_SetString("particle", "gravity", Particle_Gravity)
-	Storage_SetString("particle", "lifetime", Particle_Lifetime)
-	Storage_SetFloat("particle", "intensity_scale", Particle_FireIntensityScale)
-	Storage_SetInt("particle", "smoke_fadein", Particle_SmokeFadeIn)
-	Storage_SetInt("particle", "smoke_fadeout", Particle_SmokeFadeOut)
-	Storage_SetInt("particle", "fire_fadein", Particle_FireFadeIn)
-	Storage_SetInt("particle", "fire_fadeout", Particle_FireFadeOut)
-	Storage_SetInt("particle", "fire_emissive", Particle_FireEmissive)
-	Storage_SetString("particle", "embers", Particle_Embers)
-
+function Particle_UpdateSettingsFromSettings()
+	Particle_Intensity = Settings_GetValue("Particle", "intensity_mp")
+	Particle_Drag = Settings_GetValue("Particle", "drag_mp")
+	Particle_Gravity = Settings_GetValue("Particle", "gravity_mp")
+	Particle_Lifetime = Settings_GetValue("Particle", "lifetime_mp")
+	Particle_FireIntensityScale = Settings_GetValue("Particle", "intensity_scale")
+	Particle_SmokeFadeIn = Settings_GetValue("Particle", "smoke_fadein")
+	Particle_SmokeFadeOut = Settings_GetValue("Particle", "smoke_fadeout")
+	Particle_FireFadeIn = Settings_GetValue("Particle", "fire_fadein")
+	Particle_FireFadeOut = Settings_GetValue("Particle", "fire_fadeout")
+	Particle_FireEmissive = Settings_GetValue("Particle", "fire_emissive")
+	Particle_Embers = Settings_GetValue("Particle", "embers")
 	if Particle_Embers == "LOW" then
 		Particle_Type = {3, 5, 5, 13, 14, 8}
 	elseif Particle_Embers == "HIGH" then
@@ -258,8 +44,6 @@ function Particle_StoreSettings()
 	end
 end
 
-
-local togglePlainSmoke = false
 function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	if emitter == nil or fire_intensity == nil or location == nil then
 		-- DebugPrinter("Not spawning particle: emitter:" .. tostring(emitter) .. ", location: " .. tostring(location) .. ", intensity: " .. tostring(fire_intensity))
@@ -273,15 +57,9 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	local drag = emitter["drag"]
 	local gravity = emitter["gravity"]
 	-- Fire color
-	local red = 1.0
-	local green = 0.6
-	local blue = 0.5
-	-- Smoke may have different color
-	if type == "smoke" then
-		red = emitter["color"]["r"]
-		green = emitter["color"]["g"]
-		blue = emitter["color"]["b"]
-	end
+	local red = emitter["color"]["r"]
+	local green = emitter["color"]["g"]
+	local blue = emitter["color"]["b"]
 	local alpha = emitter["color"]["a"]
 	local variation = emitter["variation"]
 	alpha = alpha +  Generic_rnd(variation / 2 * - 1, variation * 2)
@@ -378,12 +156,10 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 
 	--Set up the particle state
 	ParticleReset()
-
 	ParticleType("smoke")
 	if type == "fire" then
 		-- 3 - 5 - 13 -  14
-		-- 8 = fire emblems
-
+		-- 8 = fire embers
 		local original_life = life * 2
 		life = ((life / (100 / Particle_FireIntensityScale)) * average_intensity)
 		if life > original_life then
@@ -422,19 +198,15 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 			ParticleRadius(radius, radius, "easein", life * (Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
 		end
 	else
-
-		ParticleAlpha(alpha, alpha, "easein", life * (Particle_SmokeFadeIn / 1000), life * (Particle_FireFadeOut / 1000))	-- Ramp up fast, ramp down after 50%
-		ParticleRadius(radius, radius, "easein",life * (Particle_SmokeFadeIn / 1000), life * (Particle_FireFadeOut / 1000))
+		ParticleAlpha(alpha, alpha, "easein", life * (Particle_SmokeFadeIn / 1000), life * (Particle_SmokeFadeOut / 1000))	-- Ramp up fast, ramp down after 50%
+		ParticleRadius(radius, radius, "easein",life * (Particle_SmokeFadeIn / 1000), life * (Particle_SmokeFadeOut / 1000))
 		ParticleColor(red, green, blue, 0.4, 0.4, 0.4)
 	end		-- Animating color towards fire color from near white
 	--Randomize lifetime
 
 	ParticleGravity(gravity)		-- Slightly randomized gravity looks better
-	if togglePlainSmoke then
-		ParticleDrag(1)
-	else
-		ParticleDrag(drag)
-	end
+
+	ParticleDrag(drag)
 	ParticleCollide(1, 1, "constant", 0.01)
 
 	ParticleRotation(Generic_rnd(vel * -1, vel), 1, "smooth", 0.5/life)

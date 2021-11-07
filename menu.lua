@@ -10,7 +10,7 @@ local _Menu_List = {}
 local _Menu_MenuActive = 1
 local _Menu_SubMenuActive = 1
 
-function Menu_Init(default)
+function Menu_Init()
     _Menu_UI = false
 end
 
@@ -43,7 +43,7 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             elseif option["option_type"] == "input_key" then
                 update = Ui_KeySelector(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
             elseif option["option_type"] == "text_input" then
-                update = UI_TextInput(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+                update = UI_TextInput(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
             elseif option["option_type"] == "float" then
                 update = Ui_FloatProperty(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
             elseif option["option_type"] == "int" then
@@ -109,6 +109,10 @@ function Menu_GenerateMenu()
     UiFont("regular.ttf", 44)
     UiTranslate(66, 100)
     UiText("ThiccSmoke & ThiccFire")
+    UiFont("regular.ttf", 33)
+    UiTranslate(0, 33)
+    UiText("Active Preset: " .. tostring(Settings_GetValue("Settings", "ActivePreset")))
+    UiTranslate(66, -33)
     UiFont("regular.ttf", 22)
     -- Every menu item contains a list of different menus
     -- The menu will be broken in a left section, containing the top level menu buttons
@@ -143,7 +147,7 @@ function Menu_GenerateGameMenu()
     -- DebugPrinter("Toggle menu button: " .. GeneralOptions_GetToggleMenuKey())
     if InputPressed(GeneralOptions_GetToggleMenuKey()) then
 		_Menu_UI = not _Menu_UI
-		Debug_ClearDebugPrinter()
+		-- Debug_ClearDebugPrinter()
         DebugPrinter("Toggle menu button clicked")
 	end
 

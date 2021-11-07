@@ -4,19 +4,6 @@
 -- @brief This module spawns particles and adjust dynamically based on FPS, it can however be adjusted
 --        if you do desire a slideshow :P.
 
-
-local ParticleSpawner_Default = {
-    fire = "YES",
-    smoke = "YES",
-    toggle_smoke_fire = "1:1",
-    dynamic_fps = "ON",
-    spawn_light = "ON",
-    dynamic_fps_target = 48,
-    particle_refresh_max = 60,
-    particle_refresh_min = 24,
-    aggressivenes = 1,
-}
-
 local ParticleSpawner_Properties = {
     fire = "YES",
     smoke = "YES",
@@ -39,111 +26,8 @@ local ParticleSpawner_ParticleRefreshRate = 5.0
 local ParticleSpawner_SpawnLight = false
 local ParticleSpawner_TimeElapsed = 0
 
-local ParticleSpawner_Options =
-{
-	storage_module="particlespawner",
-	storage_prefix_key=nil,
-    buttons={
-		{
-			text = "Set Default",
-			callback=function() ParticleSpawner_DefaultSettings() end,
-		},
-    },
-	update=function() ParticleSpawner_UpdateSettingsFromStorage() end,
-	option_items={
-        {
-            option_parent_text="",
-            option_text="Spawn Smoke Particles",
-            option_note="Enable this to spawn smoke particles",
-            option_type="text",
-            storage_key="smoke",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
-            option_text="Spawn Fire Particles",
-            option_note="Enable this to spawn fire particles",
-            option_type="text",
-            storage_key="fire",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
-            option_text="Spawn Light",
-            option_note="Also spawn lights to simulate fire emitting more intense light.",
-            option_type="text",
-            storage_key="spawn_light",
-            options={"ON", "OFF"}
-        },
-        {
-            option_parent_text="",
-            option_text="Fire to Smoke ratio",
-            option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 smoke every 8 fire particles)",
-            option_type="text",
-            storage_key="toggle_smoke_fire",
-            options={"1:1", "1:2", "1:4", "1:8"}
-        },
-        {
-            option_parent_text="",
-            option_text="Dynamic FPS Adjust",
-            option_note="Adjust based on fps. If disabled, only the max values will apply!",
-            option_type="text",
-            storage_key="dynamic_fps",
-            options={"ON", "OFF"}
-        },
-        {
-            option_parent_text="",
-            option_text="FPS Target",
-            option_note="Note: only taken into account when your FPS is above this value!",
-            option_type="int",
-            storage_key="dynamic_fps_target",
-            min_max={35, 60}
-        },
-        {
-            option_parent_text="",
-            option_text="Particle Refresh Rate",
-            option_note="Maximum particle spawn refresh rate per second (note will automatically adjust if fps is below target (more = thicker smoke).",
-            option_type="int",
-            storage_key="particle_refresh_max",
-            min_max={1, 60}
-        },
-        {
-            option_parent_text="",
-            option_text="Min Particle Refresh Rate",
-            option_note="Minimum particle spawn refresh rate per second.",
-            option_type="int",
-            storage_key="particle_refresh_min",
-            min_max={1, 60}
-        },
-        {
-            option_parent_text="",
-            option_text="Adjust Aggressivenes",
-            option_note="How quick parameters should be adjusted after dipping below target.",
-            option_type="float",
-            storage_key="aggressivenes",
-            min_max={0.01, 1.0, 0.01}
-        }
-	}
-}
 
-function ParticleSpawner_GetOptionsMenu()
-	return {
-		menu_title = "Particle Spawner Settings",
-		sub_menus={
-			{
-				sub_menu_title="Particle Spawner Options",
-				options=ParticleSpawner_Options,
-			}
-		}
-	}
-end
-
-function ParticleSpawner_Init(default)
-    if default then
-        ParticleSpawner_DefaultSettings()
-    else
-        ParticleSpawner_UpdateSettingsFromStorage()
-    end
+function ParticleSpawner_Init()
     ParticleSpawner_ParticleRefreshRate = ParticleSpawner_Properties["particle_refresh_max"]
     if ParticleSpawner_Properties["spawn_light"] == "ON" then
         ParticleSpawner_SpawnLight = true
@@ -151,18 +35,19 @@ function ParticleSpawner_Init(default)
         ParticleSpawner_SpawnLight = false
     end
     ParticleSpawner_FindNew = true
+    Settings_RegisterUpdateSettingsCallback(ParticleSpawner_UpdateSettingsFromSettings)
 end
 
-function ParticleSpawner_UpdateSettingsFromStorage()
-    ParticleSpawner_Properties["fire"] = Storage_GetString("particlespawner", "fire")
-	ParticleSpawner_Properties["smoke"] = Storage_GetString("particlespawner", "smoke")
-	ParticleSpawner_Properties["toggle_smoke_fire"] = Storage_GetString("particlespawner", "toggle_smoke_fire")
-	ParticleSpawner_Properties["dynamic_fps"] = Storage_GetString("particlespawner", "dynamic_fps")
-    ParticleSpawner_Properties["dynamic_fps_target"] = Storage_GetInt("particlespawner", "dynamic_fps_target")
-    ParticleSpawner_Properties["particle_refresh_max"] = Storage_GetInt("particlespawner", "particle_refresh_max")
-    ParticleSpawner_Properties["particle_refresh_min"] = Storage_GetInt("particlespawner", "particle_refresh_min")
-    ParticleSpawner_Properties["aggressivenes"] = Storage_GetFloat("particlespawner", "aggressivenes")
-    ParticleSpawner_Properties["spawn_light"] = Storage_GetString("particlespawner", "spawn_light")
+function ParticleSpawner_UpdateSettingsFromSettings()
+    ParticleSpawner_Properties["fire"] = Settings_GetValue("ParticleSpawner", "fire")
+	ParticleSpawner_Properties["smoke"] = Settings_GetValue("ParticleSpawner", "smoke")
+	ParticleSpawner_Properties["toggle_smoke_fire"] = Settings_GetValue("ParticleSpawner", "toggle_smoke_fire")
+	ParticleSpawner_Properties["dynamic_fps"] = Settings_GetValue("ParticleSpawner", "dynamic_fps")
+    ParticleSpawner_Properties["dynamic_fps_target"] = Settings_GetValue("ParticleSpawner", "dynamic_fps_target")
+    ParticleSpawner_Properties["particle_refresh_max"] = Settings_GetValue("ParticleSpawner", "particle_refresh_max")
+    ParticleSpawner_Properties["particle_refresh_min"] = Settings_GetValue("ParticleSpawner", "particle_refresh_min")
+    ParticleSpawner_Properties["aggressivenes"] = Settings_GetValue("ParticleSpawner", "aggressivenes")
+    ParticleSpawner_Properties["spawn_light"] = Settings_GetValue("ParticleSpawner", "spawn_light")
     ParticleSpawner_ParticleRefreshRate =  ParticleSpawner_Properties["particle_refresh_max"]
     ParticleSpawner_CurFPSTarget = ParticleSpawner_Properties["dynamic_fps_target"]
     if ParticleSpawner_Properties["spawn_light"] == "ON" then
@@ -170,19 +55,6 @@ function ParticleSpawner_UpdateSettingsFromStorage()
     else
         ParticleSpawner_SpawnLight = false
     end
-end
-
-function ParticleSpawner_DefaultSettings()
-    Storage_SetString("particlespawner", "fire", ParticleSpawner_Default["fire"])
-    Storage_SetString("particlespawner", "smoke", ParticleSpawner_Default["smoke"])
-    Storage_SetString("particlespawner", "toggle_smoke_fire", ParticleSpawner_Default["toggle_smoke_fire"])
-    Storage_SetString("particlespawner", "dynamic_fps", ParticleSpawner_Default["dynamic_fps"])
-    Storage_SetInt("particlespawner", "dynamic_fps_target", ParticleSpawner_Default["dynamic_fps_target"])
-	Storage_SetInt("particlespawner", "particle_refresh_max", ParticleSpawner_Default["particle_refresh_max"])
-	Storage_SetInt("particlespawner", "particle_refresh_min", ParticleSpawner_Default["particle_refresh_min"])
-    Storage_SetFloat("particlespawner", "aggressivenes", ParticleSpawner_Default["aggressivenes"])
-    Storage_SetString("particlespawner", "spawn_light", ParticleSpawner_Default["spawn_light"])
-    ParticleSpawner_UpdateSettingsFromStorage()
 end
 
 function ParticleSpawner_tick(dt)
@@ -212,13 +84,33 @@ function ParticleSpawner_tick(dt)
     ParticleSpawner_TimeElapsed = ParticleSpawner_TimeElapsed + dt
 
     if ParticleSpawner_SpawnLight and ParticleSpawner_ParticlesToSpawn then
+        local current_locations = {}
         for i=1, #ParticleSpawner_ParticlesToSpawn do
             local fire_info = ParticleSpawner_ParticlesToSpawn[i]
-            if fire_info ~= nil then
-                local tenth = fire_info["fire_intensity"]  / 10
-                PointLight(VecAdd(fire_info["location"], Generic_rndVec(0.1)), 0.8, 0.1, 0.01, fire_info["fire_intensity"] + Generic_rnd(-tenth, tenth))
+            if fire_info ~= nil and fire_info["light_location"] ~= nil then
+                local shouldemit = true
+                for x=1, #current_locations do
+                    local location = current_locations[x]
+                    if location[1] == fire_info["light_location"][1] and location[2] == fire_info["light_location"][2] and location[3] == fire_info["light_location"][3] then
+                        shouldemit = false
+                        break
+                    end
+                end
+                if shouldemit then
+                    current_locations[#current_locations+1] = Generic_deepCopy(fire_info["light_location"])
+                    local tenth = fire_info["fire_intensity"]  / 10
+                    local light_intensity = fire_info["fire_intensity"] + Generic_rnd(-tenth, tenth)
+                    if light_intensity < 15 then
+                        light_intensity = 15 + Generic_rnd(-1.5, 1.5)
+                    end
+                    local material = FireMaterial_GetInfo(fire_info["material"])
+                    -- PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), 0.8, 0.1, 0.01, light_intensity)
+                    PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), material["color"]["r"], material["color"]["g"] / 4, material["color"]["b"] / 8, light_intensity)
+                end
             end
         end
+        -- DebugWatch("Fires", #ParticleSpawner_ParticlesToSpawn)
+        -- DebugWatch("Light Sources", #current_locations)
     end
 end
 
@@ -286,13 +178,9 @@ function ParticleSpawner_update(dt)
             ParticleSpawner_RefreshTimer = 0
             ParticleSpawner_FindNew = true
         end
-
-
-
     else
         ParticleSpawner_FindNew = true
     end
-
 
     if ParticleSpawner_FindNew then
         ParticleSpawner_FindNew = false
@@ -300,12 +188,7 @@ function ParticleSpawner_update(dt)
     else
         ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocationsV2(dt, false)
     end
-
-    -- ParticleSpawner_UpdateTimer = ParticleSpawner_UpdateTimer + dt
     ParticleSpawner_RefreshTimer = ParticleSpawner_RefreshTimer + dt
-
-    -- FireDetector_FindFireLocationsV2(dt, true)
-
 end
 
 function ParticleSpawner_ShowStatus()

@@ -28,7 +28,7 @@ local Module_Options =
 	storage_module="module",                                                                    -- The storage_module is used by the menu module to know to which module the property belongs
 	storage_prefix_key=nil,                                                                     -- See the Module_GetOptionsMenu() function, multiple instances of this table can be created, for multiple sub menus with their own properties.
 	default=function() Module_DefaultSettings() end,                                            -- Callback function to let the menu apply default settings if required
-	update=function() Module_UpdateSettingsFromStorage() end,                                   -- Callback function to let the menu apply the settings. (from storage)
+	update=function() Module_UpdateSettingsFromSettings() end,                                   -- Callback function to let the menu apply the settings. (from storage)
 	option_items={                                                                              -- List with different kind of options to show with their own ui elements.
 		{
 			option_parent_text="",                                                                  -- Currently not used, might be used to add sub sections  for grouping options.
@@ -78,7 +78,7 @@ function Module_Init(default)
 	if default then
 		Module_DefaultSettings()
 	else
-		Module_UpdateSettingsFromStorage()
+		Module_UpdateSettingsFromSettings()
 	end
 end
 
@@ -101,11 +101,11 @@ function Module_DefaultSettings()
 	Storage_SetInt("module", "int", Module_Default["int"])
 	Storage_SetFloat("module", "float", Module_Default["float"])
 	Storage_SetString("module", "input_key", Module_Default["input_key"])
-    Module_UpdateSettingsFromStorage()
+    Module_UpdateSettingsFromSettings()
 end
 
 -- This function is required to apply the properites of the module from storage
-function Module_UpdateSettingsFromStorage()
+function Module_UpdateSettingsFromSettings()
     DebugPrinter("Updating Module from storage")
 	Module_Properties["string"] = Storage_GetString("module", "string")
 	Module_Properties["int"] = Storage_GetInt("module", "int")
