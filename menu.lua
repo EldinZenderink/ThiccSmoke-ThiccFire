@@ -18,7 +18,7 @@ function Menu_AppendMenu(menu)
     table.insert(_Menu_List, menu)
 end
 
-function Menu_GenerateSubMenuOptions(title, options, x, y)
+function Menu_GenerateSubMenuOptions(title, options, description, x, y)
     UiPush()
 	    UiTranslate(x, y)
         UiFont("regular.ttf", 44)
@@ -65,11 +65,26 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
         local offset_y = count * 44 + offset
         UiTranslate(0, offset_y)
 
+        local count_butt = 0
         for o=1, #options["buttons"] do
             local button = options["buttons"][o]
             if UI_Button(0, 44 * o, button["text"]) then
                 button["callback"]()
                 DebugPrinter("Called setting to default for sub menu " .. title )
+            end
+            count_butt = count_butt + 1
+        end
+        offset_y = count_butt * 44
+        if description ~= nil then
+            UiTranslate(0, offset_y + 88)
+            UiFont("bold.ttf", 28)
+            UiText("Description")
+            UiTranslate(0, 33)
+            local lines = Generic_SplitString(description, "\n")
+            for i=1, #lines do
+                UiFont("regular.ttf", 16)
+                UiText(lines[i])
+                UiTranslate(0, 20)
             end
         end
     UiPop()
@@ -113,7 +128,7 @@ function Menu_GenerateMenu()
     UiTranslate(0, 33)
     UiText("Active Preset: " .. tostring(Settings_GetValue("Settings", "ActivePreset")))
     UiTranslate(66, -33)
-    UiFont("regular.ttf", 22)
+    UiFont("regular.ttf", 33)
     -- Every menu item contains a list of different menus
     -- The menu will be broken in a left section, containing the top level menu buttons
     -- Then the following section will show whatever menu is clicked on in the first section, showing
@@ -137,7 +152,7 @@ function Menu_GenerateMenu()
         Menu_GenerateSubMenu(menu["menu_title"], menu["sub_menus"], 400, -66)
         local submenu = menu["sub_menus"][_Menu_SubMenuActive]
         if menu ~= nil and submenu ~= nil then
-            Menu_GenerateSubMenuOptions(submenu["sub_menu_title"], submenu["options"], 800, -66)
+            Menu_GenerateSubMenuOptions(submenu["sub_menu_title"], submenu["options"], submenu["description"], 800, -66)
         end
     end
 end

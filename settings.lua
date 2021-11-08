@@ -6,9 +6,9 @@
 
 local Settings_UpdateCallbacks = {}
 
-local Settings_Template = {
+Settings_Template ={
     Settings  = {
-        ActivePreset="default"
+        ActivePreset="medium"
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -17,24 +17,24 @@ local Settings_Template = {
         enabled="YES"
     },
     FireDetector = {
-        max_fire_spread_distance=6,
-        fire_reaction_time=2,
-        fire_update_time=1,
+        max_fire_spread_distance=2,
+        fire_reaction_time=6,
+        fire_update_time=0.5,
         min_fire_distance=2,
         max_group_fire_distance=4,
-        max_fire=150,
+        max_fire=50,
         fire_intensity="ON",
         fire_intensity_multiplier=1,
-        fire_intensity_minimum=1,
+        fire_intensity_minimum=10,
         visualize_fire_detection="OFF",
         fire_explosion = "NO",
-        fire_damage = "YES",
+        fire_damage = "NO",
         spawn_fire = "YES",
         fire_damage_soft = 0.1,
         fire_damage_medium = 0.05,
         fire_damage_hard = 0.01,
-        teardown_max_fires = 500,
-        teardown_fire_spread = 2,
+        teardown_max_fires = 200,
+        teardown_fire_spread = 1,
         material_allowed = {
             wood = true,
             foliage = true,
@@ -46,12 +46,12 @@ local Settings_Template = {
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        spawn_light = "ON",
-        fire_to_smoke_ratio = "1:1",
+        spawn_light = "OFF",
+        fire_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
-        dynamic_fps_target = 48,
-        particle_refresh_max = 60,
-        particle_refresh_min = 24,
+        dynamic_fps_target = 35,
+        particle_refresh_max = 48,
+        particle_refresh_min = 12,
         aggressivenes = 1,
     },
     Particle = {
@@ -60,9 +60,9 @@ local Settings_Template = {
         gravity_mp = "Use Material Property",
         lifetime_mp = "1x",
         intensity_scale = 1,
-        smoke_fadein = 0,
+        smoke_fadein = 2,
         smoke_fadeout = 10,
-        fire_fadein = 35,
+        fire_fadein = 15,
         fire_fadeout = 20,
         fire_emissive = 4,
         embers = "LOW"
@@ -70,7 +70,7 @@ local Settings_Template = {
     FireMaterial = {
         wood={
             color={r=1.0, g=0.6, b=0.5, a=1},
-            lifetime=2,
+            lifetime=1,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -79,7 +79,7 @@ local Settings_Template = {
         },
         foliage={
             color={r=1.0, g=0.6, b=0.5, a=1},
-            lifetime=2,
+            lifetime=1,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -88,7 +88,7 @@ local Settings_Template = {
         },
         plaster={
             color={r=1.0, g=0.6, b=0.5, a=1},
-            lifetime=2,
+            lifetime=1,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -97,7 +97,7 @@ local Settings_Template = {
         },
         plastic={
             color={r=1.0, g=0.6, b=0.5, a=1},
-            lifetime=2,
+            lifetime=1,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -106,7 +106,7 @@ local Settings_Template = {
         },
         masonery={
             color={r=1.0, g=0.6, b=0.5, a=1},
-            lifetime=2,
+            lifetime=1,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -116,46 +116,46 @@ local Settings_Template = {
     },
     SmokeMaterial = {
         wood={
-            color={r=0.15,g=0.15,b=0.15,a=0.8},
-            lifetime=8,
-            size=1,
-            gravity=3,
+            color={r=0.15,g=0.15,b=0.15,a=0.2},
+            lifetime=4,
+            size=2,
+            gravity=4,
             speed=2.5,
             drag=0.4,
             variation=1,
         },
         foliage={
-            color={r=0.3,g=0.31,b=0.3,a=0.8},
-            lifetime=8,
-            size=1,
-            gravity=2,
+            color={r=0.3,g=0.31,b=0.3,a=0.2},
+            lifetime=4,
+            size=2,
+            gravity=3,
             speed=1.5,
             drag=0.7,
             variation=0.8,
         },
         plaster={
-            color={r=0.2,g=0.2,b=0.22,a=0.8},
-            lifetime=8,
-            size=1,
-            gravity=2,
+            color={r=0.2,g=0.2,b=0.22,a=0.2},
+            lifetime=4,
+            size=2,
+            gravity=4,
             speed=1,
             drag=0.9,
             variation=0.4,
         },
         plastic={
-            color={r=0.1,g=0.1,b=0.12,a=0.8},
-            lifetime=8,
-            size=1,
-            gravity=1,
+            color={r=0.1,g=0.1,b=0.12,a=0.2},
+            lifetime=4,
+            size=2,
+            gravity=3,
             speed=0.5,
             drag=1,
             variation=0.1,
         },
         masonery={
-            color={r=0.4,g=0.4,b=0.4,a=0.8},
-            lifetime=8,
-            size=1,
-            gravity=2,
+            color={r=0.4,g=0.4,b=0.4,a=0.2},
+            lifetime=4,
+            size=2,
+            gravity=4,
             speed=2,
             drag=0.6,
             variation=0.3,
@@ -170,6 +170,11 @@ function Settings_Init(default)
     if default or active_preset == "" then
         Settings_SetDefault()
     else
+        Settings_CreatePreset(Preset_Settings_Ultra)
+        Settings_CreatePreset(Preset_Settings_High)
+        Settings_CreatePreset(Preset_Settings_Medium)
+        Settings_CreatePreset(Preset_Settings_Low)
+        Storage_SetString("settings", "active_preset", active_preset)
         Settings_LoadActivePreset()
     end
 end
@@ -215,10 +220,13 @@ end
 
 function Settings_SetDefault()
     Settings_SetStorageValuesRecursive("default", Settings_Template)
-    Storage_SetString("settings", "active_preset", "default")
     Storage_SetString("settings", "presets", "default")
+    Settings_CreatePreset(Preset_Settings_Ultra)
+    Settings_CreatePreset(Preset_Settings_High)
+    Settings_CreatePreset(Preset_Settings_Medium)
+    Settings_CreatePreset(Preset_Settings_Low)
+    Storage_SetString("settings", "active_preset", "default")
     Settings_LoadActivePreset()
-
 end
 
 -- Settings load and store from Storage
@@ -324,13 +332,23 @@ function Settings_PresetExists(preset)
     return false
 end
 
-function Settings_CreatePreset()
+function Settings_CreatePreset(settings)
     local preset = Storage_GetString("settings", "new_preset")
+    if settings ~= nil then
+        preset = settings["Settings"]["ActivePreset"]
+        if Settings_PresetExists(preset) then
+            Settings_DeletePreset(preset)
+        end
+    end
     if Settings_PresetExists(preset) then
         return false
     else
         Settings_AddPreset(preset)
-        Settings_SetStorageValuesRecursive(preset, _LoadedSettings)
+        if settings == nil then
+            Settings_SetStorageValuesRecursive(preset, _LoadedSettings)
+        else
+            Settings_SetStorageValuesRecursive(preset, settings)
+        end
         Storage_SetString("settings", "active_preset", preset)
         Settings_LoadActivePreset()
     end
@@ -414,11 +432,12 @@ local Preset_Options =
 
 function Settings_GetPresetMenu()
     return {
-        menu_title = "Preset",
+        menu_title = "Presets",
         sub_menus={
             {
-                sub_menu_title="Edit Presets",
+                sub_menu_title="Change Presets",
                 options=Preset_Options,
+                description="Note the presets 'default', 'low', 'medium', 'high', 'ultra' will be overridden every restart.\nPlease create a new preset (based on the active preset) before changing settings, otherwise they will be lost on restart!"
             }
         }
     }
@@ -439,7 +458,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure how red the fire is.",
             option_type="float",
             storage_key="color.r",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -447,7 +466,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure how green the fire is.",
             option_type="float",
             storage_key="color.g",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -455,7 +474,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure how transparent the fire is.",
             option_type="float",
             storage_key="color.b",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -463,7 +482,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure how transparent the fire is.",
             option_type="float",
             storage_key="color.a",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -471,7 +490,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure how long a single fire particle exists.",
             option_type="float",
             storage_key="lifetime",
-            min_max={0.5, 10, 0.1}
+            min_max={0.5, 30, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -495,7 +514,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure drag it has on other fire particles.",
             option_type="float",
             storage_key="drag",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -503,7 +522,7 @@ local Settings_FireMaterial_Options =
             option_note="Configure transparancy variation between fire particles",
             option_type="float",
             storage_key="variation",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -511,7 +530,7 @@ local Settings_FireMaterial_Options =
             option_note="Size of the fire particle.",
             option_type="float",
             storage_key="size",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
     }
 }
@@ -568,6 +587,7 @@ function Settings_FireMaterial_GetOptionsMenu()
         table.insert(materialMenus["sub_menus"], {
             sub_menu_title=material,
             options=materialOptions,
+            description="Change settings for material " .. material .. " in regards how fire looks when this material is on fire."
         })
 	end
 	return materialMenus
@@ -588,7 +608,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure how red the smoke is.",
             option_type="float",
             storage_key="color.r",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -596,7 +616,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure how green the smoke is.",
             option_type="float",
             storage_key="color.g",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -604,7 +624,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure how transparent the smoke is.",
             option_type="float",
             storage_key="color.b",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Color",
@@ -612,7 +632,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure how transparent the smoke is.",
             option_type="float",
             storage_key="color.a",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -620,7 +640,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure how long a single smoke particle exists.",
             option_type="float",
             storage_key="lifetime",
-            min_max={1, 50, 1}
+            min_max={1, 30, 1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -644,7 +664,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure drag it has on other smoke particles.",
             option_type="float",
             storage_key="drag",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -652,7 +672,7 @@ local Settings_SmokeMaterial_Options =
             option_note="Configure transparancy variation between smoke particles",
             option_type="float",
             storage_key="variation",
-            min_max={0.0, 1.0, 0.1}
+            min_max={0.1, 1.0, 0.1}
         },
         {
             option_parent_text="Particle Behavior",
@@ -717,6 +737,7 @@ function Settings_SmokeMaterial_GetOptionsMenu()
         table.insert(materialMenus["sub_menus"], {
             sub_menu_title=material,
             options=materialOptions,
+            description="Change settings for material " .. material .. " in regards how smoke looks when this material is on fire."
         })
 	end
 	return materialMenus
@@ -918,7 +939,7 @@ local Settings_FireDetector_OptionsFireBehavior =
             option_type="float",
             storage_key="fire_damage_hard",
             min_max={
-                0.01,
+                0.1,
                 10,
                 0.1,
                 {
@@ -1061,18 +1082,22 @@ function Settings_FireDetector_GetOptionsMenu()
             {
                 sub_menu_title="Detection",
                 options=Settings_FireDetector_OptionsDetection,
+                description="Change settings regarding fire detection, e.g. minimum distance, or the maximum size arround a fire it may use to detect intensity.\nNote: the size of the box to count fires is used to spawn lights in! Setting this 1:1 to minimum fire distance will make lights spawn for each detected fire!\n. Note: Teardown Max Fire and Fire Spread is part of the base game and has no relation to other fire spread settings in this mod!"
             },
             {
                 sub_menu_title="Fire Behavior",
                 options=Settings_FireDetector_OptionsFireBehavior,
+                description="The fire bahavior settings allow for adjusting how fire behaves. \n Behavio includes: damage, fire spreading (not teardowns own fire spreading settings, but other method implemented by this mod.))\n Note: Spawn Fire option actually spawns more 'actual' fires (from the game) which this mod can detect again! \n This setting is related to Max Fire Spread option! \n If SpawnFire is disabled, the Max Fire Spread option is not used."
             },
             {
                 sub_menu_title="Fire Intensity",
                 options=Settings_FireDetector_OptionsFireIntensity,
+                description="Intensity settings that determine how big fire particles/smoke particles are when spawned. \n Intensity also influences the damage if enabled, light intensity if enabled, \n and spreading if enabled (spawn fire), which are configured in the other menus!"
             },
             {
                 sub_menu_title="Debugging",
                 options=Settings_FireDetector_OptionsDebugging,
+                description="If your settings are behaving weird, fire is spawning weird, \nyou can see where fires are detected and the intensity of the fire \n (how greener the box, the more intense the fire).,"
             }
         }
     }
@@ -1284,6 +1309,7 @@ function Settings_ParticleSpawner_GetOptionsMenu()
 			{
 				sub_menu_title="Particle Spawner Options",
 				options=Settings_ParticleSpawner_Options,
+                description="This menu allows for changing how often particles are spawned and in what ratio, which particles are spawned and if lights should be spawned. \n The mod integrates a dynamic system that lowers the amount of particles based on FPS but can severly affect the visual appearance!"
 			}
 		}
 	}
@@ -1463,6 +1489,7 @@ function Settings_Particle_GetOptionsMenu()
 			{
 				sub_menu_title="Particle Options",
 				options=Settings_Particle_Options,
+                description="These settings are applied to all particles (independent of the material), for some quick adjustments if necessary."
 			}
 		}
 	}
