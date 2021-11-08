@@ -3,7 +3,7 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-local Version_Current = "v5"
+local Version_Current = "v5.1"
 local Version_Previous = "v4"
 local Version_ModName = ""
 local Version_PreviousModName = "ThiccFire"
@@ -37,6 +37,10 @@ function Version_Init(modname)
 	SetString("level.mod." .. Version_GetName().. ".version", Version_GetCurrent())
 
 	if storedVersion == "" or storedVersion == nil then
+		if Version_GetStored() == Version_Previous or Version_GetStoredPrevious() == Version_Previous then
+			SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+			return "transfer_stored"
+		end
 		SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
 		storedVersion = Version_GetCurrent()
 		return "store_default"
