@@ -8,6 +8,8 @@
 #include "generaloptions.lua"
 #include "debug.lua"
 #include "storage.lua"
+#include "restoresettings.lua"
+#include "settings.lua"
 #include "version.lua"
 #include "menu.lua"
 #include "smoke_material.lua"
@@ -15,30 +17,35 @@
 #include "particle_spawner.lua"
 #include "particle.lua"
 #include "firedetector.lua"
+#include "presets\preset-low.lua"
+#include "presets\preset-medium.lua"
+#include "presets\preset-high.lua"
+#include "presets\preset-ultra.lua"
 
 function init()
-   Debug_ClearDebugPrinter()
+--    Debug_ClearDebugPrinter()
    -- Determine version and if maybe the previous stored data should be transferred
-   local version_state = Version_Init("ThiccFire")
+   local version_state = Version_Init("ThiccSmoke&ThiccFire")
    local set_default = false
-   if version_state == "store_default" or version_state == "transfer_stored" then
-       set_default = true
+   local restore = false
+   if version_state == "store_default" then
+        set_default = true
+   elseif version_state == "transfer_stored" then
+        set_default = true
+        restore = true
    end
    Storage_Init(Version_GetName(), Version_GetCurrent())
-   GeneralOptions_Init(set_default)
+   Settings_Init(set_default)
+   GeneralOptions_Init()
    Debug_Init()
-   FireDetector_Init(set_default)
-   ParticleSpawner_Init(set_default)
-   Particle_Init(set_default)
-   FireMaterial_Init(set_default)
-   SmokeMaterial_Init(set_default)
-   Menu_Init(set_default)
-   Menu_AppendMenu(GeneralOptions_GetOptionsMenu())
-   Menu_AppendMenu(FireDetector_GetOptionsMenu())
-   Menu_AppendMenu(ParticleSpawner_GetOptionsMenu())
-   Menu_AppendMenu(Particle_GetOptionsMenu())
-   Menu_AppendMenu(FireMaterial_GetOptionsMenu())
-   Menu_AppendMenu(SmokeMaterial_GetOptionsMenu())
+   FireDetector_Init()
+   ParticleSpawner_Init()
+   Particle_Init()
+   FireMaterial_Init()
+   SmokeMaterial_Init()
+   Menu_Init()
+   RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
+   Settings_LoadMenu()
    DebugPrinter("version state: " .. version_state)
 end
 

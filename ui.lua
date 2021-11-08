@@ -44,9 +44,7 @@ function Ui_StringProperty(x, y, name, notes, list, module, key)
     return update
 end
 
-
 function Ui_KeySelector(x, y, name, notes, module, key)
-
     local update = false
     local current_key = Storage_GetString(module, key)
 	local awaiting_key_press = Storage_GetBool("ui", "keyselector." .. key .. ".awaiting_key_press")
@@ -103,6 +101,20 @@ function Ui_FloatProperty(x, y, name, notes, min_max_steps, module, key)
 	UiText(tostring(value))
 	UiPop()
 	if current ~= value then
+		if min_max_steps[4] ~= nil then
+			for i=1, #min_max_steps[4] do
+				local relatedvalue = Storage_GetFloat(module,  min_max_steps[4][i]["related"])
+				if min_max_steps[4][i]["type"] == ">" then
+					if value < relatedvalue then
+						Storage_SetFloat(module,  min_max_steps[4][i]["related"], value - min_max_steps[3])
+					end
+				else
+					if value > relatedvalue then
+						Storage_SetFloat(module,  min_max_steps[4][i]["related"], value + min_max_steps[3])
+					end
+				end
+			end
+		end
 		Storage_SetFloat(module, key, value);
 		return true
 	end
@@ -149,13 +161,13 @@ function UI_ToggleButton(x, y, text, group, id)
 	end
 
 	local clicked = _UI_Toggle_Buttons[group][id]
+	UiPush()
+	UiTranslate(x, y)
 	if clicked then
 		UiFont("bold.ttf", 22)
 	else
 		UiFont("regular.ttf", 22)
 	end
-	UiPush()
-		UiTranslate(x, y)
 		if UiTextButton(text) then
 			clicked = not clicked
 		end
@@ -170,6 +182,97 @@ function UI_ToggleButton(x, y, text, group, id)
 end
 
 
+function UI_TextInput(x, y,  name, notes, options, module, key)
+	-- Create a button
+
+    local current_string = Storage_GetString(module, key .. ".buffer")
+	local awaiting_key_press = Storage_GetBool("ui", "keyselector." .. key .. ".awaiting_key_press")
+	local last_pressed = InputLastPressedKey()
+
+	if InputPressed("esc") then
+		awaiting_key_press = false
+		Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", awaiting_key_press)
+		Storage_SetString(module, key, current_string)
+		return true
+	end
+
+	if (InputPressed("lmb") or InputPressed("return") or InputPressed(options["key_press"])) and awaiting_key_press then
+		awaiting_key_press = false
+		Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", awaiting_key_press)
+		Storage_SetString(module, key, current_string)
+		Storage_SetString(module, key .. ".buffer", "Please enter a text.")
+		options["action"]()
+		return true
+	end
+
+	if last_pressed == "space" then
+		last_pressed = " "
+	end
+
+	if  last_pressed == "backspace" or last_pressed == "delete" then
+		current_string = current_string:sub(1, -2)
+		last_pressed = ""
+	end
+
+	local ignore_inputs = {
+		",",
+		"tab",
+		"rmb",
+		"mmb",
+		"uparrow",
+		"downarrow",
+		"leftarrow",
+		"rightarrow",
+		"f1",
+		"backspace",
+		"alt",
+		"delete",
+		"home",
+		"end",
+		"pgup",
+		"pgdown",
+		"insert",
+		"shift",
+		"ctrl"
+	}
+
+	if Generic_TableContains(ignore_inputs, last_pressed) then
+		last_pressed = ""
+	end
+
+	if awaiting_key_press then
+		last_pressed = last_pressed:lower()
+		Storage_SetString(module, key .. ".buffer", current_string .. last_pressed)
+		current_string = current_string .. last_pressed
+	end
+
+    UiPush()
+		UiTranslate(x, y)
+        UiFont("bold.ttf", 11)
+        UiText("Click to type, press enter to store. (" .. notes .. ")")
+        UiTranslate(0, 22)
+        UiFont("regular.ttf", 22)
+        UiText(name)
+        UiTranslate(400, 0)
+		if not awaiting_key_press then
+			UiFont("regular.ttf", 22)
+		else
+			UiFont("bold.ttf", 22)
+		end
+		if current_string == "" then
+			current_string = "Please enter a text."
+		end
+        if UiTextButton(current_string) then
+			if not awaiting_key_press then
+				Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
+			end
+			Storage_SetString(module, key .. ".buffer", "")
+        end
+    UiPop()
+    return false
+end
+
+
 function UI_Button(x, y, text)
 	-- Create a button
 	UiPush()
@@ -181,4 +284,41 @@ function UI_Button(x, y, text)
 		end
 	UiPop()
 	return false
+end
+
+function Ui_MultiSelector(x, y, name, notes, list, module, key)
+    local update = false
+
+	if list["module"] ~= nil and list["key"] ~= nil then
+		local csv = Storage_GetString(list["module"], list["key"])
+		list = Generic_SplitString(csv, ',')
+	end
+    local current = Storage_GetString(module, key)
+    if current == "" then
+        current = list[1]
+    end
+    UiPush()
+		UiTranslate(x, y)
+        UiFont("bold.ttf", 11)
+        UiText(notes)
+        UiTranslate(0, 22)
+        UiFont("regular.ttf", 22)
+        UiText(name)
+        UiTranslate(400, 0)
+		for i = 1, #list do
+			local value = list[i]
+			UiTranslate(0, 24)
+			if value ~= current then
+				UiFont("regular.ttf", 22)
+			else
+				UiFont("bold.ttf", 22)
+			end
+			if UiTextButton(value) then
+				Storage_SetString(module, key, value)
+				update = true
+			end
+			y = y + 24
+		end
+    UiPop()
+    return {update, y}
 end

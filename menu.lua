@@ -10,7 +10,7 @@ local _Menu_List = {}
 local _Menu_MenuActive = 1
 local _Menu_SubMenuActive = 1
 
-function Menu_Init(default)
+function Menu_Init()
     _Menu_UI = false
 end
 
@@ -18,7 +18,7 @@ function Menu_AppendMenu(menu)
     table.insert(_Menu_List, menu)
 end
 
-function Menu_GenerateSubMenuOptions(title, options, x, y)
+function Menu_GenerateSubMenuOptions(title, options, description, x, y)
     UiPush()
 	    UiTranslate(x, y)
         UiFont("regular.ttf", 44)
@@ -30,6 +30,7 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
         -- DebugPrinter("Generate option menu for sub menu " .. title .. " or module " .. module .. " with prefix key " .. key_prefix)
         local count = 1
         local update = false
+        local offset = 0
         for o=1, #options["option_items"] do
             local option = options["option_items"][o]
             local key = option["storage_key"]
@@ -38,13 +39,21 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             end
             -- DebugPrinter("Generate option item: " .. option["option_type"])
             if option["option_type"] == "text" then
-                update = Ui_StringProperty(0 , 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
+                update = Ui_StringProperty(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
             elseif option["option_type"] == "input_key" then
-                update = Ui_KeySelector(0 , 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+                update = Ui_KeySelector(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+            elseif option["option_type"] == "text_input" then
+                update = UI_TextInput(0 , offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
             elseif option["option_type"] == "float" then
-                update = Ui_FloatProperty(0, 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+                update = Ui_FloatProperty(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
             elseif option["option_type"] == "int" then
-                update = Ui_IntProperty(0, 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+                update = Ui_IntProperty(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["min_max"], module, key)
+            elseif option["option_type"] == "toggle_button" then
+                update = UI_ToggleButton(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], module, key)
+            elseif option["option_type"] == "multi_select" then
+                local temp_update = Ui_MultiSelector(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
+                update = temp_update[1]
+                offset = offset + temp_update[2]
             end
             count = o
             if update then
@@ -53,14 +62,29 @@ function Menu_GenerateSubMenuOptions(title, options, x, y)
             end
         end
 
-        local offset_y = count * 44
+        local offset_y = count * 44 + offset
         UiTranslate(0, offset_y)
 
+        local count_butt = 0
         for o=1, #options["buttons"] do
             local button = options["buttons"][o]
             if UI_Button(0, 44 * o, button["text"]) then
                 button["callback"]()
                 DebugPrinter("Called setting to default for sub menu " .. title )
+            end
+            count_butt = count_butt + 1
+        end
+        offset_y = count_butt * 44
+        if description ~= nil then
+            UiTranslate(0, offset_y + 88)
+            UiFont("bold.ttf", 28)
+            UiText("Description")
+            UiTranslate(0, 33)
+            local lines = Generic_SplitString(description, "\n")
+            for i=1, #lines do
+                UiFont("regular.ttf", 16)
+                UiText(lines[i])
+                UiTranslate(0, 20)
             end
         end
     UiPop()
@@ -100,7 +124,11 @@ function Menu_GenerateMenu()
     UiFont("regular.ttf", 44)
     UiTranslate(66, 100)
     UiText("ThiccSmoke & ThiccFire")
-    UiFont("regular.ttf", 22)
+    UiFont("regular.ttf", 33)
+    UiTranslate(0, 33)
+    UiText("Active Preset: " .. tostring(Settings_GetValue("Settings", "ActivePreset")))
+    UiTranslate(66, -33)
+    UiFont("regular.ttf", 33)
     -- Every menu item contains a list of different menus
     -- The menu will be broken in a left section, containing the top level menu buttons
     -- Then the following section will show whatever menu is clicked on in the first section, showing
@@ -124,7 +152,7 @@ function Menu_GenerateMenu()
         Menu_GenerateSubMenu(menu["menu_title"], menu["sub_menus"], 400, -66)
         local submenu = menu["sub_menus"][_Menu_SubMenuActive]
         if menu ~= nil and submenu ~= nil then
-            Menu_GenerateSubMenuOptions(submenu["sub_menu_title"], submenu["options"], 800, -66)
+            Menu_GenerateSubMenuOptions(submenu["sub_menu_title"], submenu["options"], submenu["description"], 800, -66)
         end
     end
 end
@@ -134,7 +162,7 @@ function Menu_GenerateGameMenu()
     -- DebugPrinter("Toggle menu button: " .. GeneralOptions_GetToggleMenuKey())
     if InputPressed(GeneralOptions_GetToggleMenuKey()) then
 		_Menu_UI = not _Menu_UI
-		Debug_ClearDebugPrinter()
+		-- Debug_ClearDebugPrinter()
         DebugPrinter("Toggle menu button clicked")
 	end
 
