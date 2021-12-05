@@ -14,7 +14,7 @@
 --      drag=[float],                                       <= How much the particle affects other particle movements (0 .. 1)
 --      transparancy_variation=[float],                     <= How much variation in transparancy there can be (0 .. 1)
 
-local _SmokeMaterialConfiguration = {
+_SmokeMaterialConfiguration = {
     wood={
         color={r=0.15,g=0.15,b=0.15,a=0.8},
         lifetime=8,

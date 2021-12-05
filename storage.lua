@@ -3,7 +3,7 @@
 -- @author Eldin Zenderink
 -- @brief Group all storage related stuff per module here
 
-local _StorageKey = ""
+_StorageKey = ""
 
 function Storage_Init(modname, version)
     _StorageKey = "savegame.mod." .. modname .. "." .. version

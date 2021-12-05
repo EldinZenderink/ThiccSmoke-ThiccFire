@@ -2,7 +2,7 @@
 -- @date 2021-09-06
 -- @author Eldin Zenderink
 -- @brief Contains configuration for the mod
-local GeneralOptions = {
+GeneralOptions_Properties = {
     toggle_menu_key="U",
     ui_in_game="NO",
     debug="NO",
@@ -14,20 +14,21 @@ function GeneralOptions_Init()
 end
 
 function GeneralOptions_GetToggleMenuKey()
-    return GeneralOptions["toggle_menu_key"]
+    return GeneralOptions_Properties["toggle_menu_key"]
 end
 
 function GeneralOptions_GetDebug()
-    return GeneralOptions["debug"]
+    DebugPrint("Get debug")
+    return GeneralOptions_Properties["debug"]
 end
 
 function GeneralOptions_GetShowUiInGame()
-    return GeneralOptions["ui_in_game"]
+    return GeneralOptions_Properties["ui_in_game"]
 end
 
 function GeneralOptions_UpdateSettingsFromSettings()
-	GeneralOptions["toggle_menu_key"] = Settings_GetValue("GeneralOptions", "toggle_menu_key")
-	GeneralOptions["debug"] = Settings_GetValue("GeneralOptions", "debug")
-	GeneralOptions["ui_in_game"] = Settings_GetValue("GeneralOptions", "ui_in_game")
+	GeneralOptions_Properties["toggle_menu_key"] = Settings_GetValue("GeneralOptions", "toggle_menu_key")
+	GeneralOptions_Properties["debug"] = Settings_GetValue("GeneralOptions", "debug")
+	GeneralOptions_Properties["ui_in_game"] = Settings_GetValue("GeneralOptions", "ui_in_game")
 end
 

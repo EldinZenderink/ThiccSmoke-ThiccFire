@@ -4,7 +4,7 @@
 -- @brief This module should provide a centralized system for maintaining and grouping settings, to allow for easier adjustments, restore funcitonalities etc.
 --        Every module will have their properties  stored and accessed from here. Menus will also be generated from here. Presets will be created in separated modules based on this module. Catagorizing settings will be done through here.
 
-local Settings_UpdateCallbacks = {}
+Settings_UpdateCallbacks = {}
 
 Settings_Template ={
     Settings  = {
@@ -47,6 +47,9 @@ Settings_Template ={
         fire = "YES",
         smoke = "YES",
         spawn_light = "OFF",
+        red_light_divider = 1,
+        green_light_divider = 1.75,
+        blue_light_divider = 4,
         fire_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
@@ -163,7 +166,7 @@ Settings_Template ={
     }
 }
 
-local _LoadedSettings = {}
+_LoadedSettings = {}
 
 function Settings_Init(default)
     local active_preset = Storage_GetString("settings", "active_preset")
@@ -239,6 +242,7 @@ function Settings_SetStorageValuesRecursive(preset, table)
                 Storage_SetString("settings", preset .. "." .. key, value)
             end
             if type(value) == "number" then
+                DebugPrint("trying to set: " .. preset .. "." .. key .. " to " .. tostring(value))
                 Storage_SetFloat("settings", preset .. "." .. key, value)
             end
             if type(value) == "boolean" then
@@ -445,7 +449,7 @@ end
 
 
 -- FireMaterial Module settings
-local Settings_FireMaterial_Options =
+Settings_FireMaterial_Options =
 {
     storage_module="fire_material",
     storage_prefix_key=nil,
@@ -595,7 +599,7 @@ end
 
 
 -- SmokeMaterial Module settings
-local Settings_SmokeMaterial_Options =
+Settings_SmokeMaterial_Options =
 {
     storage_module="smoke_material",
     storage_prefix_key=nil,
@@ -744,7 +748,7 @@ function Settings_SmokeMaterial_GetOptionsMenu()
 end
 
 -- Fire Detector Module Settings
-local Settings_FireDetector_OptionsDetection =
+Settings_FireDetector_OptionsDetection =
 {
 	storage_module="firedetector",
 	storage_prefix_key=nil,
@@ -827,7 +831,7 @@ local Settings_FireDetector_OptionsDetection =
 	}
 }
 
-local Settings_FireDetector_OptionsFireBehavior =
+Settings_FireDetector_OptionsFireBehavior =
 {
 	storage_module="firedetector",
 	storage_prefix_key=nil,
@@ -957,7 +961,7 @@ local Settings_FireDetector_OptionsFireBehavior =
 	}
 }
 
-local Settings_FireDetector_OptionsFireIntensity =
+Settings_FireDetector_OptionsFireIntensity =
 {
 	storage_module="firedetector",
 	storage_prefix_key=nil,
@@ -1000,7 +1004,7 @@ local Settings_FireDetector_OptionsFireIntensity =
 }
 
 
-local Settings_FireDetector_OptionsDebugging =
+Settings_FireDetector_OptionsDebugging =
 {
 	storage_module="firedetector",
 	storage_prefix_key=nil,
@@ -1104,7 +1108,7 @@ function Settings_FireDetector_GetOptionsMenu()
 end
 
 --- General  module
-local Settings_GeneralOptions_Options =
+Settings_GeneralOptions_Options =
 {
 	storage_module="general",
 	storage_prefix_key=nil,
@@ -1183,7 +1187,7 @@ end
 
 --- Particle Spawner module
 
-local Settings_ParticleSpawner_Options =
+Settings_ParticleSpawner_Options =
 {
 	storage_module="particlespawner",
 	storage_prefix_key=nil,
@@ -1218,6 +1222,30 @@ local Settings_ParticleSpawner_Options =
             option_type="text",
             storage_key="spawn_light",
             options={"ON", "OFF"}
+        },
+        {
+            option_parent_text="",
+            option_text="Red Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="red_light_divider",
+            min_max={1, 10, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Green Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="green_light_divider",
+            min_max={1, 10, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Blue Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="blue_light_divider",
+            min_max={1, 10, 0.05}
         },
         {
             option_parent_text="",
@@ -1275,6 +1303,9 @@ function Settings_ParticleSpawner_Update()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
     Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
     Settings_SetValue("ParticleSpawner", "spawn_light", Storage_GetString("particlespawner", "spawn_light"))
+    Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
+    Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
+    Settings_SetValue("ParticleSpawner", "blue_light_divider", Storage_GetFloat("particlespawner", "blue_light_divider"))
     Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps", Storage_GetString("particlespawner", "dynamic_fps"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps_target", Storage_GetFloat("particlespawner", "dynamic_fps_target"))
@@ -1288,6 +1319,9 @@ function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
     Storage_SetString("particlespawner", "spawn_light", Settings_GetValue("ParticleSpawner", "spawn_light"))
+    Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
+    Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))
+    Storage_SetFloat("particlespawner", "blue_light_divider", Settings_GetValue("ParticleSpawner", "blue_light_divider"))
     Storage_SetString("particlespawner", "fire_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "fire_to_smoke_ratio"))
     Storage_SetString("particlespawner", "dynamic_fps", Settings_GetValue("ParticleSpawner", "dynamic_fps"))
     Storage_SetFloat("particlespawner", "dynamic_fps_target", Settings_GetValue("ParticleSpawner", "dynamic_fps_target"))
@@ -1316,7 +1350,7 @@ function Settings_ParticleSpawner_GetOptionsMenu()
 end
 
 --- Particle module
-local Settings_Particle_Options =
+Settings_Particle_Options =
 {
 	storage_module="particle",
 	storage_prefix_key=nil,

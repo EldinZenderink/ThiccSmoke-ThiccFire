@@ -1,7 +1,7 @@
-local storage_key = ""
+storage_key = ""
 
 
-local Restore_Mapping_V4={
+Restore_Mapping_V4={
     Settings  = {
         ActivePreset=false
     },

@@ -4,27 +4,30 @@
 -- @brief This module spawns particles and adjust dynamically based on FPS, it can however be adjusted
 --        if you do desire a slideshow :P.
 
-local ParticleSpawner_Properties = {
+ParticleSpawner_Properties = {
     fire = "YES",
     smoke = "YES",
     toggle_smoke_fire = "1:1",
     dynamic_fps = "ON",
     spawn_light = "ON",
+    red_light_divider = 1,
+    green_light_divider = 1.75,
+    blue_light_divider = 4,
     dynamic_fps_target = 48,
     particle_refresh_max = 60,
     particle_refresh_min = 24,
     aggressivenes = 1,
 }
 
-local ParticleSpawner_ParticlesToSpawn = nil
-local ParticleSpawner_CurFPSTarget = nil
-local ParticleSpawner_CurFPS = nil
-local ParticleSpawner_FindNew = true
-local ParticleSpawner_FireToSmokeSpawner = 0
-local ParticleSpawner_RefreshTimer = 0
-local ParticleSpawner_ParticleRefreshRate = 5.0
-local ParticleSpawner_SpawnLight = false
-local ParticleSpawner_TimeElapsed = 0
+ParticleSpawner_ParticlesToSpawn = nil
+ParticleSpawner_CurFPSTarget = nil
+ParticleSpawner_CurFPS = nil
+ParticleSpawner_FindNew = true
+ParticleSpawner_FireToSmokeSpawner = 0
+ParticleSpawner_RefreshTimer = 0
+ParticleSpawner_ParticleRefreshRate = 5.0
+ParticleSpawner_SpawnLight = false
+ParticleSpawner_TimeElapsed = 0
 
 
 function ParticleSpawner_Init()
@@ -48,6 +51,27 @@ function ParticleSpawner_UpdateSettingsFromSettings()
     ParticleSpawner_Properties["particle_refresh_min"] = Settings_GetValue("ParticleSpawner", "particle_refresh_min")
     ParticleSpawner_Properties["aggressivenes"] = Settings_GetValue("ParticleSpawner", "aggressivenes")
     ParticleSpawner_Properties["spawn_light"] = Settings_GetValue("ParticleSpawner", "spawn_light")
+    ParticleSpawner_Properties["red_light_divider"] = Settings_GetValue("ParticleSpawner", "red_light_divider")
+    ParticleSpawner_Properties["green_light_divider"] = Settings_GetValue("ParticleSpawner", "green_light_divider")
+    ParticleSpawner_Properties["blue_light_divider"] = Settings_GetValue("ParticleSpawner", "blue_light_divider")
+
+    if ParticleSpawner_Properties["red_light_divider"]  == nil or  ParticleSpawner_Properties["red_light_divider"] < 1 then
+        ParticleSpawner_Properties["red_light_divider"] = 1
+        Settings_SetValue("ParticleSpawner", "red_light_divider",  ParticleSpawner_Properties["red_light_divider"])
+        Settings_StoreActivePreset()
+    end
+    if ParticleSpawner_Properties["green_light_divider"]  == nil or  ParticleSpawner_Properties["green_light_divider"] < 1 then
+        ParticleSpawner_Properties["green_light_divider"] = 1.75
+        Settings_SetValue("ParticleSpawner", "green_light_divider", ParticleSpawner_Properties["green_light_divider"])
+        Settings_StoreActivePreset()
+    end
+    if ParticleSpawner_Properties["blue_light_divider"]  == nil or  ParticleSpawner_Properties["blue_light_divider"] < 1 then
+        ParticleSpawner_Properties["blue_light_divider"] = 4
+        Settings_SetValue("ParticleSpawner", "blue_light_divider", ParticleSpawner_Properties["blue_light_divider"] )
+        Settings_StoreActivePreset()
+    end
+
+
     ParticleSpawner_ParticleRefreshRate =  ParticleSpawner_Properties["particle_refresh_max"]
     ParticleSpawner_CurFPSTarget = ParticleSpawner_Properties["dynamic_fps_target"]
     if ParticleSpawner_Properties["spawn_light"] == "ON" then
@@ -105,7 +129,7 @@ function ParticleSpawner_tick(dt)
                     end
                     local material = FireMaterial_GetInfo(fire_info["material"])
                     -- PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), 0.8, 0.1, 0.01, light_intensity)
-                    PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), material["color"]["r"], material["color"]["g"] / 4, material["color"]["b"] / 8, light_intensity)
+                    PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.01)), material["color"]["r"] /  ParticleSpawner_Properties["red_light_divider"], material["color"]["g"] /  ParticleSpawner_Properties["green_light_divider"], material["color"]["b"] /  ParticleSpawner_Properties["blue_light_divider"], light_intensity)
                 end
             end
         end

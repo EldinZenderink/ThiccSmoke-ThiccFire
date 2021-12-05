@@ -4,19 +4,19 @@
 -- @brief Helper module for generating particles
 
 -- Global particle relevant settings
-local Particle_Intensity = ""
-local Particle_Drag = ""
-local Particle_Gravity = ""
-local Particle_Lifetime = ""
-local Particle_FireIntensityScale = 4
-local Particle_SmokeFadeIn = 5
-local Particle_SmokeFadeOut = 5
-local Particle_FireFadeIn = 5
-local Particle_FireFadeOut = 5
-local Particle_FireEmissive = 4
-local Particle_Embers = "LOW"
+Particle_Intensity = ""
+Particle_Drag = ""
+Particle_Gravity = ""
+Particle_Lifetime = ""
+Particle_FireIntensityScale = 4
+Particle_SmokeFadeIn = 5
+Particle_SmokeFadeOut = 5
+Particle_FireFadeIn = 5
+Particle_FireFadeOut = 5
+Particle_FireEmissive = 4
+Particle_Embers = "LOW"
 
-local Particle_Type = {3, 5, 5, 13, 14, 8}
+Particle_Type = {3, 5, 5, 13, 14, 8}
 
 function Particle_Init()
     Settings_RegisterUpdateSettingsCallback(Particle_UpdateSettingsFromSettings)
@@ -171,7 +171,7 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 		end
 
 		local rand = Generic_rndInt(1, 6)
-		local particle_type = Particle_Type[rand]
+		particle_type = Particle_Type[rand]
 		ParticleTile(particle_type)
 		ParticleColor(red, green, blue, 1, 0.4, 0)
 		ParticleStretch(0, 3)
@@ -189,8 +189,8 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 			vel = vel + Generic_rnd(2 , 4)
 			ParticleStretch(10)
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
-			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_FireFadeIn / 100) * Generic_rnd(variation , variation * 3))
-			ParticleRadius(radius, radius, "easein", life * (Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
+			ParticleEmissive(emissive - radius, 0, "smooth")
+			ParticleRadius(radius, radius, "easein")
 		else
 			-- life = radius * life * 2
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)

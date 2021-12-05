@@ -5,10 +5,10 @@
 
 #include "ui.lua"
 
-local _Menu_UI = false
-local _Menu_List = {}
-local _Menu_MenuActive = 1
-local _Menu_SubMenuActive = 1
+_Menu_UI = false
+_Menu_List = {}
+_Menu_MenuActive = 1
+_Menu_SubMenuActive = 1
 
 function Menu_Init()
     _Menu_UI = false

@@ -3,7 +3,7 @@
 -- @author Eldin Zenderink
 -- @brief All the ui helper functions reside here
 
-local _UI_Toggle_Buttons = {}
+_UI_Toggle_Buttons = {}
 
 -- @note original from smokegun mod from teardown!
 function Ui_StringProperty(x, y, name, notes, list, module, key)

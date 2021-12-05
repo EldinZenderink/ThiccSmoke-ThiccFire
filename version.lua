@@ -3,11 +3,10 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-local Version_Current = "v5.1"
-local Version_Previous = "v4"
-local Version_ModName = ""
-local Version_PreviousModName = "ThiccFire"
-
+Version_Current = "v5.1"
+Version_Previous = "v4"
+Version_ModName = ""
+Version_PreviousModName = "ThiccFire"
 
 function Version_GetName()
     return Version_ModName

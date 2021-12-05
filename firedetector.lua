@@ -1,4 +1,4 @@
-local FireDetector_Properties = {
+FireDetector_Properties = {
     max_fire_spread_distance=6,
     fire_reaction_time=2,
     fire_update_time=1,
@@ -27,7 +27,7 @@ local FireDetector_Properties = {
 }
 
 --- Some global properties
-local FireDetector_LocalDB = {
+FireDetector_LocalDB = {
     time_elapsed = 0,
     fire_count=0,
     fire_intensity=0,
@@ -36,7 +36,7 @@ local FireDetector_LocalDB = {
 }
 
 -- Store all shapes that could potentially be detached from shapes on fire (BPOF = shapes potentially on fire)
-local FireDetector_SPOF = {}
+FireDetector_SPOF = {}
 
 ---Initialize the properties of the module
 ---@param default bool -- set to true to set all properties to their default configured values

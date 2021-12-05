@@ -3,7 +3,7 @@
 -- @author Eldin Zenderink
 -- @brief Helper module debug printer
 
-local _DebugPrevious = ""
+_DebugPrevious = ""
 
 function Debug_Init()
 	if  GeneralOptions_GetDebug() == "NO" then
@@ -21,9 +21,9 @@ end
 
 function DebugPrinter(line)
 	local enabled = false
-	if  GeneralOptions_GetDebug() == "YES" then
-		enabled = true
-	end
+	-- if  GeneralOptions_GetDebug() == "YES" then
+	-- 	enabled = true
+	-- end
 	if enabled == nil then
 		enabled = false
 	end
