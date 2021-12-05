@@ -242,7 +242,6 @@ function Settings_SetStorageValuesRecursive(preset, table)
                 Storage_SetString("settings", preset .. "." .. key, value)
             end
             if type(value) == "number" then
-                DebugPrint("trying to set: " .. preset .. "." .. key .. " to " .. tostring(value))
                 Storage_SetFloat("settings", preset .. "." .. key, value)
             end
             if type(value) == "boolean" then
