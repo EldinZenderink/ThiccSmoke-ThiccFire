@@ -12,6 +12,8 @@ _Menu_SubMenuActive = 1
 
 function Menu_Init()
     _Menu_UI = false
+    Storage_SetBool("global", "keyselector.text_input_field_pending", false)
+    Storage_SetBool("global", "keyselector.text_input_pending", false)
 end
 
 function Menu_AppendMenu(menu)
@@ -53,6 +55,9 @@ function Menu_GenerateSubMenuOptions(title, options, description, x, y)
             elseif option["option_type"] == "multi_select" then
                 local temp_update = Ui_MultiSelector(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
                 update = temp_update[1]
+                offset = offset + temp_update[2] + 44
+            elseif option["option_type"] == "text_input_field" then
+                local temp_update = UI_TextFieldInput(0, offset + 44 * (o - 1), option["option_text"], option["option_note"], option["options"], module, key)
                 offset = offset + temp_update[2]
             end
             count = o
@@ -155,16 +160,22 @@ function Menu_GenerateMenu()
             Menu_GenerateSubMenuOptions(submenu["sub_menu_title"], submenu["options"], submenu["description"], 800, -66)
         end
     end
+
+    UiFont("regular.ttf", 33)
+    UiTranslate(0, 800)
+    UiText("Version: " .. Version_GetStored())
 end
 
 function Menu_GenerateGameMenu()
 
     -- DebugPrinter("Toggle menu button: " .. GeneralOptions_GetToggleMenuKey())
-    if InputPressed(GeneralOptions_GetToggleMenuKey()) then
-		_Menu_UI = not _Menu_UI
-		-- Debug_ClearDebugPrinter()
-        DebugPrinter("Toggle menu button clicked")
-	end
+    if Storage_GetBool("global", "keyselector.text_input_field_pending") == false and Storage_GetBool("global", "keyselector.text_input_pending") == false then
+        if InputPressed(GeneralOptions_GetToggleMenuKey()) then
+            _Menu_UI = not _Menu_UI
+            -- Debug_ClearDebugPrinter()
+            DebugPrinter("Toggle menu button clicked")
+        end
+    end
 
     if _Menu_UI then
         -- Make ui clickable.

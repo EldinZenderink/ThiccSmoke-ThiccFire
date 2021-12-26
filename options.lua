@@ -15,11 +15,12 @@
 #include "presets\preset-medium.lua"
 #include "presets\preset-high.lua"
 #include "presets\preset-ultra.lua"
+#include "presets\preset-slipperygypsy.lua"
 
 function init()
     Debug_ClearDebugPrinter()
     -- Determine version and if maybe the previous stored data should be transferred
-    local version_state = Version_Init("ThiccSmoke&ThiccFire")
+    local version_state = Version_Init("ThiccSmokeThiccFire")
     local set_default = false
     local restore = false
     if version_state == "store_default" then
@@ -38,7 +39,7 @@ function init()
     FireMaterial_Init()
     SmokeMaterial_Init()
     Menu_Init()
-    RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
+    -- RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
     Settings_LoadMenu()
     DebugPrinter("version state: " .. version_state)
 end

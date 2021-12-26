@@ -9,12 +9,25 @@ Particle_Drag = ""
 Particle_Gravity = ""
 Particle_Lifetime = ""
 Particle_FireIntensityScale = 4
+Particle_Duplicator = 4
 Particle_SmokeFadeIn = 5
 Particle_SmokeFadeOut = 5
 Particle_FireFadeIn = 5
 Particle_FireFadeOut = 5
 Particle_FireEmissive = 4
 Particle_Embers = "LOW"
+Particle_WindDirection = 300
+Particle_WindStrength = 50
+Particle_WindHeight = 40
+Particle_WindWidth = 4
+Particle_WindDirRandom = 10
+Particle_WindStrenghtRandom = 5
+Particle_WindDistanceFromPoint = 4
+Particle_WindHeightIncrement = 4
+Particle_WindWidthIncrement = 4
+Particle_WindSpawnRate = 4
+Particle_WindVisible = "OFF"
+Particle_WindEnabled = "ON"
 
 Particle_Type = {3, 5, 5, 13, 14, 8}
 
@@ -28,6 +41,7 @@ function Particle_UpdateSettingsFromSettings()
 	Particle_Drag = Settings_GetValue("Particle", "drag_mp")
 	Particle_Gravity = Settings_GetValue("Particle", "gravity_mp")
 	Particle_Lifetime = Settings_GetValue("Particle", "lifetime_mp")
+	Particle_Duplicator = Settings_GetValue("Particle", "duplicator")
 	Particle_FireIntensityScale = Settings_GetValue("Particle", "intensity_scale")
 	Particle_SmokeFadeIn = Settings_GetValue("Particle", "smoke_fadein")
 	Particle_SmokeFadeOut = Settings_GetValue("Particle", "smoke_fadeout")
@@ -35,13 +49,86 @@ function Particle_UpdateSettingsFromSettings()
 	Particle_FireFadeOut = Settings_GetValue("Particle", "fire_fadeout")
 	Particle_FireEmissive = Settings_GetValue("Particle", "fire_emissive")
 	Particle_Embers = Settings_GetValue("Particle", "embers")
+	Particle_WindEnabled= Settings_GetValue("Particle", "windenabled")
+	Particle_WindStrength = Settings_GetValue("Particle", "windstrength")
+	Particle_WindHeight = Settings_GetValue("Particle", "windheight")
+	Particle_WindWidth = Settings_GetValue("Particle", "windwidth")
+	Particle_WindVisible = Settings_GetValue("Particle", "windvisible")
+	Particle_WindDirection = Settings_GetValue("Particle", "winddirection")
+	Particle_WindDirRandom = Settings_GetValue("Particle", "winddirrandom")
+	Particle_WindStrenghtRandom = Settings_GetValue("Particle", "windstrengthrandom")
+	Particle_WindDistanceFromPoint = Settings_GetValue("Particle", "winddistancefrompoint")
+	Particle_WindHeightIncrement = Settings_GetValue("Particle", "windheightincrement")
+	Particle_WindWidthIncrement = Settings_GetValue("Particle", "windwidthincrement")
+	Particle_WindSpawnRate = Settings_GetValue("Particle", "windspawnrate")
 	if Particle_Embers == "LOW" then
-		Particle_Type = {3, 5, 5, 13, 14, 8}
+		Particle_Type = {3, 5, 5, 13, 14, 3, 5, 5, 13, 14, 8}
 	elseif Particle_Embers == "HIGH" then
-		Particle_Type = {3, 5, 8, 13, 14, 8}
+		Particle_Type = {3, 5, 8, 13, 14, 8, 3, 5, 8, 13, 14, 8}
 	else
-		Particle_Type = {3, 5, 5, 13, 14, 5}
+		Particle_Type = {3, 5, 5, 13, 14, 5, 3, 5, 5, 13, 14, 5}
 	end
+end
+
+Particle_WindSpawnRateCounter = 0
+function Particle_SpawnWindWall(location)
+	Particle_WindSpawnRateCounter = Particle_WindSpawnRateCounter + 1
+
+	if Particle_WindSpawnRateCounter > Particle_WindSpawnRate then
+		ParticleReset()
+		ParticleType("smoke")
+		ParticleRadius(10)
+		ParticleGravity(0)		-- Slightly randomized gravity looks better
+		ParticleDrag(0)
+		if Particle_WindVisible == "ON" then
+			ParticleAlpha(1)
+		else
+			ParticleAlpha(0)
+		end
+		ParticleCollide(1)
+		--Emit particles
+
+		local start = Particle_WindWidth * Particle_WindWidthIncrement
+		start =  (start / 2) - start
+		local dirdegstart = Particle_WindDirection - start
+		for x=1, Particle_WindWidth do
+			dirdegstart = dirdegstart + (x * Particle_WindWidthIncrement)
+			local direction = Generic_rndInt(dirdegstart - Particle_WindDirRandom, dirdegstart + Particle_WindDirRandom)
+			local radian = math.rad(direction)
+			local vecdir = {math.cos(radian), 0,  math.sin(radian)}
+
+
+			local temp = Generic_deepCopy(location)
+			temp[2] = 0
+			temp = VecAdd(temp, VecScale(vecdir, Particle_WindDistanceFromPoint))
+			temp[2] = location[2]
+			local direction = VecNormalize(VecSub(location, temp))
+			-- local actualwidth = Particle_WindWidth
+			-- temp[1] = temp[1] * ((actualwidth / 2) - actualwidth)
+			-- temp[3] = temp[3] * ((actualwidth / 2) - actualwidth)
+			-- local increment_start = (((Particle_WindWidthIncrement * Particle_WindWidth) / 2))
+			-- increment_start = increment_start - (Particle_WindWidthIncrement * Particle_WindWidth)
+			-- for x=1, Particle_WindWidthIncrement do
+
+			-- 	local newincrement = increment_start + (Particle_WindWidthIncrement * x)
+			-- 	temp[1] = temp[1] + newincrement
+			-- 	temp[3] = temp[3] + newincrement
+
+
+			local temp2 = Generic_deepCopy(temp)
+			local height = Particle_WindHeight
+			for i=1, height do
+				local strength = Generic_rndInt(Particle_WindStrength - Particle_WindStrenghtRandom, Particle_WindStrength + Particle_WindStrenghtRandom)
+				--Spawn particle into the world
+				SpawnParticle(temp2, VecScale(direction, strength), 2)
+				temp2[2] = temp2[2] + Particle_WindHeightIncrement
+			end
+		end
+		-- end
+		Particle_WindSpawnRateCounter = 0
+	end
+
+
 end
 
 function Particle_EmitParticle(emitter, location, particle, fire_intensity)
@@ -49,6 +136,7 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 		-- DebugPrinter("Not spawning particle: emitter:" .. tostring(emitter) .. ", location: " .. tostring(location) .. ", intensity: " .. tostring(fire_intensity))
 		return nil
 	end
+
 	local average_intensity = fire_intensity
 	local type = particle
 	local radius = emitter["size"]
@@ -157,6 +245,9 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 	--Set up the particle state
 	ParticleReset()
 	ParticleType("smoke")
+	ParticleDrag(drag)
+	ParticleCollide(1, 1, "constant", 0.01)
+	local iterator = Particle_Duplicator
 	if type == "fire" then
 		-- 3 - 5 - 13 -  14
 		-- 8 = fire embers
@@ -170,7 +261,7 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 			life = 0.5
 		end
 
-		local rand = Generic_rndInt(1, 6)
+		local rand = Generic_rndInt(1, #Particle_Type)
 		particle_type = Particle_Type[rand]
 		ParticleTile(particle_type)
 		ParticleColor(red, green, blue, 1, 0.4, 0)
@@ -187,34 +278,32 @@ function Particle_EmitParticle(emitter, location, particle, fire_intensity)
 			life = life * 8
 			gravity = gravity +  Generic_rnd(1, 3)
 			vel = vel + Generic_rnd(2 , 4)
-			ParticleStretch(10)
+			ParticleStretch(1, 10)
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
 			ParticleEmissive(emissive - radius, 0, "smooth")
-			ParticleRadius(radius, radius, "easein")
+			ParticleRadius(radius / 2 , radius / 2, "easein")
 		else
 			-- life = radius * life * 2
 			local emissive = Generic_rnd(Particle_FireEmissive / 2, Particle_FireEmissive)
 			ParticleEmissive(emissive - radius, 0, "smooth", 0, (Particle_FireFadeIn / 100) * Generic_rnd(variation , variation * 3))
 			ParticleRadius(radius, radius, "easein", life * (Particle_FireFadeIn / 100), life * (Particle_FireFadeOut / 100))
 		end
+		iterator = 1
 	else
-		ParticleAlpha(alpha, alpha, "easein", life * (Particle_SmokeFadeIn / 1000), life * (Particle_SmokeFadeOut / 1000))	-- Ramp up fast, ramp down after 50%
-		ParticleRadius(radius, radius, "easein",life * (Particle_SmokeFadeIn / 1000), life * (Particle_SmokeFadeOut / 1000))
+		ParticleAlpha(alpha / 2, alpha, "easein", (Particle_SmokeFadeIn / 100), (Particle_SmokeFadeOut / 100))	-- Ramp up fast, ramp down after 50%
+		ParticleRadius(radius / 2, radius, "easein", (Particle_SmokeFadeIn / 100),  (Particle_SmokeFadeOut / 100))
 		ParticleColor(red, green, blue, 0.4, 0.4, 0.4)
 	end		-- Animating color towards fire color from near white
-	--Randomize lifetime
 
-	ParticleGravity(gravity)		-- Slightly randomized gravity looks better
+	for d=1, iterator do
+		ParticleGravity(Generic_rnd(gravity - (gravity / 2), gravity + (gravity / 2)))		-- Slightly randomized gravity looks better
 
-	ParticleDrag(drag)
-	ParticleCollide(1, 1, "constant", 0.01)
+		ParticleRotation(Generic_rnd(vel * -2, vel * 2), 2, "smooth", 0.5/life)
+		--Emit particles
 
-	ParticleRotation(Generic_rnd(vel * -1, vel), 1, "smooth", 0.5/life)
-	--Emit particles
+		local v = {Generic_rnd(vel * - 2, vel * 2),Generic_rnd(vel * - 2, vel * 2),Generic_rnd(vel * - 2, vel * 2)}
 
-	local v = {Generic_rnd(vel * - 1, vel * 1),Generic_rnd(vel * - 1, vel * 1),Generic_rnd(vel * - 1, vel * 1)}
-
-	--Spawn particle into the world
-	SpawnParticle(location, v, life)
-	-- end
+		--Spawn particle into the world
+		SpawnParticle(location, v, life)
+	end
 end

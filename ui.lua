@@ -168,9 +168,9 @@ function UI_ToggleButton(x, y, text, group, id)
 	else
 		UiFont("regular.ttf", 22)
 	end
-		if UiTextButton(text) then
-			clicked = not clicked
-		end
+	if UiTextButton(text) then
+		clicked = not clicked
+	end
 	UiPop()
 	for k, v in pairs(_UI_Toggle_Buttons[group]) do
 		if k ~= id and clicked then
@@ -204,6 +204,8 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
 		options["action"]()
 		return true
 	end
+
+	Storage_SetBool("global", "keyselector.text_input_pending", awaiting_key_press)
 
 	if last_pressed == "space" then
 		last_pressed = " "
@@ -249,7 +251,7 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
     UiPush()
 		UiTranslate(x, y)
         UiFont("bold.ttf", 11)
-        UiText("Click to type, press enter to store. (" .. notes .. ")")
+        UiText("Click to edit, edit while bold, press return to store. (" .. notes .. ")")
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
@@ -264,6 +266,7 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
 		end
         if UiTextButton(current_string) then
 			if not awaiting_key_press then
+				Storage_SetBool("global", "keyselector.text_input_pending", true)
 				Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
 			end
 			Storage_SetString(module, key .. ".buffer", "")
@@ -321,4 +324,137 @@ function Ui_MultiSelector(x, y, name, notes, list, module, key)
 		end
     UiPop()
     return {update, y}
+end
+
+function UI_TextFieldInput(x, y, name, notes, options, module, key)
+	-- Create a button
+
+    local current_string = Storage_GetString(module, key .. ".buffer")
+	local awaiting_key_press = Storage_GetBool("ui", "keyselector." .. key .. ".awaiting_key_press")
+	local last_pressed = InputLastPressedKey()
+
+	if InputPressed("esc") then
+		awaiting_key_press = false
+		Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", awaiting_key_press)
+		Storage_SetString(module, key, current_string)
+		local offset  = Storage_GetInt("ui", "keyselector." .. key .. ".offset")
+		Storage_SetInt("ui", "keyselector." .. key .. ".offset", 0)
+		Storage_SetString(module, key .. ".buffer", "")
+		return {true, offset}
+	end
+
+	if (InputPressed("lmb") or InputPressed(options["key_press"])) and awaiting_key_press then
+		awaiting_key_press = false
+		Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", awaiting_key_press)
+		Storage_SetString(module, key, current_string)
+		options["action"]()
+		local offset  = Storage_GetInt("ui", "keyselector." .. key .. ".offset")
+		Storage_SetInt("ui", "keyselector." .. key .. ".offset", 0)
+		Storage_SetString(module, key .. ".buffer", "")
+		return {true, offset}
+	end
+
+	if InputReleased("return") then
+		DebugPrint("Enter released")
+		if Storage_GetBool("global", "return_pressed") then
+			Storage_SetBool("global", "return_pressed", false)
+			awaiting_key_press = false
+			Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", awaiting_key_press)
+			Storage_SetString(module, key, current_string)
+			options["action"]()
+			local offset  = Storage_GetInt("ui", "keyselector." .. key .. ".offset")
+			Storage_SetInt("ui", "keyselector." .. key .. ".offset", 0)
+			Storage_SetString(module, key .. ".buffer", "")
+			return {true, offset}
+		end
+		Storage_SetBool("global", "return_pressed", true)
+	end
+
+
+	if InputPressed("return") then
+		last_pressed = "\n"
+	end
+	if InputPressed("return") == false and last_pressed ~= "" then
+		Storage_SetBool("global", "return_pressed", false)
+	end
+
+	Storage_SetBool("global", "keyselector.text_input_field_pending", awaiting_key_press)
+
+	if last_pressed == "space" then
+		last_pressed = " "
+	end
+
+	if  last_pressed == "backspace" or last_pressed == "delete" then
+		current_string = current_string:sub(1, -2)
+	end
+
+	local ignore_inputs = {
+		",",
+		"tab",
+		"rmb",
+		"mmb",
+		"uparrow",
+		"downarrow",
+		"leftarrow",
+		"rightarrow",
+		"f1",
+		"backspace",
+		"alt",
+		"delete",
+		"home",
+		"end",
+		"pgup",
+		"pgdown",
+		"insert",
+		"shift",
+		"ctrl"
+	}
+
+	if Generic_TableContains(ignore_inputs, last_pressed) then
+		last_pressed = ""
+	end
+
+	if awaiting_key_press then
+		last_pressed = last_pressed:lower()
+		Storage_SetString(module, key .. ".buffer", current_string .. last_pressed)
+		current_string = current_string .. last_pressed
+	end
+
+    UiPush()
+		UiTranslate(x, y)
+        UiFont("bold.ttf", 11)
+        UiText("Click textfield to edit, edit when bold, save by pressing return twice. (" .. notes .. ")")
+        UiTranslate(0, 22)
+        UiFont("regular.ttf", 22)
+        UiText(name)
+        UiTranslate(400, 0)
+		if not awaiting_key_press then
+			UiFont("regular.ttf", 16)
+		else
+			UiFont("bold.ttf", 16)
+		end
+		if current_string == "" then
+			if Storage_GetString(module, key) == "" then
+				current_string = "Please enter a text."
+			else
+				current_string = Storage_GetString(module, key)
+			end
+		end
+
+		local lines = Generic_SplitString(current_string, "\n")
+		Storage_SetInt("ui", "keyselector." .. key .. ".offset", 0)
+		for i=1, #lines do
+			if UiTextButton(lines[i]) then
+				if not awaiting_key_press then
+					Storage_SetBool("global", "keyselector.text_input_field_pending", true)
+					Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
+				end
+				Storage_SetString(module, key .. ".buffer", "")
+			end
+			UiTranslate(0, 20)
+			Storage_SetInt("ui", "keyselector." .. key .. ".offset", Storage_GetInt("ui", "keyselector." .. key .. ".offset") + 20)
+		end
+        UiTranslate(0, 33)
+    UiPop()
+    return {false, Storage_GetInt("ui", "keyselector." .. key .. ".offset")}
 end

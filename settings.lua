@@ -7,8 +7,9 @@
 Settings_UpdateCallbacks = {}
 
 Settings_Template ={
-    Settings  = {
-        ActivePreset="medium"
+    Settings = {
+        ActivePreset="medium",
+        description="Default preset (medium preset)."
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -46,10 +47,12 @@ Settings_Template ={
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
+        wind = "NO",
         spawn_light = "OFF",
         red_light_divider = 1,
         green_light_divider = 1.75,
         blue_light_divider = 4,
+        light_flickering_intensity = 4,
         fire_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
@@ -63,12 +66,24 @@ Settings_Template ={
         gravity_mp = "Use Material Property",
         lifetime_mp = "1x",
         intensity_scale = 1,
+        duplicator = 1,
         smoke_fadein = 2,
         smoke_fadeout = 10,
         fire_fadein = 15,
         fire_fadeout = 20,
         fire_emissive = 4,
-        embers = "LOW"
+        embers = "LOW",
+        windvisible = "OFF",
+        windspawnrate = 4,
+        windstrength = 10,
+        winddirection = 360,
+        windheight = 40,
+        windwidth =  4,
+        winddirrandom = 4,
+        windstrengthrandom = 5,
+        winddistancefrompoint = 4,
+        windheightincrement = 4,
+        windwidthincrement = 4,
     },
     FireMaterial = {
         wood={
@@ -173,6 +188,7 @@ function Settings_Init(default)
     if default or active_preset == "" then
         Settings_SetDefault()
     else
+        Settings_CreatePreset(Preset_Settings_SlipperyGypsy)
         Settings_CreatePreset(Preset_Settings_Ultra)
         Settings_CreatePreset(Preset_Settings_High)
         Settings_CreatePreset(Preset_Settings_Medium)
@@ -224,6 +240,7 @@ end
 function Settings_SetDefault()
     Settings_SetStorageValuesRecursive("default", Settings_Template)
     Storage_SetString("settings", "presets", "default")
+    Settings_CreatePreset(Preset_Settings_SlipperyGypsy)
     Settings_CreatePreset(Preset_Settings_Ultra)
     Settings_CreatePreset(Preset_Settings_High)
     Settings_CreatePreset(Preset_Settings_Medium)
@@ -341,11 +358,14 @@ function Settings_CreatePreset(settings)
         preset = settings["Settings"]["ActivePreset"]
         if Settings_PresetExists(preset) then
             Settings_DeletePreset(preset)
+            DebugPrinter("Delete preset: "  .. preset)
         end
     end
     if Settings_PresetExists(preset) then
+        DebugPrinter("Preset still exists, not adding: "  .. preset)
         return false
     else
+        DebugPrinter("Adding preset: "  .. preset)
         Settings_AddPreset(preset)
         if settings == nil then
             Settings_SetStorageValuesRecursive(preset, _LoadedSettings)
@@ -357,11 +377,16 @@ function Settings_CreatePreset(settings)
     end
 end
 
+function Settings_CreateDescription()
+    Settings_SetValue("Settings", "description", Storage_GetString("settings", "description"))
+    Settings_StoreActivePreset()
+end
+
 function Settings_LoadActivePreset()
     _LoadedSettings = Generic_deepCopy(Settings_Template)
     local preset = Storage_GetString("settings", "active_preset")
     Settings_GetStorageValuesRecursive(preset, _LoadedSettings)
-    Settings_StoreAll()
+    Storage_SetString("settings", "description", Settings_GetValue("Settings", "description"))
     Settings_CallUpdate()
 end
 
@@ -421,6 +446,17 @@ local Preset_Options =
         },
 		{
 			option_parent_text="",
+			option_text="Preset Description",
+			option_note="Update Description.",
+            option_type="text_input_field",
+			storage_key="description",
+            options={
+                key_press=nil,
+                action=function() Settings_CreateDescription() end
+            }
+		},
+		{
+			option_parent_text="",
 			option_text="New Preset Name",
 			option_note="Enter a new preset name here, settings will be copied from the active preset.",
             option_type="text_input",
@@ -429,7 +465,7 @@ local Preset_Options =
                 key_press="enter",
                 action=function() Settings_CreatePreset() end
             }
-		}
+		},
 	}
 }
 
@@ -791,7 +827,7 @@ Settings_FireDetector_OptionsDetection =
             storage_key="max_group_fire_distance",
             min_max={
                 0.5, -- min
-                5,   -- max
+                10,   -- max
                 0.1, -- steps
                 {
                     {
@@ -809,7 +845,7 @@ Settings_FireDetector_OptionsDetection =
             storage_key="min_fire_distance",
             min_max={
                 0.1,
-                5,
+                10,
                 0.1,
                 {
                     {
@@ -825,7 +861,7 @@ Settings_FireDetector_OptionsDetection =
             option_note="Update fire detection/locations.",
             option_type="float",
             storage_key="fire_update_time",
-            min_max={0.1, 10, 0.1}
+            min_max={0.05, 10, 0.05}
         },
 	}
 }
@@ -1186,7 +1222,7 @@ end
 
 --- Particle Spawner module
 
-Settings_ParticleSpawner_Options =
+Settings_ParticleSpawner_FrameRate_Options =
 {
 	storage_module="particlespawner",
 	storage_prefix_key=nil,
@@ -1198,62 +1234,6 @@ Settings_ParticleSpawner_Options =
     },
 	update=function() Settings_ParticleSpawner_Update() end,
 	option_items={
-        {
-            option_parent_text="",
-            option_text="Spawn Smoke Particles",
-            option_note="Enable this to spawn smoke particles",
-            option_type="text",
-            storage_key="smoke",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
-            option_text="Spawn Fire Particles",
-            option_note="Enable this to spawn fire particles",
-            option_type="text",
-            storage_key="fire",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
-            option_text="Spawn Light",
-            option_note="Also spawn lights to simulate fire emitting more intense light.",
-            option_type="text",
-            storage_key="spawn_light",
-            options={"ON", "OFF"}
-        },
-        {
-            option_parent_text="",
-            option_text="Red Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="red_light_divider",
-            min_max={1, 10, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Green Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="green_light_divider",
-            min_max={1, 10, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Blue Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="blue_light_divider",
-            min_max={1, 10, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Fire to Smoke ratio",
-            option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 smoke every 8 fire particles)",
-            option_type="text",
-            storage_key="toggle_smoke_fire",
-            options={"1:1", "1:2", "1:4", "1:8"}
-        },
         {
             option_parent_text="",
             option_text="Dynamic FPS Adjust",
@@ -1297,14 +1277,119 @@ Settings_ParticleSpawner_Options =
 	}
 }
 
+Settings_ParticleSpawner_Particle_Options =
+{
+	storage_module="particlespawner",
+	storage_prefix_key=nil,
+    buttons={
+		{
+			text = "Set Default",
+			callback=function() Settings_ParticleSpawner_Default() end,
+		},
+    },
+	update=function() Settings_ParticleSpawner_Update() end,
+	option_items={
+        {
+            option_parent_text="",
+            option_text="Spawn Smoke Particles",
+            option_note="Enable this to spawn smoke particles",
+            option_type="text",
+            storage_key="smoke",
+            options={"YES", "NO"}
+        },
+        {
+            option_parent_text="",
+            option_text="Spawn Fire Particles",
+            option_note="Enable this to spawn fire particles",
+            option_type="text",
+            storage_key="fire",
+            options={"YES", "NO"}
+        },
+        {
+            option_parent_text="",
+            option_text="Spawn Wind Particles [EXPERIMENTAL]",
+            option_note="Enable this to spawn wind particles, wind particles are experimental and performance costly and sometimes buggy!",
+            option_type="text",
+            storage_key="wind",
+            options={"YES", "NO"}
+        },
+        {
+            option_parent_text="",
+            option_text="Fire to Smoke ratio",
+            option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 smoke every 8 fire particles)",
+            option_type="text",
+            storage_key="toggle_smoke_fire",
+            options={"1:1", "1:2", "1:4", "1:8"}
+        }
+	}
+}
+
+Settings_ParticleSpawner_Light_Options =
+{
+	storage_module="particlespawner",
+	storage_prefix_key=nil,
+    buttons={
+		{
+			text = "Set Default",
+			callback=function() Settings_ParticleSpawner_Default() end,
+		},
+    },
+	update=function() Settings_ParticleSpawner_Update() end,
+	option_items={
+
+        {
+            option_parent_text="",
+            option_text="Enable Light Effect",
+            option_note="Also spawn lights to simulate fire emitting more intense light.",
+            option_type="text",
+            storage_key="spawn_light",
+            options={"ON", "OFF"}
+        },
+        {
+            option_parent_text="",
+            option_text="Red Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="red_light_divider",
+            min_max={1, 10, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Green Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="green_light_divider",
+            min_max={1, 10, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Blue Light Divider",
+            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="blue_light_divider",
+            min_max={1, 10, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Light Flickering Intensity",
+            option_note="Note: changes how much the light flickers, which is based on the fire intensity.",
+            option_type="float",
+            storage_key="light_flickering_intensity",
+            min_max={1, 10, 1}
+        }
+	}
+}
+
 
 function Settings_ParticleSpawner_Update()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
     Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
+    Settings_SetValue("ParticleSpawner", "wind", Storage_GetString("particlespawner", "wind"))
     Settings_SetValue("ParticleSpawner", "spawn_light", Storage_GetString("particlespawner", "spawn_light"))
     Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
     Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
     Settings_SetValue("ParticleSpawner", "blue_light_divider", Storage_GetFloat("particlespawner", "blue_light_divider"))
+    Settings_SetValue("ParticleSpawner", "light_flickering_intensity", Storage_GetFloat("particlespawner", "light_flickering_intensity"))
     Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps", Storage_GetString("particlespawner", "dynamic_fps"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps_target", Storage_GetFloat("particlespawner", "dynamic_fps_target"))
@@ -1317,10 +1402,12 @@ end
 function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
+    Storage_SetString("particlespawner", "wind", Settings_GetValue("ParticleSpawner", "wind"))
     Storage_SetString("particlespawner", "spawn_light", Settings_GetValue("ParticleSpawner", "spawn_light"))
     Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
     Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))
     Storage_SetFloat("particlespawner", "blue_light_divider", Settings_GetValue("ParticleSpawner", "blue_light_divider"))
+    Storage_SetFloat("particlespawner", "light_flickering_intensity", Settings_GetValue("ParticleSpawner", "light_flickering_intensity"))
     Storage_SetString("particlespawner", "fire_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "fire_to_smoke_ratio"))
     Storage_SetString("particlespawner", "dynamic_fps", Settings_GetValue("ParticleSpawner", "dynamic_fps"))
     Storage_SetFloat("particlespawner", "dynamic_fps_target", Settings_GetValue("ParticleSpawner", "dynamic_fps_target"))
@@ -1340,16 +1427,26 @@ function Settings_ParticleSpawner_GetOptionsMenu()
 		menu_title = "Particle Spawner Settings",
 		sub_menus={
 			{
-				sub_menu_title="Particle Spawner Options",
-				options=Settings_ParticleSpawner_Options,
-                description="This menu allows for changing how often particles are spawned and in what ratio, which particles are spawned and if lights should be spawned. \n The mod integrates a dynamic system that lowers the amount of particles based on FPS but can severly affect the visual appearance!"
+				sub_menu_title="Frame Rate Control",
+				options=Settings_ParticleSpawner_FrameRate_Options,
+                description="This menu allows for controlling frame rate dependent particle spawning, to hopefully keep frame rate playable (but can have huge impact on visuals)."
+			},
+			{
+				sub_menu_title="Particle Settings",
+				options=Settings_ParticleSpawner_Particle_Options,
+                description="This menu allows for particle related settings to be changed, e.g. which particles can be spawned and in what ratio!\nNote: go to Particle Settings main menu for more detailed particle settings."
+			},
+			{
+				sub_menu_title="Light Settings",
+				options=Settings_ParticleSpawner_Light_Options,
+                description="This menu allows for adjusting light behavior. (Lights are extremely performance intensive!). \nThe particle spawner also takes care of light hence why it is here."
 			}
 		}
 	}
 end
 
 --- Particle module
-Settings_Particle_Options =
+Settings_General_Particle_Options =
 {
 	storage_module="particle",
 	storage_prefix_key=nil,
@@ -1417,18 +1514,38 @@ Settings_Particle_Options =
 				"16x"
 			}
 		},
+        {
+            option_parent_text="",
+            option_text="Intensity modifier",
+            option_note="Configure how the fire intensity_mp (see fire detection settings) affects particles (size and gravity_mp).",
+            option_type="float",
+            storage_key="intensity_scale",
+            min_max={1, 10.0, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Particle Duplicator",
+            option_note="To make your PC cry, instead of spawning 1 particle, spawn multiple per instance.",
+            option_type="float",
+            storage_key="duplicator",
+            min_max={1, 20, 1}
+        }
+	}
+}
+
+Settings_Smoke_Particle_Options =
+{
+	storage_module="particle",
+	storage_prefix_key=nil,
+	buttons={
 		{
-			option_parent_text="",
-			option_text="Embers",
-			option_note="Amount of embers fire can produce.",
-			option_type="text",
-			storage_key="embers",
-			options={
-				"OFF",
-				"LOW",
-				"HIGH",
-			}
-		},
+			text="Set default",
+			callback=function() Settings_Particle_Default() end,
+		}
+	},
+	update=function() Settings_Particle_Update() end,
+	option_items={
+
 		{
 			option_parent_text="",
 			option_text="Smoke Fade In (%)",
@@ -1444,6 +1561,33 @@ Settings_Particle_Options =
 			option_type="float",
 			storage_key="smoke_fadeout",
 			min_max={0, 100, 1}
+		}
+	}
+}
+
+Settings_Fire_Particle_Options =
+{
+	storage_module="particle",
+	storage_prefix_key=nil,
+	buttons={
+		{
+			text="Set default",
+			callback=function() Settings_Particle_Default() end,
+		}
+	},
+	update=function() Settings_Particle_Update() end,
+	option_items={
+		{
+			option_parent_text="",
+			option_text="Embers",
+			option_note="Amount of embers fire can produce.",
+			option_type="text",
+			storage_key="embers",
+			options={
+				"OFF",
+				"LOW",
+				"HIGH",
+			}
 		},
 		{
 			option_parent_text="",
@@ -1469,16 +1613,116 @@ Settings_Particle_Options =
 			storage_key="fire_emissive",
 			min_max={1, 10, 1}
 		},
-        {
-            option_parent_text="",
-            option_text="Intensity modifier",
-            option_note="Configure how the fire intensity_mp (see fire detection settings) affects particles (size and gravity_mp).",
-            option_type="float",
-            storage_key="intensity_scale",
-            min_max={1, 10.0, 0.05}
-        },
 	}
 }
+
+Settings_Wind_Particle_Options =
+{
+	storage_module="particle",
+	storage_prefix_key=nil,
+	buttons={
+		{
+			text="Set default",
+			callback=function() Settings_Particle_Default() end,
+		}
+	},
+	update=function() Settings_Particle_Update() end,
+	option_items={
+		{
+			option_parent_text="",
+			option_text="Wind Spawn Rate",
+			option_note="How often wind should be spawned (higher value is lower).",
+			option_type="float",
+			storage_key="windspawnrate",
+			min_max={1, 60, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Strength",
+			option_note="Strength of the wind.",
+			option_type="float",
+			storage_key="windstrength",
+			min_max={1, 100, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Strength Randomness",
+			option_note="How much the strenght can vary.",
+			option_type="float",
+			storage_key="windstrengthrandom",
+			min_max={0, 50, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Direction",
+			option_note="Wind direction in degrees.",
+			option_type="float",
+			storage_key="winddirection",
+			min_max={0, 360, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Direction Randomness",
+			option_note="How much the direction can vary.",
+			option_type="float",
+			storage_key="winddirrandom",
+			min_max={0, 50, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Height",
+			option_note="How high the wind should blow.",
+			option_type="float",
+			storage_key="windheight",
+			min_max={1, 100, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Height Increment",
+			option_note="The space between each wind particle in height.",
+			option_type="float",
+			storage_key="windheightincrement",
+			min_max={1, 10, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Width",
+			option_note="How wide the wind should blow.",
+			option_type="float",
+			storage_key="windwidth",
+			min_max={1, 100, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Width Increment",
+			option_note="The space between each wind particle in width.",
+			option_type="float",
+			storage_key="windwidthincrement",
+			min_max={1, 10, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Distance From Point",
+			option_note="The space between each wind particle in width.",
+			option_type="float",
+			storage_key="winddistancefrompoint",
+			min_max={1, 50, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Visible",
+			option_note="Make wind particles visible (to help debugging)",
+			option_type="text",
+			storage_key="windvisible",
+			options={
+				"OFF",
+				"ON",
+			}
+		},
+	}
+}
+
+
 
 function Settings_Particle_Update()
     Settings_SetValue("Particle", "intensity_mp", Storage_GetString("particle", "intensity_mp"))
@@ -1486,12 +1730,24 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "gravity_mp", Storage_GetString("particle", "gravity_mp"))
     Settings_SetValue("Particle", "lifetime_mp", Storage_GetString("particle", "lifetime_mp"))
     Settings_SetValue("Particle", "intensity_scale", Storage_GetFloat("particle", "intensity_scale"))
+    Settings_SetValue("Particle", "duplicator", Storage_GetFloat("particle", "duplicator"))
     Settings_SetValue("Particle", "smoke_fadein", Storage_GetFloat("particle", "smoke_fadein"))
     Settings_SetValue("Particle", "smoke_fadeout", Storage_GetFloat("particle", "smoke_fadeout"))
     Settings_SetValue("Particle", "fire_fadein", Storage_GetFloat("particle", "fire_fadein"))
     Settings_SetValue("Particle", "fire_fadeout", Storage_GetFloat("particle", "fire_fadeout"))
     Settings_SetValue("Particle", "fire_emissive", Storage_GetFloat("particle", "fire_emissive"))
     Settings_SetValue("Particle", "embers", Storage_GetString("particle", "embers"))
+    Settings_SetValue("Particle", "windspawnrate", Storage_GetFloat("particle", "windspawnrate"))
+    Settings_SetValue("Particle", "windvisible", Storage_GetString("particle", "windvisible"))
+    Settings_SetValue("Particle", "windstrength", Storage_GetFloat("particle", "windstrength"))
+    Settings_SetValue("Particle", "winddirection", Storage_GetFloat("particle", "winddirection"))
+    Settings_SetValue("Particle", "windheight", Storage_GetFloat("particle", "windheight"))
+    Settings_SetValue("Particle", "windwidth", Storage_GetFloat("particle", "windwidth"))
+    Settings_SetValue("Particle", "winddirrandom", Storage_GetFloat("particle", "winddirrandom"))
+    Settings_SetValue("Particle", "windstrengthrandom", Storage_GetFloat("particle", "windstrengthrandom"))
+    Settings_SetValue("Particle", "winddistancefrompoint", Storage_GetFloat("particle", "winddistancefrompoint"))
+    Settings_SetValue("Particle", "windheightincrement", Storage_GetFloat("particle", "windheightincrement"))
+    Settings_SetValue("Particle", "windwidthincrement", Storage_GetFloat("particle", "windwidthincrement"))
     Settings_StoreActivePreset()
 end
 
@@ -1501,12 +1757,24 @@ function Settings_Particle_Store()
     Storage_SetString("particle", "gravity_mp", Settings_GetValue("Particle", "gravity_mp"))
     Storage_SetString("particle", "lifetime_mp", Settings_GetValue("Particle", "lifetime_mp"))
     Storage_SetFloat("particle", "intensity_scale", Settings_GetValue("Particle", "intensity_scale"))
+    Storage_SetFloat("particle", "duplicator", Settings_GetValue("Particle", "duplicator"))
     Storage_SetFloat("particle", "smoke_fadein", Settings_GetValue("Particle", "smoke_fadein"))
     Storage_SetFloat("particle", "smoke_fadeout", Settings_GetValue("Particle", "smoke_fadeout"))
     Storage_SetFloat("particle", "fire_fadein", Settings_GetValue("Particle", "fire_fadein"))
     Storage_SetFloat("particle", "fire_fadeout", Settings_GetValue("Particle", "fire_fadeout"))
     Storage_SetFloat("particle", "fire_emissive", Settings_GetValue("Particle", "fire_emissive"))
     Storage_SetString("particle", "embers", Settings_GetValue("Particle", "embers"))
+    Storage_SetFloat("particle", "windspawnrate", Settings_GetValue("Particle", "windspawnrate"))
+    Storage_SetString("particle", "windvisible", Settings_GetValue("Particle", "windvisible"))
+    Storage_SetFloat("particle", "windstrength", Settings_GetValue("Particle", "windstrength"))
+    Storage_SetFloat("particle", "winddirection", Settings_GetValue("Particle", "winddirection"))
+    Storage_SetFloat("particle", "windheight",  Settings_GetValue("Particle", "windheight"))
+    Storage_SetFloat("particle", "windwidth",  Settings_GetValue("Particle", "windwidth"))
+    Storage_SetFloat("particle", "winddirrandom",  Settings_GetValue("Particle", "winddirrandom"))
+    Storage_SetFloat("particle", "windstrengthrandom",  Settings_GetValue("Particle", "windstrengthrandom"))
+    Storage_SetFloat("particle", "winddistancefrompoint",  Settings_GetValue("Particle", "winddistancefrompoint"))
+    Storage_SetFloat("particle", "windheightincrement",  Settings_GetValue("Particle", "windheightincrement"))
+    Storage_SetFloat("particle", "windwidthincrement",  Settings_GetValue("Particle", "windwidthincrement"))
     Settings_StoreActivePreset()
 end
 
@@ -1520,9 +1788,24 @@ function Settings_Particle_GetOptionsMenu()
 		menu_title = "Particle Settings",
 		sub_menus={
 			{
-				sub_menu_title="Particle Options",
-				options=Settings_Particle_Options,
+				sub_menu_title="General",
+				options=Settings_General_Particle_Options,
                 description="These settings are applied to all particles (independent of the material), for some quick adjustments if necessary."
+			},
+			{
+				sub_menu_title="Fire",
+				options=Settings_Fire_Particle_Options,
+                description="These settings are applied to all fire particles (independent of the material), for some quick adjustments if necessary."
+			},
+			{
+				sub_menu_title="Smoke",
+				options=Settings_Smoke_Particle_Options,
+                description="These settings are applied to all smoke particles (independent of the material), for some quick adjustments if necessary."
+			},
+			{
+				sub_menu_title="Wind [EXPERIMENTAL]",
+				options=Settings_Wind_Particle_Options,
+                description="These settings are applied to all wind particles (independent of the material), for some quick adjustments if necessary. \nNote that wind simulation is performance expensive and currently isn't 100% bug free!"
 			}
 		}
 	}

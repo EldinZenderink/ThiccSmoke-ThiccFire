@@ -1,11 +1,11 @@
 -- preset-default.lua
 -- @date 2021-10-30
 -- @author Eldin Zenderink
--- @brief This preset is nice for slide shows, with huge fires, a lot of dynamic lights, stuff breaking.
-Preset_Settings_Ultra = {
+-- @brief Would you like a powerpoint presentation?
+Preset_Settings_SlipperyGypsy = {
     Settings  = {
-        ActivePreset="ultra",
-        description="This preset is nice for slide shows, with huge fires, a lot of dynamic lights, stuff breaking."
+        ActivePreset="SlipperyGypsy (Extreme)",
+        description="Preset made for SlipperyGypsy, ultra preset on steroids "
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -14,14 +14,14 @@ Preset_Settings_Ultra = {
         enabled="YES"
     },
     FireDetector = {
-        max_fire_spread_distance=8,
-        fire_reaction_time=3,
+        max_fire_spread_distance=20,
+        fire_reaction_time=2,
         fire_update_time=0.05,
         min_fire_distance=1,
         max_group_fire_distance=2,
-        max_fire=400,
+        max_fire=1000,
         fire_intensity="ON",
-        fire_intensity_multiplier=2,
+        fire_intensity_multiplier=4,
         fire_intensity_minimum=10,
         visualize_fire_detection="OFF",
         fire_explosion = "NO",
@@ -31,7 +31,7 @@ Preset_Settings_Ultra = {
         fire_damage_medium = 0.5,
         fire_damage_hard = 0.1,
         teardown_max_fires = 10000,
-        teardown_fire_spread = 4,
+        teardown_fire_spread = 6,
         material_allowed = {
             wood = true,
             foliage = true,
@@ -43,17 +43,17 @@ Preset_Settings_Ultra = {
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        wind = "NO",
+        wind = "YES",
         spawn_light = "ON",
         red_light_divider = 1,
         green_light_divider = 1.75,
         blue_light_divider = 4,
-        light_flickering_intensity = 4,
+        light_flickering_intensity = 3,
         fire_to_smoke_ratio = "1:1",
-        dynamic_fps = "ON",
+        dynamic_fps = "OFF",
         dynamic_fps_target = 35,
         particle_refresh_max = 60,
-        particle_refresh_min = 48,
+        particle_refresh_min = 30,
         aggressivenes = 1,
     },
     Particle = {
@@ -62,19 +62,19 @@ Preset_Settings_Ultra = {
         gravity_mp = "Use Material Property",
         lifetime_mp = "1x",
         intensity_scale = 1,
-        duplicator = 2,
+        duplicator = 4,
         smoke_fadein = 1,
         smoke_fadeout = 10,
         fire_fadein = 1,
         fire_fadeout = 10,
         fire_emissive = 4,
         embers = "LOW",
-        windspawnrate = 10,
+        windspawnrate = 8,
         windvisible = "OFF",
         windstrength = 35,
         winddirection = 360,
-        windheight = 5,
-        windwidth =  3,
+        windheight = 10,
+        windwidth =  4,
         winddirrandom = 4,
         windstrengthrandom = 10,
         winddistancefrompoint = 10,

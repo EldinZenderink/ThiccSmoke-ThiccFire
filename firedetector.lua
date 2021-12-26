@@ -38,14 +38,20 @@ FireDetector_LocalDB = {
 -- Store all shapes that could potentially be detached from shapes on fire (BPOF = shapes potentially on fire)
 FireDetector_SPOF = {}
 
+-- Courtesy of: https://www.fesliyanstudios.com/royalty-free-sound-effects-download/glass-shattering-and-breaking-124
+FireDetector_GlassBreakingSnd = {}
+
 ---Initialize the properties of the module
 ---@param default bool -- set to true to set all properties to their default configured values
 function FireDetector_Init()
     FireDetector_LocalDB["time_elapsed"] = 0
     FireDetector_LocalDB["time_input_disabled_elapsed"] = 0
     FireDetector_LocalDB["fire_count"] = 0
-
     Settings_RegisterUpdateSettingsCallback(FireDetector_UpdateSettingsFromSettings)
+
+    for i=1,12 do
+        FireDetector_GlassBreakingSnd[i] = LoadSound("MOD/sound/glass/00 - www.fesliyanstudios.com - " .. i .. ".ogg")
+    end
 
 end
 
@@ -221,14 +227,21 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                 if fire_damage == "YES" then
                     MakeHole(fire["location"], fire_damage_soft * intensity, fire_damage_medium * intensity, fire_damage_hard * intensity, true)
                 end
-                if spawn_fire == "YES" then
-                    for x=0, intensity / 10  do
+                if spawn_fire == "YES" or fire_damage == "YES" then
+                    for x=0, intensity / 5  do
                         local direction = Generic_rndVec(1)
-                        local hit, dist = QueryRaycast(fire["location"], direction, max_fire_spread_distance * intensity + fire_damage_soft * intensity)
+                        local hit, dist,n,s = QueryRaycast(fire["location"], direction, max_fire_spread_distance * intensity + fire_damage_soft * intensity)
                         if hit then
                             local newpoint = VecAdd(fire["location"], VecScale(direction, dist))
-                            SpawnFire(newpoint)
-                            fire["location"] = newpoint
+                            local shape_mat = GetShapeMaterialAtPosition(s, newpoint)
+                            if spawn_fire == "YES" then
+                                SpawnFire(newpoint)
+                                fire["location"] = newpoint
+                            end
+                            if fire_damage == "YES" and shape_mat == "glass" then
+                                MakeHole(newpoint, intensity / Generic_rndInt(50, 75), intensity / Generic_rndInt(50, 75), intensity / Generic_rndInt(50, 75), true)
+                                PlaySound(FireDetector_GlassBreakingSnd[Generic_rndInt(1,12)], newpoint, intensity / 200)
+                            end
                         end
                     end
                 end
@@ -240,7 +253,9 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             time_elapsed = 0
                 -- Search fire locations, onfire = lists with actual fires
             local onfire = {}
-            FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 1)
+
+            -- FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+            FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 0, nil)
 
             -- Parse all fires
             FireDetector_SPOF = {}
@@ -284,6 +299,23 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     return FireDetector_SPOF
 end
 
+
+function FireDetector_GetLightAndWindLocations()
+
+    local added = {}
+    local lightandwind = {}
+
+    for i=1, #FireDetector_SPOF do
+        local fire = FireDetector_SPOF[i]
+        if Generic_TableContainsTable(added, fire["light_location"]) == false then
+            added[#added+1] = fire["light_location"]
+            lightandwind[#lightandwind+1] = fire
+        end
+    end
+
+    return lightandwind
+end
+
 function FireDetector_VecMidPoint(vec1, vec2)
     -- return {vec1[1]+vec2[1]/2, vec1[2]+vec2[2]/2, vec1[3]+vec2[3]/2}
     return VecLerp(vec1, vec2, 0.5)
@@ -306,32 +338,39 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
         return
     end
 
+    if size <= size_fire_count and (intensity == nil or intensity == 0) then
+        intensity = firecount
+        local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size_fire_count)
+        if hit then
+            light_location = {pos, size_fire_count}
+        else
+            light_location = {vecstart, size_fire_count}
+        end
+    end
+
+
 
     if size < min_size and max_fires > #onfire then
         if min_size > 0.1 then
             local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size )
             if hit then
-                onfire[#onfire + 1] = {pos, intensity, vecstart, size, light_location}
+                local ll = nil
+                if light_location == nil  then
+                    ll = nil
+                else
+                    ll = light_location
+                    FireDetector_CreateBox(ll[1], ll[2], nil, {1,0,1}, true)
+                end
+                onfire[#onfire + 1] = {pos, intensity, vecstart, size, ll[1]}
             end
-        else
-            FireDetector_CreateBox(vecstart, size, nil, {intensity * 0.01, 0, 0}, true)
-            onfire[#onfire + 1] = {vecstart, intensity, vecstart, size, light_location}
-            FireDetector_DrawPoint(vecstart, 1,0,0)
+        -- else
+        --     FireDetector_CreateBox(vecstart, size, nil, {intensity * 0.01, 0, 0}, true)
+        --     FireDetector_CreateBox(light_location[1], light_location[2], nil, {1, 0, 1}, true)
+        --     onfire[#onfire + 1] = {vecstart, intensity, vecstart, size, light_location[1]}
+        --     FireDetector_DrawPoint(vecstart, 1,0,0)
         end
         return
     end
-
-    if size >= size_fire_count then
-        intensity = firecount
-    else
-        if light_location == nil then
-            local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size )
-            if hit then
-                light_location = pos
-            end
-        end
-    end
-
     -- Calculate 4 boxes inside bounding b
 
 -- if QueryAabbFireCount(outerpoints[1], outerpoints[7]) > 0 then
