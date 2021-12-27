@@ -88,39 +88,39 @@ function Particle_SpawnWindWall(location)
 		ParticleCollide(1)
 		--Emit particles
 
-		local start = Particle_WindWidth * Particle_WindWidthIncrement
-		start =  (start / 2) - start
-		local dirdegstart = Particle_WindDirection - start
-		for x=1, Particle_WindWidth do
-			dirdegstart = dirdegstart + (x * Particle_WindWidthIncrement)
-			local direction = Generic_rndInt(dirdegstart - Particle_WindDirRandom, dirdegstart + Particle_WindDirRandom)
-			local radian = math.rad(direction)
-			local vecdir = {math.cos(radian), 0,  math.sin(radian)}
+		local direction = Generic_rndInt(Particle_WindDirection - Particle_WindDirRandom, Particle_WindDirection + Particle_WindDirRandom)
+		local radian = math.rad(direction)
+		local vecdir = {math.cos(radian), 0,  math.sin(radian)}
 
+		local radian90 = math.rad(90 + Particle_WindDirection)
+		local vecdir90 = {math.cos(radian90), 0,  math.sin(radian90)}
+		local radian180 = math.rad(270 + Particle_WindDirection)
+		local vecdir180 = {math.cos(radian180), 0,  math.sin(radian180)}
+		local start = Particle_WindWidth / 2 - Particle_WindWidth
+
+		for x=1, Particle_WindWidth do
 
 			local temp = Generic_deepCopy(location)
 			temp[2] = 0
-			temp = VecAdd(temp, VecScale(vecdir, Particle_WindDistanceFromPoint))
+			temp = VecAdd(temp, VecScale(vecdir, Particle_WindDistanceFromPoint * -1))
 			temp[2] = location[2]
-			local direction = VecNormalize(VecSub(location, temp))
-			-- local actualwidth = Particle_WindWidth
-			-- temp[1] = temp[1] * ((actualwidth / 2) - actualwidth)
-			-- temp[3] = temp[3] * ((actualwidth / 2) - actualwidth)
-			-- local increment_start = (((Particle_WindWidthIncrement * Particle_WindWidth) / 2))
-			-- increment_start = increment_start - (Particle_WindWidthIncrement * Particle_WindWidth)
-			-- for x=1, Particle_WindWidthIncrement do
 
-			-- 	local newincrement = increment_start + (Particle_WindWidthIncrement * x)
-			-- 	temp[1] = temp[1] + newincrement
-			-- 	temp[3] = temp[3] + newincrement
+			local temp3 = Generic_deepCopy(temp)
 
+			temp3[2] = 0
+			if x < Particle_WindWidth / 2 then
+				temp3 = VecAdd(temp3, VecScale(vecdir90, (start + x) * -1 * Particle_WindWidthIncrement))
+			else
+				temp3 = VecAdd(temp3, VecScale(vecdir180, (start + x) * Particle_WindWidthIncrement))
+			end
+			temp3[2] = temp3[2]
 
-			local temp2 = Generic_deepCopy(temp)
+			local temp2 = Generic_deepCopy(temp3)
 			local height = Particle_WindHeight
 			for i=1, height do
 				local strength = Generic_rndInt(Particle_WindStrength - Particle_WindStrenghtRandom, Particle_WindStrength + Particle_WindStrenghtRandom)
 				--Spawn particle into the world
-				SpawnParticle(temp2, VecScale(direction, strength), 2)
+				SpawnParticle(temp2, VecScale(vecdir, strength), 6)
 				temp2[2] = temp2[2] + Particle_WindHeightIncrement
 			end
 		end

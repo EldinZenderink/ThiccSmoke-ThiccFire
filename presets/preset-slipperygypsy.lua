@@ -4,7 +4,7 @@
 -- @brief Would you like a powerpoint presentation?
 Preset_Settings_SlipperyGypsy = {
     Settings  = {
-        ActivePreset="SlipperyGypsy (Extreme)",
+        ActivePreset="SlipperyGypsy",
         description="Preset made for SlipperyGypsy, ultra preset on steroids "
     },
     GeneralOptions = {
@@ -21,7 +21,7 @@ Preset_Settings_SlipperyGypsy = {
         max_group_fire_distance=2,
         max_fire=1000,
         fire_intensity="ON",
-        fire_intensity_multiplier=4,
+        fire_intensity_multiplier=2,
         fire_intensity_minimum=10,
         visualize_fire_detection="OFF",
         fire_explosion = "NO",
@@ -71,15 +71,15 @@ Preset_Settings_SlipperyGypsy = {
         embers = "LOW",
         windspawnrate = 8,
         windvisible = "OFF",
-        windstrength = 35,
+        windstrength = 50,
         winddirection = 360,
-        windheight = 10,
-        windwidth =  4,
+        windheight = 50,
+        windwidth =  6,
         winddirrandom = 4,
         windstrengthrandom = 10,
-        winddistancefrompoint = 10,
-        windheightincrement = 10,
-        windwidthincrement = 10,
+        winddistancefrompoint = 15,
+        windheightincrement = 3,
+        windwidthincrement = 3,
     },
     FireMaterial = {
         wood={

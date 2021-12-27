@@ -387,6 +387,7 @@ function Settings_LoadActivePreset()
     local preset = Storage_GetString("settings", "active_preset")
     Settings_GetStorageValuesRecursive(preset, _LoadedSettings)
     Storage_SetString("settings", "description", Settings_GetValue("Settings", "description"))
+    Settings_StoreAll()
     Settings_CallUpdate()
 end
 

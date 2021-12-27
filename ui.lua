@@ -217,6 +217,7 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
 	end
 
 	local ignore_inputs = {
+		" ",
 		",",
 		"tab",
 		"rmb",
@@ -355,7 +356,6 @@ function UI_TextFieldInput(x, y, name, notes, options, module, key)
 	end
 
 	if InputReleased("return") then
-		DebugPrint("Enter released")
 		if Storage_GetBool("global", "return_pressed") then
 			Storage_SetBool("global", "return_pressed", false)
 			awaiting_key_press = false
