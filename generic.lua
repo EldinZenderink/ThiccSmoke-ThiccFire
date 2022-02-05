@@ -120,3 +120,8 @@ function Generic_TableToStr(t1, prefix)
 	end
     return str
 end
+
+
+function Generic_RGBConv(r, g, b)
+	return {255 / r, 255 / g, 255 / b}
+end

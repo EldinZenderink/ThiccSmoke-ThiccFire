@@ -9,7 +9,8 @@ Settings_UpdateCallbacks = {}
 Settings_Template ={
     Settings = {
         ActivePreset="medium",
-        description="Default preset (medium preset)."
+        description="Default preset (medium preset).",
+        version="v5.4"
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -18,14 +19,15 @@ Settings_Template ={
         enabled="YES"
     },
     FireDetector = {
-        max_fire_spread_distance=2,
-        fire_reaction_time=6,
+        map_size = "LARGE",
+        max_fire_spread_distance=6,
+        fire_reaction_time=20,
         fire_update_time=0.5,
-        min_fire_distance=2,
-        max_group_fire_distance=4,
-        max_fire=50,
+        min_fire_distance=4,
+        max_group_fire_distance=6,
+        max_fire=100,
         fire_intensity="ON",
-        fire_intensity_multiplier=1,
+        fire_intensity_multiplier=2,
         fire_intensity_minimum=10,
         visualize_fire_detection="OFF",
         fire_explosion = "NO",
@@ -34,8 +36,8 @@ Settings_Template ={
         fire_damage_soft = 0.1,
         fire_damage_medium = 0.05,
         fire_damage_hard = 0.01,
-        teardown_max_fires = 200,
-        teardown_fire_spread = 1,
+        teardown_max_fires = 500,
+        teardown_fire_spread = 2,
         material_allowed = {
             wood = true,
             foliage = true,
@@ -50,14 +52,15 @@ Settings_Template ={
         wind = "NO",
         spawn_light = "OFF",
         red_light_divider = 1,
-        green_light_divider = 1.75,
+        green_light_divider = 1.25,
         blue_light_divider = 4,
+        light_intensity = 0.5,
         light_flickering_intensity = 4,
         fire_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
-        particle_refresh_max = 48,
-        particle_refresh_min = 12,
+        particle_refresh_max = 30,
+        particle_refresh_min = 15,
         aggressivenes = 1,
     },
     Particle = {
@@ -65,67 +68,69 @@ Settings_Template ={
         drag_mp = "Use Material Property",
         gravity_mp = "Use Material Property",
         lifetime_mp = "1x",
-        intensity_scale = 1,
+        intensity_scale = 1.5,
+        randomness = 0.85,
         duplicator = 1,
-        smoke_fadein = 2,
-        smoke_fadeout = 10,
-        fire_fadein = 15,
-        fire_fadeout = 20,
+        smoke_fadein = 0,
+        smoke_fadeout = 1,
+        fire_fadein = 0,
+        fire_fadeout = 4,
         fire_emissive = 4,
         embers = "LOW",
+        windspawnrate = 10,
         windvisible = "OFF",
-        windspawnrate = 4,
-        windstrength = 10,
+        windstrength = 35,
         winddirection = 360,
-        windheight = 40,
-        windwidth =  4,
+        windheightstart = 5,
+        windheight = 4,
+        windwidth =  2,
         winddirrandom = 4,
-        windstrengthrandom = 5,
-        winddistancefrompoint = 4,
-        windheightincrement = 4,
-        windwidthincrement = 4,
+        windstrengthrandom = 10,
+        winddistancefrompoint = 10,
+        windheightincrement = 10,
+        windwidthincrement = 10,
     },
     FireMaterial = {
         wood={
-            color={r=1.0, g=0.6, b=0.5, a=1},
+            color={r=0.93,g=0.25,b=0.10,a=1},
             lifetime=1,
-            size=0.7,
+            size=0.9,
             gravity=2,
             speed=0.1,
             drag=0.2,
             variation=0.4,
         },
         foliage={
-            color={r=1.0, g=0.6, b=0.5, a=1},
+            color={r=0.86,g=0.23,b=0.09,a=1},
             lifetime=1,
-            size=0.7,
+            size=0.9,
             gravity=2,
             speed=0.1,
             drag=0.2,
             variation=0.4,
         },
         plaster={
-            color={r=1.0, g=0.6, b=0.5, a=1},
+            color={r=0.7,g=0.13,b=0.13,a=1},
             lifetime=1,
-            size=0.7,
+            size=0.9,
             gravity=2,
             speed=0.1,
             drag=0.2,
             variation=0.4,
         },
         plastic={
-            color={r=1.0, g=0.6, b=0.5, a=1},
+            color={r=0.86,g=0.23,b=0.09,a=1},
             lifetime=1,
-            size=0.7,
+            size=0.9,
             gravity=2,
             speed=0.1,
             drag=0.2,
             variation=0.4,
         },
         masonery={
-            color={r=1.0, g=0.6, b=0.5, a=1},
+            color={r=0.38,g=0.11,b=0.03,a=1},
             lifetime=1,
-            size=0.7,
+            size=0.9,
             gravity=2,
             speed=0.1,
             drag=0.2,
@@ -134,48 +139,48 @@ Settings_Template ={
     },
     SmokeMaterial = {
         wood={
-            color={r=0.15,g=0.15,b=0.15,a=0.2},
-            lifetime=4,
-            size=2,
+            color={r=0.16,g=0.16,b=0.16,a=1},
+            lifetime=6,
+            size=1,
             gravity=4,
-            speed=2.5,
-            drag=0.4,
-            variation=1,
+            speed=0.5,
+            drag=0.3,
+            variation=0.2,
         },
         foliage={
-            color={r=0.3,g=0.31,b=0.3,a=0.2},
-            lifetime=4,
-            size=2,
-            gravity=3,
-            speed=1.5,
-            drag=0.7,
-            variation=0.8,
-        },
-        plaster={
-            color={r=0.2,g=0.2,b=0.22,a=0.2},
-            lifetime=4,
-            size=2,
-            gravity=4,
-            speed=1,
-            drag=0.9,
-            variation=0.4,
-        },
-        plastic={
-            color={r=0.1,g=0.1,b=0.12,a=0.2},
-            lifetime=4,
-            size=2,
+            color={r=0.2,g=0.2,b=0.15,a=1},
+            lifetime=6,
+            size=1,
             gravity=3,
             speed=0.5,
+            drag=0.2,
+            variation=0.2,
+        },
+        plaster={
+            color={r=0.27,g=0.27,b=0.27,a=1},
+            lifetime=6,
+            size=1,
+            gravity=4,
+            speed=0.6,
+            drag=0.1,
+            variation=0.1,
+        },
+        plastic={
+            color={r=0.25,g=0.25,b=0.27,a=1},
+            lifetime=6,
+            size=1,
+            gravity=3,
+            speed=0.15,
             drag=1,
             variation=0.1,
         },
         masonery={
-            color={r=0.4,g=0.4,b=0.4,a=0.2},
-            lifetime=4,
-            size=2,
+            color={r=0.16,g=0.16,b=0.16,a=1},
+            lifetime=6,
+            size=1,
             gravity=4,
-            speed=2,
-            drag=0.6,
+            speed=1,
+            drag=0.2,
             variation=0.3,
         },
     }
@@ -498,7 +503,7 @@ Settings_FireMaterial_Options =
             option_note="Configure how red the fire is.",
             option_type="float",
             storage_key="color.r",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -506,7 +511,7 @@ Settings_FireMaterial_Options =
             option_note="Configure how green the fire is.",
             option_type="float",
             storage_key="color.g",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -514,7 +519,7 @@ Settings_FireMaterial_Options =
             option_note="Configure how transparent the fire is.",
             option_type="float",
             storage_key="color.b",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -522,7 +527,7 @@ Settings_FireMaterial_Options =
             option_note="Configure how transparent the fire is.",
             option_type="float",
             storage_key="color.a",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -530,7 +535,7 @@ Settings_FireMaterial_Options =
             option_note="Configure how long a single fire particle exists.",
             option_type="float",
             storage_key="lifetime",
-            min_max={0.5, 30, 0.1}
+            min_max={0.5, 30, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -546,7 +551,7 @@ Settings_FireMaterial_Options =
             option_note="Configure the speed at which the fire particle shoots away.",
             option_type="float",
             storage_key="speed",
-            min_max={0.1, 10, 0.1}
+            min_max={0.01, 10, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -554,7 +559,7 @@ Settings_FireMaterial_Options =
             option_note="Configure drag it has on other fire particles.",
             option_type="float",
             storage_key="drag",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -562,7 +567,7 @@ Settings_FireMaterial_Options =
             option_note="Configure transparancy variation between fire particles",
             option_type="float",
             storage_key="variation",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -570,7 +575,7 @@ Settings_FireMaterial_Options =
             option_note="Size of the fire particle.",
             option_type="float",
             storage_key="size",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
     }
 }
@@ -648,7 +653,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure how red the smoke is.",
             option_type="float",
             storage_key="color.r",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -656,7 +661,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure how green the smoke is.",
             option_type="float",
             storage_key="color.g",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -664,7 +669,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure how transparent the smoke is.",
             option_type="float",
             storage_key="color.b",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Color",
@@ -672,7 +677,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure how transparent the smoke is.",
             option_type="float",
             storage_key="color.a",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -696,7 +701,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure the speed at which the smoke particle shoots away.",
             option_type="float",
             storage_key="speed",
-            min_max={0.1, 10, 0.1}
+            min_max={0.01, 10, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -704,7 +709,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure drag it has on other smoke particles.",
             option_type="float",
             storage_key="drag",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -712,7 +717,7 @@ Settings_SmokeMaterial_Options =
             option_note="Configure transparancy variation between smoke particles",
             option_type="float",
             storage_key="variation",
-            min_max={0.1, 1.0, 0.1}
+            min_max={0.01, 1.0, 0.01}
         },
         {
             option_parent_text="Particle Behavior",
@@ -720,7 +725,7 @@ Settings_SmokeMaterial_Options =
             option_note="Size of the smoke particle.",
             option_type="float",
             storage_key="size",
-            min_max={0.0, 4.0, 0.1}
+            min_max={0.0, 4.0, 0.01}
         },
     }
 }
@@ -796,6 +801,21 @@ Settings_FireDetector_OptionsDetection =
     },
 	update=function() Settings_FireDetector_Update() end,
 	option_items={
+
+        {
+            option_parent_text="",
+            option_text="Map Size",
+            option_note="Select LARGE, if fire is not detected on the edges of the map, SMALL for more accurate detection without performance hit!",
+            option_type="text",
+			storage_key="map_size",
+			options={
+				"LARGE",
+				"MEDIUM",
+                "SMALL",
+                "TINY",
+                "ULTRATINY"
+			}
+        },
         {
             option_parent_text="",
             option_text="Max Fires",
@@ -1067,6 +1087,7 @@ Settings_FireDetector_OptionsDebugging =
 }
 
 function Settings_FireDetector_Update()
+    Settings_SetValue("FireDetector", "map_size", Storage_GetString("firedetector", "map_size"))
     Settings_SetValue("FireDetector", "max_fire_spread_distance", Storage_GetFloat("firedetector", "max_fire_spread_distance"))
     Settings_SetValue("FireDetector", "fire_reaction_time", Storage_GetFloat("firedetector", "fire_reaction_time"))
     Settings_SetValue("FireDetector", "fire_update_time", Storage_GetFloat("firedetector", "fire_update_time"))
@@ -1089,6 +1110,7 @@ function Settings_FireDetector_Update()
 end
 
 function Settings_FireDetector_Store()
+    Storage_SetString("firedetector", "map_size", Settings_GetValue("FireDetector", "map_size"))
     Storage_SetFloat("firedetector", "max_fire_spread_distance", Settings_GetValue("FireDetector", "max_fire_spread_distance"))
     Storage_SetFloat("firedetector", "fire_reaction_time", Settings_GetValue("FireDetector", "fire_reaction_time"))
     Storage_SetFloat("firedetector", "fire_update_time", Settings_GetValue("FireDetector", "fire_update_time"))
@@ -1377,6 +1399,14 @@ Settings_ParticleSpawner_Light_Options =
             option_type="float",
             storage_key="light_flickering_intensity",
             min_max={1, 10, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Light Brightness",
+            option_note="Note: Changes the brightness, 0.1 == 10%, 1 = 100%,  brightness also depends on fire intensity but cannot go > 100%",
+            option_type="float",
+            storage_key="light_intensity",
+            min_max={0.01, 1, 0.01}
         }
 	}
 }
@@ -1390,6 +1420,7 @@ function Settings_ParticleSpawner_Update()
     Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
     Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
     Settings_SetValue("ParticleSpawner", "blue_light_divider", Storage_GetFloat("particlespawner", "blue_light_divider"))
+    Settings_SetValue("ParticleSpawner", "light_intensity", Storage_GetFloat("particlespawner", "light_intensity"))
     Settings_SetValue("ParticleSpawner", "light_flickering_intensity", Storage_GetFloat("particlespawner", "light_flickering_intensity"))
     Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps", Storage_GetString("particlespawner", "dynamic_fps"))
@@ -1408,6 +1439,7 @@ function Settings_ParticleSpawner_Store()
     Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
     Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))
     Storage_SetFloat("particlespawner", "blue_light_divider", Settings_GetValue("ParticleSpawner", "blue_light_divider"))
+    Storage_SetFloat("particlespawner", "light_intensity", Settings_GetValue("ParticleSpawner", "light_intensity"))
     Storage_SetFloat("particlespawner", "light_flickering_intensity", Settings_GetValue("ParticleSpawner", "light_flickering_intensity"))
     Storage_SetString("particlespawner", "fire_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "fire_to_smoke_ratio"))
     Storage_SetString("particlespawner", "dynamic_fps", Settings_GetValue("ParticleSpawner", "dynamic_fps"))
@@ -1522,6 +1554,14 @@ Settings_General_Particle_Options =
             option_type="float",
             storage_key="intensity_scale",
             min_max={1, 10.0, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Particle Randomness",
+            option_note="To make the fire feel more alive/less static, 0.05 = max randomness, 1 = no randomness",
+            option_type="float",
+            storage_key="randomness",
+            min_max={0.05, 1, 0.05}
         },
         {
             option_parent_text="",
@@ -1671,6 +1711,14 @@ Settings_Wind_Particle_Options =
 		},
 		{
 			option_parent_text="",
+			option_text="Wind Height Start",
+			option_note="At what height the wind should blow.",
+			option_type="float",
+			storage_key="windheightstart",
+			min_max={1, 100, 1}
+		},
+		{
+			option_parent_text="",
 			option_text="Wind Height",
 			option_note="How high the wind should blow.",
 			option_type="float",
@@ -1731,6 +1779,7 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "gravity_mp", Storage_GetString("particle", "gravity_mp"))
     Settings_SetValue("Particle", "lifetime_mp", Storage_GetString("particle", "lifetime_mp"))
     Settings_SetValue("Particle", "intensity_scale", Storage_GetFloat("particle", "intensity_scale"))
+    Settings_SetValue("Particle", "randomness", Storage_GetFloat("particle", "randomness"))
     Settings_SetValue("Particle", "duplicator", Storage_GetFloat("particle", "duplicator"))
     Settings_SetValue("Particle", "smoke_fadein", Storage_GetFloat("particle", "smoke_fadein"))
     Settings_SetValue("Particle", "smoke_fadeout", Storage_GetFloat("particle", "smoke_fadeout"))
@@ -1742,6 +1791,7 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "windvisible", Storage_GetString("particle", "windvisible"))
     Settings_SetValue("Particle", "windstrength", Storage_GetFloat("particle", "windstrength"))
     Settings_SetValue("Particle", "winddirection", Storage_GetFloat("particle", "winddirection"))
+    Settings_SetValue("Particle", "windheightstart", Storage_GetFloat("particle", "windheightstart"))
     Settings_SetValue("Particle", "windheight", Storage_GetFloat("particle", "windheight"))
     Settings_SetValue("Particle", "windwidth", Storage_GetFloat("particle", "windwidth"))
     Settings_SetValue("Particle", "winddirrandom", Storage_GetFloat("particle", "winddirrandom"))
@@ -1758,6 +1808,7 @@ function Settings_Particle_Store()
     Storage_SetString("particle", "gravity_mp", Settings_GetValue("Particle", "gravity_mp"))
     Storage_SetString("particle", "lifetime_mp", Settings_GetValue("Particle", "lifetime_mp"))
     Storage_SetFloat("particle", "intensity_scale", Settings_GetValue("Particle", "intensity_scale"))
+    Storage_SetFloat("particle", "randomness", Settings_GetValue("Particle", "randomness"))
     Storage_SetFloat("particle", "duplicator", Settings_GetValue("Particle", "duplicator"))
     Storage_SetFloat("particle", "smoke_fadein", Settings_GetValue("Particle", "smoke_fadein"))
     Storage_SetFloat("particle", "smoke_fadeout", Settings_GetValue("Particle", "smoke_fadeout"))
@@ -1769,6 +1820,7 @@ function Settings_Particle_Store()
     Storage_SetString("particle", "windvisible", Settings_GetValue("Particle", "windvisible"))
     Storage_SetFloat("particle", "windstrength", Settings_GetValue("Particle", "windstrength"))
     Storage_SetFloat("particle", "winddirection", Settings_GetValue("Particle", "winddirection"))
+    Storage_SetFloat("particle", "windheightstart",  Settings_GetValue("Particle", "windheightstart"))
     Storage_SetFloat("particle", "windheight",  Settings_GetValue("Particle", "windheight"))
     Storage_SetFloat("particle", "windwidth",  Settings_GetValue("Particle", "windwidth"))
     Storage_SetFloat("particle", "winddirrandom",  Settings_GetValue("Particle", "winddirrandom"))

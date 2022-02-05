@@ -6,9 +6,6 @@
 _DebugPrevious = ""
 
 function Debug_Init()
-	if  GeneralOptions_GetDebug() == "NO" then
-		Debug_ClearDebugPrinter()
-	end
 end
 
 -- Debug helper functions

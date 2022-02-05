@@ -2,6 +2,7 @@
 -- @date 2021-09-06
 -- @author Eldin Zenderink
 -- @brief All the ui helper functions reside here
+#include "util.lua"
 
 _UI_Toggle_Buttons = {}
 
@@ -19,9 +20,9 @@ function Ui_StringProperty(x, y, name, notes, list, module, key)
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
-        UiTranslate(400, 0)
+        UiTranslate(500, -18)
         UiFont("bold.ttf", 22)
-        if UiTextButton(current) then
+        if UiTextedButton(current, "center middle", 240, 33, {0.5,0.5,0.5,1}, {1,1,1,1}) then
             local new = nil
             for i=1, #list-1 do
                 if list[i] == current then
@@ -51,10 +52,15 @@ function Ui_KeySelector(x, y, name, notes, module, key)
 	local last_pressed_stored = Storage_GetString("ui", "keyselector." .. key .. ".last_pressed")
 	local last_pressed = InputLastPressedKey()
 
+	local  color = {0.5,0.5,0.5,1}
+
 	if awaiting_key_press and last_pressed ~= last_pressed_stored then
 		Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", false)
 		Storage_SetString(module, key, last_pressed)
 		update = true
+	end
+	if  awaiting_key_press then
+		color = {0.2,0.5,0.2,1}
 	end
 
     UiPush()
@@ -64,9 +70,9 @@ function Ui_KeySelector(x, y, name, notes, module, key)
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
-        UiTranslate(400, 0)
+        UiTranslate(500, -18)
         UiFont("bold.ttf", 22)
-        if UiTextButton(current_key) then
+        if UiTextedButton(current_key, "center middle", 240, 33, color, {1,1,1,1}) then
 			if not awaiting_key_press then
 				Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
 			end
@@ -85,20 +91,17 @@ function Ui_FloatProperty(x, y, name, notes, min_max_steps, module, key)
 	local value = (current - min_max_steps[1]) / (min_max_steps[2] - min_max_steps[1]);
 	local width = 300;
 	UiPush()
-	UiTranslate(x, y)
-	UiFont("bold.ttf", 11)
-	UiText(notes)
-	UiTranslate(0, 22)
-	UiFont("regular.ttf", 22)
-	UiText(name)
-	UiTranslate(400, 0)
-	UiTranslate(6, -6)
-	UiRect(width, 4)
-	UiTranslate(-6, -6)
-	value = UiSlider("ui/common/dot.png", "x", value*width, 0, width)/width;
-	value = math.floor((value*(min_max_steps[2] - min_max_steps[1])+min_max_steps[1])/steps+0.5)*steps;
-	UiTranslate(width + 24, 14)
-	UiText(tostring(value))
+		UiTranslate(x, y)
+		UiFont("bold.ttf", 11)
+		UiText(notes)
+		UiTranslate(0, 22)
+		UiFont("regular.ttf", 22)
+		UiText(name)
+		UiTranslate(500, -18)
+		local value_rounded = math.floor((value*(min_max_steps[2] - min_max_steps[1])+min_max_steps[1])/steps+0.5)*steps
+		local sliderval = UiColoredSlider(value_rounded, value * width, 0, width, width, 22, {0.5,0.5,0.5,1}, {0,1,0,0.8})
+		value = sliderval / width
+		value = math.floor((value*(min_max_steps[2] - min_max_steps[1])+min_max_steps[1])/steps+0.5)*steps;
 	UiPop()
 	if current ~= value then
 		if min_max_steps[4] ~= nil then
@@ -123,12 +126,14 @@ end
 
 function Ui_IntProperty(x, y, name, notes, min_max, module, key)
 	local steps = 1
-	local current = Storage_GetInt(module, key)
+	local current = Storage_GetFloat(module, key)
 	if current == nil then
 		current = 0
 	end
 	local value = (current - min_max[1]) / (min_max[2] - min_max[1]);
+	local value_rounded = math.floor((value*(min_max[2] - min_max[1])+min_max[1])/steps+0.5)*steps
 	local width = 300;
+
 	UiPush()
 	UiTranslate(x, y)
 	UiFont("bold.ttf", 11)
@@ -136,18 +141,27 @@ function Ui_IntProperty(x, y, name, notes, min_max, module, key)
 	UiTranslate(0, 22)
 	UiFont("regular.ttf", 22)
 	UiText(name)
-	UiTranslate(400, 0)
-	UiTranslate(6, -6)
-	UiRect(width, 4)
-	UiTranslate(- 6, -6)
-	value = UiSlider("ui/common/dot.png", "x", value*width, 0, width)/width;
+	UiTranslate(500, -18)
+	local sliderval = UiColoredSlider(value_rounded, value * width, 0, width, width, 22, {0.5,0.5,0.5,1}, {0,1,0,0.8})
+	value = sliderval / width
 	value = math.floor((value*(min_max[2] - min_max[1])+min_max[1])/steps+0.5)*steps;
-	UiTranslate(width + 24, 14)
-	UiFont("regular.ttf", 16)
-	UiText(tostring(value))
 	UiPop()
 	if current ~= value then
-		Storage_SetInt(module, key, value);
+		if min_max[4] ~= nil then
+			for i=1, #min_max[4] do
+				local relatedvalue = Storage_GetFloat(module,  min_max[4][i]["related"])
+				if min_max[4][i]["type"] == ">" then
+					if value < relatedvalue then
+						Storage_SetFloat(module,  min_max[4][i]["related"], value - min_max[3])
+					end
+				else
+					if value > relatedvalue then
+						Storage_SetFloat(module,  min_max[4][i]["related"], value + min_max[3])
+					end
+				end
+			end
+		end
+		Storage_SetFloat(module, key, value);
 		return true
 	end
 	return false
@@ -163,12 +177,21 @@ function UI_ToggleButton(x, y, text, group, id)
 	local clicked = _UI_Toggle_Buttons[group][id]
 	UiPush()
 	UiTranslate(x, y)
+	local color = {0.5,0.5,0.5,1}
 	if clicked then
 		UiFont("bold.ttf", 22)
+		color = {0.2,0.8,0.2,1}
 	else
 		UiFont("regular.ttf", 22)
+		color = {0.5,0.5,0.5,1}
 	end
-	if UiTextButton(text) then
+
+
+	if clicked then
+		color = {0.2,0.8,0.2,1}
+	end
+
+	if UiTextedButton(text, "center middle", 240, 33, color, {1,1,1,1}) then
 		clicked = not clicked
 	end
 	UiPop()
@@ -243,10 +266,13 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
 		last_pressed = ""
 	end
 
+
+	local color = {0.5,0.5,0.5,1}
 	if awaiting_key_press then
 		last_pressed = last_pressed:lower()
 		Storage_SetString(module, key .. ".buffer", current_string .. last_pressed)
 		current_string = current_string .. last_pressed
+		color = {0.2,0.8,0.2,1}
 	end
 
     UiPush()
@@ -256,16 +282,19 @@ function UI_TextInput(x, y,  name, notes, options, module, key)
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
-        UiTranslate(400, 0)
+        UiTranslate(500, -18)
 		if not awaiting_key_press then
 			UiFont("regular.ttf", 22)
+			color = {0.5,0.5,0.5,1}
 		else
 			UiFont("bold.ttf", 22)
+			color = {0.2,0.8,0.2,1}
 		end
 		if current_string == "" then
 			current_string = "Please enter a text."
+			color = {0.8,0.8,0.0,1}
 		end
-        if UiTextButton(current_string) then
+        if UiTextedButton(current_string, "center middle", 240, 33, color, {1,1,1,1}) then
 			if not awaiting_key_press then
 				Storage_SetBool("global", "keyselector.text_input_pending", true)
 				Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
@@ -279,10 +308,11 @@ end
 
 function UI_Button(x, y, text)
 	-- Create a button
+	local color = {0.5,0.5,0.5,1}
 	UiPush()
 		UiTranslate(x, y)
 		UiFont("bold.ttf", 22)
-		if UiTextButton(text) then
+		if UiTextedButton(text, "center middle", 240, 33, color, {1,1,1,1}) then
 			UiPop()
 			return true
 		end
@@ -308,20 +338,23 @@ function Ui_MultiSelector(x, y, name, notes, list, module, key)
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
-        UiTranslate(400, 0)
+        UiTranslate(500, -18)
+		local color = {0.5,0.5,0.5,1}
 		for i = 1, #list do
 			local value = list[i]
-			UiTranslate(0, 24)
+			UiTranslate(0, 44)
 			if value ~= current then
 				UiFont("regular.ttf", 22)
+				color = {0.5,0.5,0.5,1}
 			else
 				UiFont("bold.ttf", 22)
+				color = {0.2,0.8,0.2,1}
 			end
-			if UiTextButton(value) then
+			if UiTextedButton(value, "center middle", 240, 33, color, {1,1,1,1}) then
 				Storage_SetString(module, key, value)
 				update = true
 			end
-			y = y + 24
+			y = y + 44
 		end
     UiPop()
     return {update, y}
@@ -427,15 +460,19 @@ function UI_TextFieldInput(x, y, name, notes, options, module, key)
         UiTranslate(0, 22)
         UiFont("regular.ttf", 22)
         UiText(name)
-        UiTranslate(400, 0)
+        UiTranslate(400, -18)
+		local color = {0.5,0.5,0.5,1}
 		if not awaiting_key_press then
 			UiFont("regular.ttf", 16)
+			color = {0.5,0.5,0.5,1}
 		else
 			UiFont("bold.ttf", 16)
+			color = {0.2,0.8,0.2,1}
 		end
 		if current_string == "" then
 			if Storage_GetString(module, key) == "" then
 				current_string = "Please enter a text."
+				color = {0.8,0.8,0.0,1}
 			else
 				current_string = Storage_GetString(module, key)
 			end
@@ -443,13 +480,22 @@ function UI_TextFieldInput(x, y, name, notes, options, module, key)
 
 		local lines = Generic_SplitString(current_string, "\n")
 		Storage_SetInt("ui", "keyselector." .. key .. ".offset", 0)
+		local max_width = 0
+		local width = 0
 		for i=1, #lines do
-			if UiTextButton(lines[i]) then
+			width = #lines[i] * 7
+			if max_width < width then
+				max_width = width
+			elseif max_width == 0 then
+				max_width = width
+			end
+			if UiTextedButton(lines[i], "left center", max_width, 22, color, {1,1,1,1}) then
 				if not awaiting_key_press then
 					Storage_SetBool("global", "keyselector.text_input_field_pending", true)
 					Storage_SetBool("ui", "keyselector." .. key .. ".awaiting_key_press", true)
+					Storage_SetString(module, key .. ".buffer", "")
+					Storage_SetString(module, key, "")
 				end
-				Storage_SetString(module, key .. ".buffer", "")
 			end
 			UiTranslate(0, 20)
 			Storage_SetInt("ui", "keyselector." .. key .. ".offset", Storage_GetInt("ui", "keyselector." .. key .. ".offset") + 20)

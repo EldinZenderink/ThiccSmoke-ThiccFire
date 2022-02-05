@@ -15,6 +15,7 @@ ParticleSpawner_Properties = {
     green_light_divider = 1.75,
     blue_light_divider = 4,
     light_flickering_intensity = 4,
+    light_intensity = 0.5,
     dynamic_fps_target = 48,
     particle_refresh_max = 60,
     particle_refresh_min = 24,
@@ -63,7 +64,15 @@ function ParticleSpawner_UpdateSettingsFromSettings()
     ParticleSpawner_Properties["red_light_divider"] = Settings_GetValue("ParticleSpawner", "red_light_divider")
     ParticleSpawner_Properties["green_light_divider"] = Settings_GetValue("ParticleSpawner", "green_light_divider")
     ParticleSpawner_Properties["blue_light_divider"] = Settings_GetValue("ParticleSpawner", "blue_light_divider")
+    ParticleSpawner_Properties["light_intensity"] = Settings_GetValue("ParticleSpawner", "light_intensity")
     ParticleSpawner_Properties["light_flickering_intensity"] = Settings_GetValue("ParticleSpawner", "light_flickering_intensity")
+
+
+    if ParticleSpawner_Properties["light_intensity"]  == nil or  ParticleSpawner_Properties["light_intensity"] < 0.1 then
+        ParticleSpawner_Properties["light_intensity"] = 0.5
+        Settings_SetValue("ParticleSpawner", "light_intensity",  ParticleSpawner_Properties["light_intensity"])
+        Settings_StoreActivePreset()
+    end
 
     if ParticleSpawner_Properties["red_light_divider"]  == nil or  ParticleSpawner_Properties["red_light_divider"] < 1 then
         ParticleSpawner_Properties["red_light_divider"] = 1
@@ -135,7 +144,7 @@ function ParticleSpawner_tick(dt)
                 end
                 local material = FireMaterial_GetInfo(fire_info["material"])
                 -- PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), 0.8, 0.1, 0.01, light_intensity)
-                PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.01)), material["color"]["r"] /  ParticleSpawner_Properties["red_light_divider"], material["color"]["g"] /  ParticleSpawner_Properties["green_light_divider"], material["color"]["b"] /  ParticleSpawner_Properties["blue_light_divider"], light_intensity)
+                PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.01)), material["color"]["r"] /  ParticleSpawner_Properties["red_light_divider"], material["color"]["g"] /  ParticleSpawner_Properties["green_light_divider"], material["color"]["b"] /  ParticleSpawner_Properties["blue_light_divider"], light_intensity * ParticleSpawner_Properties["light_intensity"] )
             end
             if ParticleSpawner_SpawnWind then
                 Particle_SpawnWindWall(fire_info["light_location"])

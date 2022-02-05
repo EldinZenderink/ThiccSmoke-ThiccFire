@@ -1,4 +1,5 @@
 FireDetector_Properties = {
+    map_size="MEDIUM",
     max_fire_spread_distance=6,
     fire_reaction_time=2,
     fire_update_time=1,
@@ -57,6 +58,7 @@ end
 
 ---Retrieve properties from storage and apply them
 function FireDetector_UpdateSettingsFromSettings()
+    FireDetector_Properties["map_size"] = Settings_GetValue("FireDetector", "map_size")
     FireDetector_Properties["max_fire_spread_distance"] = Settings_GetValue("FireDetector", "max_fire_spread_distance")
     FireDetector_Properties["fire_reaction_time"] = Settings_GetValue("FireDetector", "fire_reaction_time")
     FireDetector_Properties["fire_update_time"] = Settings_GetValue("FireDetector", "fire_update_time")
@@ -77,6 +79,11 @@ function FireDetector_UpdateSettingsFromSettings()
     FireDetector_Properties["teardown_fire_spread"] = Settings_GetValue("FireDetector", "teardown_fire_spread")
     SetInt("game.fire.maxcount",  math.floor(FireDetector_Properties["teardown_max_fires"]))
     SetInt("game.fire.spread",  math.floor(FireDetector_Properties["teardown_fire_spread"]))
+
+    if FireDetector_Properties["map_size"] == nil or FireDetector_Properties["map_size"] == "" then
+        FireDetector_Properties["map_size"] = "MEDIUM"
+        Settings_SetValue("FireDetector", "map_size", "MEDIUM")
+    end
 end
 
 
@@ -254,8 +261,28 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                 -- Search fire locations, onfire = lists with actual fires
             local onfire = {}
 
+            local modifier = 1
+            if FireDetector_Properties["map_size"] == "MEDIUM" then
+                modifier = 2
+            end
+            if FireDetector_Properties["map_size"] == "SMALL" then
+                modifier = 4
+            end
+            if FireDetector_Properties["map_size"] == "TINY" then
+                modifier = 8
+            end
+            if FireDetector_Properties["map_size"] == "ULTRATINY" then
+                modifier = 16
+            end
+
+
+
+
             -- FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
-            FireDetector_RecursiveBinarySearchFire({0,0,0}, 409.6, max_group_fire_distance, min_fire_distance , max_fires, onfire, 0, nil)
+            local p = GetPlayerPos()
+            local n = FireDetector_FindNearestPoint(p, 409.6 / 100)
+            FireDetector_RecursiveBinarySearchFire(n, 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires, onfire, 0, nil)
+            FireDetector_CreateBox(n, 409.6 / modifier, nil, {1, 0, 0}, true)
 
             -- Parse all fires
             FireDetector_SPOF = {}
@@ -267,7 +294,6 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                 elseif intensity < min_fire_intensity then
                     intensity = min_fire_intensity
                 end
-
                 local hit, point, normal, shape_hit = QueryClosestPoint(onfire[i][1], min_fire_distance)
                 if hit then
                     local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
@@ -321,6 +347,16 @@ function FireDetector_VecMidPoint(vec1, vec2)
     return VecLerp(vec1, vec2, 0.5)
 end
 
+function FireDetector_FindNearestPoint(point, size)
+    -- local norm = VecNormalize(point)
+    size = size * 2
+    local x = (math.ceil((point[1] / size)) * size)
+    local z = (math.ceil((point[2] / size)) * size)
+    local y = (math.ceil((point[3] / size)) * size)
+    FireDetector_DrawPoint({x, z, y}, 1,0,1)
+    return {x, z, y}
+end
+
 --- Determine fire locations by recursively searching for fires in bounding boxes. Thanks to @Thomasims on the official Teardown discord for additional help and input.
 ---@param vecstart Location to start searching from
 ---@param size Size of the bounding box
@@ -333,6 +369,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 
     -- Draw bounding box
     local outerpoints = FireDetector_CreateBox(vecstart, size, nil, {1, 0, 0}, false)
+    QueryRequire("large")
     local firecount = QueryAabbFireCount(outerpoints[1], outerpoints[7])
     if firecount == 0 or #onfire >= max_fires then
         return
@@ -340,6 +377,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 
     if size <= size_fire_count and (intensity == nil or intensity == 0) then
         intensity = firecount
+        QueryRequire("large")
         local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size_fire_count)
         if hit then
             light_location = {pos, size_fire_count}
@@ -352,6 +390,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 
     if size < min_size and max_fires > #onfire then
         if min_size > 0.1 then
+            QueryRequire("large")
             local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size )
             if hit then
                 local ll = nil
@@ -363,11 +402,6 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
                 end
                 onfire[#onfire + 1] = {pos, intensity, vecstart, size, ll[1]}
             end
-        -- else
-        --     FireDetector_CreateBox(vecstart, size, nil, {intensity * 0.01, 0, 0}, true)
-        --     FireDetector_CreateBox(light_location[1], light_location[2], nil, {1, 0, 1}, true)
-        --     onfire[#onfire + 1] = {vecstart, intensity, vecstart, size, light_location[1]}
-        --     FireDetector_DrawPoint(vecstart, 1,0,0)
         end
         return
     end
@@ -415,11 +449,12 @@ end
 function FireDetector_ShowStatus()
     if GeneralOptions_GetShowUiInGame() == "YES" then
 
-        DebugWatch("FireDetector, Fire count:", FireDetector_LocalDB["fire_count"])
-        DebugWatch("FireDetector, time elapsed:", tostring(FireDetector_LocalDB["time_elapsed"]))
-        DebugWatch("FireDetector, intensity:", tostring(FireDetector_LocalDB["fire_intensity"]))
-        DebugWatch("FireDetector, randomtimer:", tostring(FireDetector_LocalDB["random_timer"]))
-        DebugWatch("FireDetector, timer:", tostring(FireDetector_LocalDB["timer"]))
+        DebugWatch("FireDetector, Fire count", FireDetector_LocalDB["fire_count"])
+        DebugWatch("FireDetector, time elapsed", tostring(FireDetector_LocalDB["time_elapsed"]))
+        DebugWatch("FireDetector, intensity", tostring(FireDetector_LocalDB["fire_intensity"]))
+        DebugWatch("FireDetector, randomtimer", tostring(FireDetector_LocalDB["random_timer"]))
+        DebugWatch("FireDetector, timer", tostring(FireDetector_LocalDB["timer"]))
+        DebugWatch("FireDetector, map_size", tostring(FireDetector_Properties["map_size"]))
 
     end
 end

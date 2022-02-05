@@ -45,7 +45,7 @@ function init()
    FireMaterial_Init()
    SmokeMaterial_Init()
    Menu_Init()
---    RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
+   RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
    Settings_LoadMenu()
    DebugPrinter("version state: " .. version_state)
 end
