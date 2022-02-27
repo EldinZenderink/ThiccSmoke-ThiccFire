@@ -170,9 +170,9 @@ function Menu_GenerateMenu()
         end
     end
 
-    UiFont("regular.ttf", 33)
+    UiFont("regular.ttf", 16)
     UiTranslate(0, 800)
-    UiText("Version: " .. Version_GetStored())
+    UiText("Version: " .. Version_GetCurrentActual())
 end
 
 function Menu_GenerateGameMenu()

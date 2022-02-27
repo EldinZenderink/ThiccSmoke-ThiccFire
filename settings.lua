@@ -18,6 +18,13 @@ Settings_Template ={
         debug="NO",
         enabled="YES"
     },
+    Wind = {
+        wind = "NO",
+        winddirection = 360,
+        winddirectionrandom = 15,
+        windstrength = 5,
+        windstrengthrandom = 5
+    },
     FireDetector = {
         map_size = "LARGE",
         max_fire_spread_distance=6,
@@ -33,6 +40,11 @@ Settings_Template ={
         fire_explosion = "NO",
         fire_damage = "NO",
         spawn_fire = "YES",
+        soot_sim = "YES",
+        soot_max_size = 5,
+        soot_min_size = 0.1,
+        soot_dithering_max = 1,
+        soot_dithering_min = 0.5,
         fire_damage_soft = 0.1,
         fire_damage_medium = 0.05,
         fire_damage_hard = 0.01,
@@ -49,7 +61,6 @@ Settings_Template ={
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        wind = "NO",
         spawn_light = "OFF",
         red_light_divider = 1,
         green_light_divider = 1.25,
@@ -70,25 +81,14 @@ Settings_Template ={
         lifetime_mp = "1x",
         intensity_scale = 1.5,
         randomness = 0.85,
+        location_randomness = 0.5,
         duplicator = 1,
         smoke_fadein = 0,
         smoke_fadeout = 1,
         fire_fadein = 0,
         fire_fadeout = 4,
         fire_emissive = 4,
-        embers = "LOW",
-        windspawnrate = 10,
-        windvisible = "OFF",
-        windstrength = 35,
-        winddirection = 360,
-        windheightstart = 5,
-        windheight = 4,
-        windwidth =  2,
-        winddirrandom = 4,
-        windstrengthrandom = 10,
-        winddistancefrompoint = 10,
-        windheightincrement = 10,
-        windwidthincrement = 10,
+        embers = "LOW"
     },
     FireMaterial = {
         wood={
@@ -208,6 +208,7 @@ function Settings_LoadMenu()
     Menu_AppendMenu(Settings_GetPresetMenu())
     Menu_AppendMenu(Settings_GeneralOptions_GetOptionsMenu())
     Menu_AppendMenu(Settings_FireDetector_GetOptionsMenu())
+    Menu_AppendMenu(Settings_Wind_GetOptionsMenu())
     Menu_AppendMenu(Settings_ParticleSpawner_GetOptionsMenu())
     Menu_AppendMenu(Settings_Particle_GetOptionsMenu())
     Menu_AppendMenu(Settings_FireMaterial_GetOptionsMenu())
@@ -818,30 +819,6 @@ Settings_FireDetector_OptionsDetection =
         },
         {
             option_parent_text="",
-            option_text="Max Fires",
-            option_note="How many fires may be detected at once.",
-            option_type="float",
-            storage_key="max_fire",
-            min_max={1, 1000, 1}
-        },
-        {
-            option_parent_text="",
-            option_text="Teardown Max Fire",
-            option_note="Set the max fires of non mod related fires from teardown that can spawn.",
-            option_type="float",
-            storage_key="teardown_max_fires",
-            min_max={1, 10000, 1}
-        },
-        {
-            option_parent_text="",
-            option_text="Teardown Fire Spread",
-            option_note="Set the max fire spread of non mod related fire from teardown.",
-            option_type="float",
-            storage_key="teardown_fire_spread",
-            min_max={1, 10, 1}
-        },
-        {
-            option_parent_text="",
             option_text="Max Group Size Fire Count",
             option_note="The max distance between fires that could be connected to the same fire. Must be larger than minimum distance between fires.",
             option_type="float",
@@ -887,7 +864,7 @@ Settings_FireDetector_OptionsDetection =
 	}
 }
 
-Settings_FireDetector_OptionsFireBehavior =
+Settings_FireDetector_OptionsFireSpread=
 {
 	storage_module="firedetector",
 	storage_prefix_key=nil,
@@ -901,6 +878,38 @@ Settings_FireDetector_OptionsFireBehavior =
 	option_items={
         {
             option_parent_text="",
+            option_text="Teardown Max Fire",
+            option_note="Set the max fires of non mod related fires from teardown that can spawn.",
+            option_type="float",
+            storage_key="teardown_max_fires",
+            min_max={1, 10000, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Teardown Fire Spread",
+            option_note="Set the max fire spread of non mod related fire from teardown.",
+            option_type="float",
+            storage_key="teardown_fire_spread",
+            min_max={1, 10, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Fires Detected",
+            option_note="How many fires may be detected at once by this mod, spawns particles on detected fires.",
+            option_type="float",
+            storage_key="max_fire",
+            min_max={1, 1000, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Fire Spread Distance",
+            option_note="How far at max intensity a fire can spread/ interact with shapes.",
+            option_type="float",
+            storage_key="max_fire_spread_distance",
+            min_max={1, 20, 1}
+        },
+        {
+            option_parent_text="",
             option_text="Trigger Fire Reaction Time",
             option_note="Will trigger fire damage and spreading after x seconds (note the smaller the harder it is to extinguish)",
             option_type="float",
@@ -909,40 +918,36 @@ Settings_FireDetector_OptionsFireBehavior =
         },
         {
             option_parent_text="",
-            option_text="Max Fire Spread Distance",
-            option_note="How far at max intensity a fire can spread.",
-            option_type="float",
-            storage_key="max_fire_spread_distance",
-            min_max={1, 20, 1}
-        },
-        {
-            option_parent_text="",
-            option_text="Explosive Fire",
-            option_note="Triggers explosion based on fire intensity, for fun (currently not extinguishable).",
+            option_text="Spawn Fire",
+            option_note="Spawnes additional teardown native fire to the existing fire (currently not extinguishable)",
             option_type="text",
-			storage_key="fire_explosion",
+			storage_key="spawn_fire",
 			options={
 				"YES",
 				"NO"
 			}
         },
+	}
+}
+
+Settings_FireDetector_OptionsFireDamage =
+{
+	storage_module="firedetector",
+	storage_prefix_key=nil,
+    buttons={
+		{
+			text = "Set Default",
+			callback=function() Settings_FireDetector_Default() end,
+		},
+    },
+	update=function() Settings_FireDetector_Update() end,
+	option_items={
         {
             option_parent_text="",
             option_text="Fire Damage",
             option_note="Creates holes based on fire intensity, simulating fire damage (currently not extinguishable).",
             option_type="text",
 			storage_key="fire_damage",
-			options={
-				"YES",
-				"NO"
-			}
-        },
-        {
-            option_parent_text="",
-            option_text="Spawn Fire",
-            option_note="Spawnes additional (not particle) fire to the existing fire (currently not extinguishable)",
-            option_type="text",
-			storage_key="spawn_fire",
 			options={
 				"YES",
 				"NO"
@@ -1014,6 +1019,115 @@ Settings_FireDetector_OptionsFireBehavior =
                 }
             }
         },
+        {
+            option_parent_text="",
+            option_text="Explosive Fire",
+            option_note="Triggers explosion based on fire intensity, for fun (currently not extinguishable).",
+            option_type="text",
+			storage_key="fire_explosion",
+			options={
+				"YES",
+				"NO"
+			}
+        },
+	}
+}
+
+Settings_FireDetector_OptionsFireSoot =
+{
+	storage_module="firedetector",
+	storage_prefix_key=nil,
+    buttons={
+		{
+			text = "Set Default",
+			callback=function() Settings_FireDetector_Default() end,
+		},
+    },
+	update=function() Settings_FireDetector_Update() end,
+	option_items={
+        {
+            option_parent_text="",
+            option_text="Simulate Soot",
+            option_note="Creates soot on walls and ceiling where smoke is, size depending on fire intensity",
+            option_type="text",
+			storage_key="soot_sim",
+			options={
+				"YES",
+				"NO"
+			}
+        },
+        {
+            option_parent_text="",
+            option_text="Soot Max Size",
+            option_note="Max radius of one soot 'spray' (5 = 5m), intensity is randum but affected by intensity, max size when 100% intensity",
+            option_type="float",
+            storage_key="soot_max_size",
+            min_max={
+                0.1,
+                5,
+                0.1,
+                {
+                    {
+                        related="soot_min_size",
+                        type=">"
+                    }
+                }
+            }
+        },
+        {
+            option_parent_text="",
+            option_text="Soot Min Size",
+            option_note="Min radius of one soot 'spray' (5 = 5m), intensity is randum but affected by intensity, min size when 0% intensity",
+            option_type="float",
+            storage_key="soot_min_size",
+            min_max={
+                0.1,
+                5,
+                0.1,
+                {
+                    {
+                        related="soot_max_size",
+                        type="<"
+                    }
+                }
+            }
+        },
+        {
+            option_parent_text="",
+            option_text="Soot Max Dithering",
+            option_note="Dithering is random, but the max can be set, less dithering == less detail.",
+            option_type="float",
+            storage_key="soot_dithering_max",
+            min_max={
+                0.1,
+                1,
+                0.1,
+                {
+                    {
+                        related="soot_dithering_min",
+                        type=">"
+                    }
+                }
+            }
+        },
+        {
+            option_parent_text="",
+            option_text="Soot Min Dithering",
+            option_note="Dithering is random, but the min can be set, less dithering == less detail.",
+            option_type="float",
+            storage_key="soot_dithering_min",
+            min_max={
+                0.1,
+                1,
+                0.1,
+                {
+                    {
+                        related="soot_dithering_max",
+                        type="<"
+                    }
+                }
+            }
+        },
 	}
 }
 
@@ -1031,7 +1145,7 @@ Settings_FireDetector_OptionsFireIntensity =
 	option_items={
 		{
 			option_parent_text="",
-			option_text="Detect Fire Intensity",
+			option_text="Simulate Fire Intensity",
 			option_note="Detects how big a fire potentially to adjust particle size",
             option_type="text",
 			storage_key="fire_intensity",
@@ -1106,6 +1220,11 @@ function Settings_FireDetector_Update()
     Settings_SetValue("FireDetector", "fire_damage_hard", Storage_GetFloat("firedetector", "fire_damage_hard"))
     Settings_SetValue("FireDetector", "teardown_max_fires", Storage_GetFloat("firedetector", "teardown_max_fires"))
     Settings_SetValue("FireDetector", "teardown_fire_spread", Storage_GetFloat("firedetector", "teardown_fire_spread"))
+    Settings_SetValue("FireDetector", "soot_sim", Storage_GetString("firedetector", "soot_sim"))
+    Settings_SetValue("FireDetector", "soot_dithering_max", Storage_GetFloat("firedetector", "soot_dithering_max"))
+    Settings_SetValue("FireDetector", "soot_dithering_min", Storage_GetFloat("firedetector", "soot_dithering_min"))
+    Settings_SetValue("FireDetector", "soot_max_size", Storage_GetFloat("firedetector", "soot_max_size"))
+    Settings_SetValue("FireDetector", "soot_min_size", Storage_GetFloat("firedetector", "soot_min_size"))
     Settings_StoreActivePreset()
 end
 
@@ -1129,6 +1248,11 @@ function Settings_FireDetector_Store()
     Storage_SetFloat("firedetector", "fire_damage_hard", Settings_GetValue("FireDetector", "fire_damage_hard"))
     Storage_SetFloat("firedetector", "teardown_max_fires", Settings_GetValue("FireDetector", "teardown_max_fires"))
     Storage_SetFloat("firedetector", "teardown_fire_spread", Settings_GetValue("FireDetector", "teardown_fire_spread"))
+    Storage_SetString("firedetector", "soot_sim", Settings_GetValue("FireDetector", "soot_sim"))
+    Storage_SetFloat("firedetector", "soot_dithering_max", Settings_GetValue("FireDetector", "soot_dithering_max"))
+    Storage_SetFloat("firedetector", "soot_max_size", Settings_GetValue("FireDetector", "soot_max_size"))
+    Storage_SetFloat("firedetector", "soot_dithering_min", Settings_GetValue("FireDetector", "soot_dithering_min"))
+    Storage_SetFloat("firedetector", "soot_min_size", Settings_GetValue("FireDetector", "soot_min_size"))
     Settings_StoreActivePreset()
 end
 
@@ -1142,19 +1266,29 @@ function Settings_FireDetector_GetOptionsMenu()
         menu_title = "Fire Settings",
         sub_menus={
             {
-                sub_menu_title="Detection",
+                sub_menu_title="Fire Detection",
                 options=Settings_FireDetector_OptionsDetection,
                 description="Change settings regarding fire detection, e.g. minimum distance, or the maximum size arround a fire it may use to detect intensity.\nNote: the size of the box to count fires is used to spawn lights in! Setting this 1:1 to minimum fire distance will make lights spawn for each detected fire!\n. Note: Teardown Max Fire and Fire Spread is part of the base game and has no relation to other fire spread settings in this mod!"
-            },
-            {
-                sub_menu_title="Fire Behavior",
-                options=Settings_FireDetector_OptionsFireBehavior,
-                description="The fire bahavior settings allow for adjusting how fire behaves. \n Behavio includes: damage, fire spreading (not teardowns own fire spreading settings, but other method implemented by this mod.))\n Note: Spawn Fire option actually spawns more 'actual' fires (from the game) which this mod can detect again! \n This setting is related to Max Fire Spread option! \n If SpawnFire is disabled, the Max Fire Spread option is not used."
             },
             {
                 sub_menu_title="Fire Intensity",
                 options=Settings_FireDetector_OptionsFireIntensity,
                 description="Intensity settings that determine how big fire particles/smoke particles are when spawned. \n Intensity also influences the damage if enabled, light intensity if enabled, \n and spreading if enabled (spawn fire), which are configured in the other menus!"
+            },
+            {
+                sub_menu_title="Fire Spread",
+                options=Settings_FireDetector_OptionsFireSpread,
+                description="The fire spread menu contains options that influence the fire spreading behavior."
+            },
+            {
+                sub_menu_title="Fire Damage",
+                options=Settings_FireDetector_OptionsFireDamage,
+                description="This mode allows fires to do extra damage to buildings, beyond the existing fire damage model. \nNote that to much damage can actually put out flames. "
+            },
+            {
+                sub_menu_title="Fire Soot",
+                options=Settings_FireDetector_OptionsFireSoot,
+                description="Fire soot simulation settings, since update 0.9.4 teardown this mod is able to simulate soot trails created by smoke \neven though no fire is really near. \nNote, only available in Teardown 0.9.4 and up, will be disabled otherwise."
             },
             {
                 sub_menu_title="Debugging",
@@ -1330,14 +1464,6 @@ Settings_ParticleSpawner_Particle_Options =
         },
         {
             option_parent_text="",
-            option_text="Spawn Wind Particles [EXPERIMENTAL]",
-            option_note="Enable this to spawn wind particles, wind particles are experimental and performance costly and sometimes buggy!",
-            option_type="text",
-            storage_key="wind",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
             option_text="Fire to Smoke ratio",
             option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 smoke every 8 fire particles)",
             option_type="text",
@@ -1374,7 +1500,7 @@ Settings_ParticleSpawner_Light_Options =
             option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
             option_type="float",
             storage_key="red_light_divider",
-            min_max={1, 10, 0.05}
+            min_max={-1, 1, 0.05}
         },
         {
             option_parent_text="",
@@ -1382,7 +1508,7 @@ Settings_ParticleSpawner_Light_Options =
             option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
             option_type="float",
             storage_key="green_light_divider",
-            min_max={1, 10, 0.05}
+            min_max={-1, 1, 0.05}
         },
         {
             option_parent_text="",
@@ -1390,7 +1516,7 @@ Settings_ParticleSpawner_Light_Options =
             option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
             option_type="float",
             storage_key="blue_light_divider",
-            min_max={1, 10, 0.05}
+            min_max={-1, 1, 0.05}
         },
         {
             option_parent_text="",
@@ -1415,7 +1541,6 @@ Settings_ParticleSpawner_Light_Options =
 function Settings_ParticleSpawner_Update()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
     Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
-    Settings_SetValue("ParticleSpawner", "wind", Storage_GetString("particlespawner", "wind"))
     Settings_SetValue("ParticleSpawner", "spawn_light", Storage_GetString("particlespawner", "spawn_light"))
     Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
     Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
@@ -1434,7 +1559,6 @@ end
 function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
-    Storage_SetString("particlespawner", "wind", Settings_GetValue("ParticleSpawner", "wind"))
     Storage_SetString("particlespawner", "spawn_light", Settings_GetValue("ParticleSpawner", "spawn_light"))
     Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
     Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))
@@ -1565,6 +1689,14 @@ Settings_General_Particle_Options =
         },
         {
             option_parent_text="",
+            option_text="Particle Location Randomness",
+            option_note="Spread around location, makes it less static.",
+            option_type="float",
+            storage_key="location_randomness",
+            min_max={0.1, 10, 0.1}
+        },
+        {
+            option_parent_text="",
             option_text="Particle Duplicator",
             option_note="To make your PC cry, instead of spawning 1 particle, spawn multiple per instance.",
             option_type="float",
@@ -1657,122 +1789,6 @@ Settings_Fire_Particle_Options =
 	}
 }
 
-Settings_Wind_Particle_Options =
-{
-	storage_module="particle",
-	storage_prefix_key=nil,
-	buttons={
-		{
-			text="Set default",
-			callback=function() Settings_Particle_Default() end,
-		}
-	},
-	update=function() Settings_Particle_Update() end,
-	option_items={
-		{
-			option_parent_text="",
-			option_text="Wind Spawn Rate",
-			option_note="How often wind should be spawned (higher value is lower).",
-			option_type="float",
-			storage_key="windspawnrate",
-			min_max={1, 60, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Strength",
-			option_note="Strength of the wind.",
-			option_type="float",
-			storage_key="windstrength",
-			min_max={1, 100, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Strength Randomness",
-			option_note="How much the strenght can vary.",
-			option_type="float",
-			storage_key="windstrengthrandom",
-			min_max={0, 50, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Direction",
-			option_note="Wind direction in degrees.",
-			option_type="float",
-			storage_key="winddirection",
-			min_max={0, 360, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Direction Randomness",
-			option_note="How much the direction can vary.",
-			option_type="float",
-			storage_key="winddirrandom",
-			min_max={0, 50, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Height Start",
-			option_note="At what height the wind should blow.",
-			option_type="float",
-			storage_key="windheightstart",
-			min_max={1, 100, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Height",
-			option_note="How high the wind should blow.",
-			option_type="float",
-			storage_key="windheight",
-			min_max={1, 100, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Height Increment",
-			option_note="The space between each wind particle in height.",
-			option_type="float",
-			storage_key="windheightincrement",
-			min_max={1, 10, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Width",
-			option_note="How wide the wind should blow.",
-			option_type="float",
-			storage_key="windwidth",
-			min_max={1, 100, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Width Increment",
-			option_note="The space between each wind particle in width.",
-			option_type="float",
-			storage_key="windwidthincrement",
-			min_max={1, 10, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Distance From Point",
-			option_note="The space between each wind particle in width.",
-			option_type="float",
-			storage_key="winddistancefrompoint",
-			min_max={1, 50, 1}
-		},
-		{
-			option_parent_text="",
-			option_text="Wind Visible",
-			option_note="Make wind particles visible (to help debugging)",
-			option_type="text",
-			storage_key="windvisible",
-			options={
-				"OFF",
-				"ON",
-			}
-		},
-	}
-}
-
-
-
 function Settings_Particle_Update()
     Settings_SetValue("Particle", "intensity_mp", Storage_GetString("particle", "intensity_mp"))
     Settings_SetValue("Particle", "drag_mp", Storage_GetString("particle", "drag_mp"))
@@ -1780,6 +1796,7 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "lifetime_mp", Storage_GetString("particle", "lifetime_mp"))
     Settings_SetValue("Particle", "intensity_scale", Storage_GetFloat("particle", "intensity_scale"))
     Settings_SetValue("Particle", "randomness", Storage_GetFloat("particle", "randomness"))
+    Settings_SetValue("Particle", "location_randomness", Storage_GetFloat("particle", "location_randomness"))
     Settings_SetValue("Particle", "duplicator", Storage_GetFloat("particle", "duplicator"))
     Settings_SetValue("Particle", "smoke_fadein", Storage_GetFloat("particle", "smoke_fadein"))
     Settings_SetValue("Particle", "smoke_fadeout", Storage_GetFloat("particle", "smoke_fadeout"))
@@ -1787,18 +1804,6 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "fire_fadeout", Storage_GetFloat("particle", "fire_fadeout"))
     Settings_SetValue("Particle", "fire_emissive", Storage_GetFloat("particle", "fire_emissive"))
     Settings_SetValue("Particle", "embers", Storage_GetString("particle", "embers"))
-    Settings_SetValue("Particle", "windspawnrate", Storage_GetFloat("particle", "windspawnrate"))
-    Settings_SetValue("Particle", "windvisible", Storage_GetString("particle", "windvisible"))
-    Settings_SetValue("Particle", "windstrength", Storage_GetFloat("particle", "windstrength"))
-    Settings_SetValue("Particle", "winddirection", Storage_GetFloat("particle", "winddirection"))
-    Settings_SetValue("Particle", "windheightstart", Storage_GetFloat("particle", "windheightstart"))
-    Settings_SetValue("Particle", "windheight", Storage_GetFloat("particle", "windheight"))
-    Settings_SetValue("Particle", "windwidth", Storage_GetFloat("particle", "windwidth"))
-    Settings_SetValue("Particle", "winddirrandom", Storage_GetFloat("particle", "winddirrandom"))
-    Settings_SetValue("Particle", "windstrengthrandom", Storage_GetFloat("particle", "windstrengthrandom"))
-    Settings_SetValue("Particle", "winddistancefrompoint", Storage_GetFloat("particle", "winddistancefrompoint"))
-    Settings_SetValue("Particle", "windheightincrement", Storage_GetFloat("particle", "windheightincrement"))
-    Settings_SetValue("Particle", "windwidthincrement", Storage_GetFloat("particle", "windwidthincrement"))
     Settings_StoreActivePreset()
 end
 
@@ -1809,6 +1814,7 @@ function Settings_Particle_Store()
     Storage_SetString("particle", "lifetime_mp", Settings_GetValue("Particle", "lifetime_mp"))
     Storage_SetFloat("particle", "intensity_scale", Settings_GetValue("Particle", "intensity_scale"))
     Storage_SetFloat("particle", "randomness", Settings_GetValue("Particle", "randomness"))
+    Storage_SetFloat("particle", "location_randomness", Settings_GetValue("Particle", "location_randomness"))
     Storage_SetFloat("particle", "duplicator", Settings_GetValue("Particle", "duplicator"))
     Storage_SetFloat("particle", "smoke_fadein", Settings_GetValue("Particle", "smoke_fadein"))
     Storage_SetFloat("particle", "smoke_fadeout", Settings_GetValue("Particle", "smoke_fadeout"))
@@ -1816,18 +1822,6 @@ function Settings_Particle_Store()
     Storage_SetFloat("particle", "fire_fadeout", Settings_GetValue("Particle", "fire_fadeout"))
     Storage_SetFloat("particle", "fire_emissive", Settings_GetValue("Particle", "fire_emissive"))
     Storage_SetString("particle", "embers", Settings_GetValue("Particle", "embers"))
-    Storage_SetFloat("particle", "windspawnrate", Settings_GetValue("Particle", "windspawnrate"))
-    Storage_SetString("particle", "windvisible", Settings_GetValue("Particle", "windvisible"))
-    Storage_SetFloat("particle", "windstrength", Settings_GetValue("Particle", "windstrength"))
-    Storage_SetFloat("particle", "winddirection", Settings_GetValue("Particle", "winddirection"))
-    Storage_SetFloat("particle", "windheightstart",  Settings_GetValue("Particle", "windheightstart"))
-    Storage_SetFloat("particle", "windheight",  Settings_GetValue("Particle", "windheight"))
-    Storage_SetFloat("particle", "windwidth",  Settings_GetValue("Particle", "windwidth"))
-    Storage_SetFloat("particle", "winddirrandom",  Settings_GetValue("Particle", "winddirrandom"))
-    Storage_SetFloat("particle", "windstrengthrandom",  Settings_GetValue("Particle", "windstrengthrandom"))
-    Storage_SetFloat("particle", "winddistancefrompoint",  Settings_GetValue("Particle", "winddistancefrompoint"))
-    Storage_SetFloat("particle", "windheightincrement",  Settings_GetValue("Particle", "windheightincrement"))
-    Storage_SetFloat("particle", "windwidthincrement",  Settings_GetValue("Particle", "windwidthincrement"))
     Settings_StoreActivePreset()
 end
 
@@ -1854,12 +1848,100 @@ function Settings_Particle_GetOptionsMenu()
 				sub_menu_title="Smoke",
 				options=Settings_Smoke_Particle_Options,
                 description="These settings are applied to all smoke particles (independent of the material), for some quick adjustments if necessary."
-			},
-			{
-				sub_menu_title="Wind [EXPERIMENTAL]",
-				options=Settings_Wind_Particle_Options,
-                description="These settings are applied to all wind particles (independent of the material), for some quick adjustments if necessary. \nNote that wind simulation is performance expensive and currently isn't 100% bug free!"
 			}
 		}
 	}
 end
+
+Settings_Wind_General_Options =
+{
+	storage_module="wind",
+	storage_prefix_key=nil,
+	buttons={
+		{
+			text="Set default",
+			callback=function() Settings_Wind_Default() end,
+		}
+	},
+	update=function() Settings_Wind_Update() end,
+	option_items={
+        {
+            option_parent_text="",
+            option_text="Enable Wind",
+            option_note="Uses the environment property to generate a wind",
+            option_type="text",
+            storage_key="wind",
+            options={"YES", "NO"}
+        },
+		{
+			option_parent_text="",
+			option_text="Wind Direction",
+			option_note="Wind direction in degrees.",
+			option_type="float",
+			storage_key="winddirection",
+			min_max={0, 360, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Direction Randomness",
+			option_note="Direction can change randomly within the direction minus and plus this value",
+			option_type="float",
+			storage_key="winddirectionrandom",
+			min_max={0, 360, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Strength",
+			option_note="Strength of the wind.",
+			option_type="float",
+			storage_key="windstrength",
+			min_max={1, 100, 1}
+		},
+		{
+			option_parent_text="",
+			option_text="Wind Strength Randomness",
+			option_note="How much the strenght can vary.",
+			option_type="float",
+			storage_key="windstrengthrandom",
+			min_max={0, 50, 1}
+		},
+	}
+}
+
+function Settings_Wind_Update()
+    Settings_SetValue("Wind", "wind", Storage_GetString("wind", "wind"))
+    Settings_SetValue("Wind", "winddirection", Storage_GetFloat("wind", "winddirection"))
+    Settings_SetValue("Wind", "winddirectionrandom", Storage_GetFloat("wind", "winddirectionrandom"))
+    Settings_SetValue("Wind", "windstrength", Storage_GetFloat("wind", "windstrength"))
+    Settings_SetValue("Wind", "windstrengthrandom", Storage_GetFloat("wind", "windstrengthrandom"))
+    Settings_StoreActivePreset()
+end
+
+function Settings_Wind_Store()
+    Storage_SetString("wind", "wind", Settings_GetValue("Wind", "wind"))
+    Storage_SetFloat("wind", "winddirection", Settings_GetValue("Wind", "winddirection"))
+    Storage_SetFloat("wind", "winddirectionrandom", Settings_GetValue("Wind", "winddirectionrandom"))
+    Storage_SetFloat("wind", "windstrength", Settings_GetValue("Wind", "windstrength"))
+    Storage_SetFloat("wind", "windstrengthrandom",  Settings_GetValue("Wind", "windstrengthrandom"))
+    Settings_StoreActivePreset()
+end
+
+function Settings_Wind_Default()
+    _LoadedSettings["Wind"] = Settings_Template["Wind"]
+    Settings_Wind_Store()
+end
+
+function Settings_Wind_GetOptionsMenu()
+	return {
+		menu_title = "Wind Settings",
+		sub_menus={
+			{
+				sub_menu_title="General",
+				options=Settings_Wind_General_Options,
+                description="Configure the wind."
+			}
+		}
+	}
+end
+
+

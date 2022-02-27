@@ -16,7 +16,9 @@
 #include "fire_material.lua"
 #include "particle_spawner.lua"
 #include "particle.lua"
+#include "wind.lua"
 #include "firedetector.lua"
+#include "light_spawner\lightspawner.lua"
 #include "presets\preset-low.lua"
 #include "presets\preset-medium.lua"
 #include "presets\preset-high.lua"
@@ -42,6 +44,7 @@ function init()
    FireDetector_Init()
    ParticleSpawner_Init()
    Particle_Init()
+   Wind_Init()
    FireMaterial_Init()
    SmokeMaterial_Init()
    Menu_Init()
@@ -52,10 +55,11 @@ end
 
 function tick(dt)
     ParticleSpawner_tick(dt)
+    ParticleSpawner_update(dt)
+    Particle_MoveWindWall();
 end
 
 function update(dt)
-    ParticleSpawner_update(dt)
     FireDetector_ShowStatus()
     ParticleSpawner_ShowStatus()
 end

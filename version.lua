@@ -4,12 +4,17 @@
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
 Version_Current = "v5.4"
+Version_CurrentActual = "v6"
 Version_Previous = "v4"
 Version_ModName = ""
 Version_PreviousModName = "ThiccFire"
 
 function Version_GetName()
     return Version_ModName
+end
+
+function Version_GetCurrentActual()
+    return Version_CurrentActual
 end
 
 function Version_GetCurrent()

@@ -116,8 +116,13 @@ function Ui_FloatProperty(x, y, name, notes, min_max_steps, module, key)
 						Storage_SetFloat(module,  min_max_steps[4][i]["related"], value + min_max_steps[3])
 					end
 				end
+				if value == relatedvalue then
+					Storage_SetFloat(module,  key, value + min_max_steps[3])
+					Storage_SetFloat(module,  min_max_steps[4][i]["related"], value - min_max_steps[3])
+				end
 			end
 		end
+
 		Storage_SetFloat(module, key, value);
 		return true
 	end

@@ -121,7 +121,130 @@ function Generic_TableToStr(t1, prefix)
     return str
 end
 
-
 function Generic_RGBConv(r, g, b)
 	return {255 / r, 255 / g, 255 / b}
+end
+
+local floor = math.floor
+function Generic_xor(a, b)
+  local r = 0
+  for i = 0, 31 do
+    local x = a / 2 + b / 2
+    if x ~= floor (x) then
+      r = r + 2^i
+    end
+    a = floor (a / 2)
+    b = floor (b / 2)
+  end
+  return r
+end
+
+function ObjectDetector_HashVec(vec)
+    local p1 = 73856093
+    local p2 = 19349663
+    local p3 = 83492791
+    local xor_p1_p2 = Generic_xor((vec[1] * p1), vec[3] * p2)
+    local xored_p1_2wp3 = Generic_xor(xor_p1_p2, (vec[2] * p3))
+    return xored_p1_2wp3
+end
+
+
+---Draw a point if visualize fire detection is turned on
+---@param point Vec (array of 3 values) containing the position to draw the point
+---@param r float intensity of the color red
+---@param g float intensity of the color green
+---@param b float intensity of the color blue
+function Generic_DrawPoint(point, r, g, b, draw)
+    if draw then
+        DebugCross(point,  r, g, b)
+    end
+end
+
+
+---Draw a line between two points if visualize fire detection is turned on
+---@param vec1 Vec (array of 3 values) containing the position to draw the point
+---@param vec2 Vec (array of 3 values) containing the position to draw the point
+---@param r float intensity of the color red
+---@param g float intensity of the color green
+---@param b float intensity of the color blue
+function Generic_DrawLine(vec1, vec2, r, g, b, draw)
+    if draw then
+        DebugLine(vec1, vec2, r, g, b)
+    end
+end
+
+---Calculate distance between two 3D vectors
+---@param vec1 Vec (array of 3 values) containing the position
+---@param vec2 Vec (array of 3 values) containing the position
+---@return number value of the distance
+function Generic_VecDistance(vec1, vec2)
+    return VecLength(VecSub(vec1, vec2))
+end
+
+function Generic_VecCompare(vec1, vec2)
+    return ((vec1[1] and vec2[1]) and (vec1[2] and vec2[2]) and (vec1[3] and vec2[3]))
+end
+
+function Generic_CreateBox(point, size, point2, color, draw)
+    local p1 = {point[1] - size, point[2] - size, point[3] - size}
+    local p2 = {point[1] - size, point[2] + size, point[3] - size}
+    local p3 = {point[1] - size, point[2] + size, point[3] + size}
+    local p4 = {point[1] - size, point[2] - size, point[3] + size}
+
+    local p5 = {point[1] + size, point[2] - size, point[3] - size}
+    local p6 = {point[1] + size, point[2] + size, point[3] - size}
+    local p7 = {point[1] + size, point[2] + size, point[3] + size}
+    local p8 = {point[1] + size, point[2] - size, point[3] + size}
+
+    if draw then
+        Generic_DrawLine(p1, p2, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p2, p3, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p3, p4, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p4, p1, color[1], color[2], color[3], draw)
+
+
+        Generic_DrawLine(p5, p6, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p6, p7, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p7, p8, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p8, p5, color[1], color[2], color[3], draw)
+
+
+        Generic_DrawLine(p1, p5, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p2, p6, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p3, p7, color[1], color[2], color[3], draw)
+        Generic_DrawLine(p4, p8, color[1], color[2], color[3], draw)
+    end
+
+    if point2 ~= nil then
+
+        local u = VecSub(p5, p1)
+        local v = VecSub(p5, p6)
+        local w = VecSub(p5, p8)
+
+        local ud = VecDot(u, point2)
+        local vd = VecDot(v, point2)
+        local wd = VecDot(w, point2)
+
+        local u1 = VecDot(u, p5)
+        local u2 = VecDot(u, p1)
+
+        local v1 = VecDot(v, p5)
+        local v2 = VecDot(v, p6)
+
+        local w1 = VecDot(w, p5)
+        local w2 = VecDot(w, p8)
+
+        if  (ud > u2 and ud < u1) and (vd > v2 and vd < v1) and (wd > w2 and wd < w1) then
+
+
+            Generic_DrawPoint(point2, 1,0,0, draw)
+            return true
+        else
+            Generic_DrawPoint(point2, 0,1,0, draw)
+            -- Generic_DrawPoint(point2, 1,0,0)
+            return false
+        end
+    else
+        return {p1,p2,p3,p4,p5,p6,p7,p8}
+    end
 end

@@ -1,3 +1,4 @@
 name = ThiccSmoke & ThiccFire
 author = Eldin Zenderink
 description = [noupload] Always felt like teardown lacked proper fire and smoke behavior? Like, it just wasn't what you'd expected it to be? Then this mod is for you! A fully configurable smoke and fire enhancement mod!
+tags = Misc

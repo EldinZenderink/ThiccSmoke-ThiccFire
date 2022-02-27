@@ -213,9 +213,7 @@ function RestoreSettings_Restore(mapping, new_settings)
                     new_settings[property] = GetString(storage_key .. "." .. mapping[property][1])
                 end
                 -- DebugPrint("Mapping: " .. tostring(property) .. "(" .. storage_key .. "." .. mapping[property][1] .. ") value: " .. tostring(new_settings[property]))
-
             end
         end
     end
-
 end
