@@ -62,6 +62,7 @@ Settings_Template ={
         fire = "YES",
         smoke = "YES",
         spawn_light = "OFF",
+        legacy = "YES",
         red_light_divider = 1,
         green_light_divider = 1.25,
         blue_light_divider = 4,
@@ -1485,7 +1486,6 @@ Settings_ParticleSpawner_Light_Options =
     },
 	update=function() Settings_ParticleSpawner_Update() end,
 	option_items={
-
         {
             option_parent_text="",
             option_text="Enable Light Effect",
@@ -1496,6 +1496,14 @@ Settings_ParticleSpawner_Light_Options =
         },
         {
             option_parent_text="",
+            option_text="Legacy",
+            option_note="Use legacy method (pre v0.9.3) for spawning light (performance heavy)!",
+            option_type="text",
+            storage_key="legacy",
+            options={"YES", "NO"}
+        },
+        {
+            optiYES_parent_text="",
             option_text="Red Light Divider",
             option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
             option_type="float",
@@ -1541,6 +1549,7 @@ Settings_ParticleSpawner_Light_Options =
 function Settings_ParticleSpawner_Update()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
     Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
+    Settings_SetValue("ParticleSpawner", "legacy", Storage_GetString("particlespawner", "legacy"))
     Settings_SetValue("ParticleSpawner", "spawn_light", Storage_GetString("particlespawner", "spawn_light"))
     Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
     Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
@@ -1559,6 +1568,7 @@ end
 function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
+    Storage_SetString("particlespawner", "legacy", Settings_GetValue("ParticleSpawner", "legacy"))
     Storage_SetString("particlespawner", "spawn_light", Settings_GetValue("ParticleSpawner", "spawn_light"))
     Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
     Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))

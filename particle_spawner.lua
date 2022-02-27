@@ -32,6 +32,9 @@ ParticleSpawner_ParticleRefreshRate = 5.0
 ParticleSpawner_SpawnLight = false
 ParticleSpawner_TimeElapsed = 0
 
+ParticleSpawner_OldVersionDetected = false
+ParticleSpawner_OldVersion = false
+
 
 function ParticleSpawner_Init()
     ParticleSpawner_ParticleRefreshRate = ParticleSpawner_Properties["particle_refresh_max"]
@@ -42,6 +45,13 @@ function ParticleSpawner_Init()
     end
     ParticleSpawner_FindNew = true
     Settings_RegisterUpdateSettingsCallback(ParticleSpawner_UpdateSettingsFromSettings)
+
+    local version = GetVersion()
+    local splittedversion = Generic_SplitString(version, ".")
+    if tonumber(splittedversion[2]) <= 9 and tonumber(splittedversion[3]) < 3 then
+        ParticleSpawner_OldVersion = true
+        ParticleSpawner_OldVersionDetected = true
+    end
 end
 
 function ParticleSpawner_UpdateSettingsFromSettings()
@@ -60,29 +70,60 @@ function ParticleSpawner_UpdateSettingsFromSettings()
     ParticleSpawner_Properties["light_intensity"] = Settings_GetValue("ParticleSpawner", "light_intensity")
     ParticleSpawner_Properties["light_flickering_intensity"] = Settings_GetValue("ParticleSpawner", "light_flickering_intensity")
 
+    if Settings_GetValue("ParticleSpawner", "legacy") == "YES" then
+        ParticleSpawner_OldVersion = true
+    else
+        ParticleSpawner_OldVersion = ParticleSpawner_OldVersionDetected
+    end
 
-    if ParticleSpawner_Properties["light_intensity"]  == nil or  ParticleSpawner_Properties["light_intensity"] < 0.1 then
-        ParticleSpawner_Properties["light_intensity"] = 1
+    if ParticleSpawner_OldVersion == false then
+        if ParticleSpawner_Properties["light_intensity"]  == nil or ParticleSpawner_Properties["light_intensity"] < 0.1 then
+            ParticleSpawner_Properties["light_intensity"] = 1
+            Settings_SetValue("ParticleSpawner", "light_intensity",  ParticleSpawner_Properties["light_intensity"])
+            Settings_StoreActivePreset()
+        end
+
+        if ParticleSpawner_Properties["red_light_divider"]  == nil or  ParticleSpawner_Properties["red_light_divider"] > 1 or  ParticleSpawner_Properties["red_light_divider"] < -1 then
+            ParticleSpawner_Properties["red_light_divider"] = 0
+            Settings_SetValue("ParticleSpawner", "red_light_divider",  ParticleSpawner_Properties["red_light_divider"])
+            Settings_StoreActivePreset()
+        end
+        if ParticleSpawner_Properties["green_light_divider"]  == nil or  ParticleSpawner_Properties["green_light_divider"] > 1 or  ParticleSpawner_Properties["green_light_divider"] < -1 then
+            ParticleSpawner_Properties["green_light_divider"] = -0.2
+            Settings_SetValue("ParticleSpawner", "green_light_divider", ParticleSpawner_Properties["green_light_divider"])
+            Settings_StoreActivePreset()
+        end
+        if ParticleSpawner_Properties["blue_light_divider"]  == nil or  ParticleSpawner_Properties["blue_light_divider"] > 1 or  ParticleSpawner_Properties["blue_light_divider"] < -1 then
+            ParticleSpawner_Properties["blue_light_divider"] = -0.4
+            Settings_SetValue("ParticleSpawner", "blue_light_divider", ParticleSpawner_Properties["blue_light_divider"] )
+            Settings_StoreActivePreset()
+        end
+        if ParticleSpawner_Properties["legacy"] == nil or ParticleSpawner_Properties["legacy"] == "" then
+            ParticleSpawner_Properties["legacy"] = "NO"
+            Settings_SetValue("ParticleSpawner", "legacy",  ParticleSpawner_Properties["legacy"])
+            Settings_StoreActivePreset()
+        end
+
+
+    else
+        Settings_SetValue("ParticleSpawner", "legacy",  ParticleSpawner_Properties["legacy"])
+        -- Settings_StoreActivePreset()
+        ParticleSpawner_Properties["light_intensity"] = 0.5
         Settings_SetValue("ParticleSpawner", "light_intensity",  ParticleSpawner_Properties["light_intensity"])
-        Settings_StoreActivePreset()
-    end
+        -- Settings_StoreActivePreset()
 
-    if ParticleSpawner_Properties["red_light_divider"]  == nil or  ParticleSpawner_Properties["red_light_divider"] > 1 or  ParticleSpawner_Properties["red_light_divider"] < -1 then
-        ParticleSpawner_Properties["red_light_divider"] = 0
+        ParticleSpawner_Properties["red_light_divider"] = 1
         Settings_SetValue("ParticleSpawner", "red_light_divider",  ParticleSpawner_Properties["red_light_divider"])
-        Settings_StoreActivePreset()
-    end
-    if ParticleSpawner_Properties["green_light_divider"]  == nil or  ParticleSpawner_Properties["green_light_divider"] > 1 or  ParticleSpawner_Properties["green_light_divider"] < -1 then
-        ParticleSpawner_Properties["green_light_divider"] = -0.2
-        Settings_SetValue("ParticleSpawner", "green_light_divider", ParticleSpawner_Properties["green_light_divider"])
-        Settings_StoreActivePreset()
-    end
-    if ParticleSpawner_Properties["blue_light_divider"]  == nil or  ParticleSpawner_Properties["blue_light_divider"] > 1 or  ParticleSpawner_Properties["blue_light_divider"] < -1 then
-        ParticleSpawner_Properties["blue_light_divider"] = -0.4
-        Settings_SetValue("ParticleSpawner", "blue_light_divider", ParticleSpawner_Properties["blue_light_divider"] )
-        Settings_StoreActivePreset()
-    end
+        -- Settings_StoreActivePreset()
 
+        ParticleSpawner_Properties["green_light_divider"] = 1.75
+        Settings_SetValue("ParticleSpawner", "green_light_divider", ParticleSpawner_Properties["green_light_divider"])
+        -- Settings_StoreActivePreset()
+
+        ParticleSpawner_Properties["blue_light_divider"] = 4
+        Settings_SetValue("ParticleSpawner", "blue_light_divider", ParticleSpawner_Properties["blue_light_divider"] )
+        -- Settings_StoreActivePreset()
+    end
 
     ParticleSpawner_ParticleRefreshRate =  ParticleSpawner_Properties["particle_refresh_max"]
     ParticleSpawner_CurFPSTarget = ParticleSpawner_Properties["dynamic_fps_target"]
@@ -119,6 +160,26 @@ function ParticleSpawner_tick(dt)
         ParticleSpawner_ParticleRefreshRate = Particle_RefreshMax
     end
     ParticleSpawner_TimeElapsed = ParticleSpawner_TimeElapsed + dt
+
+
+    if ParticleSpawner_OldVersion  then
+        local lightandwind = FireDetector_GetLightAndWindLocations()
+        for i=1, #lightandwind do
+            local fire_info = lightandwind[i]
+            if fire_info ~= nil and fire_info["light_location"] ~= nil then
+                if ParticleSpawner_SpawnLight then
+                    local tenth = fire_info["fire_intensity"]  / ParticleSpawner_Properties["light_flickering_intensity"]
+                    local light_intensity = fire_info["fire_intensity"] + Generic_rnd(tenth * -1, tenth)
+                    if light_intensity < 5 then
+                        light_intensity = 5 + Generic_rnd(-1.5, 1.5)
+                    end
+                    local material = FireMaterial_GetInfo(fire_info["material"])
+                    -- PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.1)), 0.8, 0.1, 0.01, light_intensity)
+                    PointLight(VecAdd(fire_info["light_location"], Generic_rndVec(0.01)), material["color"]["r"] /  ParticleSpawner_Properties["red_light_divider"], material["color"]["g"] /  ParticleSpawner_Properties["green_light_divider"], material["color"]["b"] /  ParticleSpawner_Properties["blue_light_divider"], light_intensity * ParticleSpawner_Properties["light_intensity"] )
+                end
+            end
+        end
+    end
 end
 
 function ParticleSpawner_update(dt)
@@ -168,7 +229,9 @@ function ParticleSpawner_update(dt)
                 spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
             end
-            LightSpawner_DeleteAll()
+            if ParticleSpawner_OldVersion == false then
+                LightSpawner_DeleteAll()
+            end
             for hash, info in pairs(ParticleSpawner_ParticlesToSpawn) do
                 if info ~= nil then
                     local firemat = Generic_deepCopy(FireMaterial_GetInfo(info["material"]))
@@ -178,7 +241,7 @@ function ParticleSpawner_update(dt)
                     if fire == "YES" and spawn_fire then
                         Particle_EmitParticle(firemat, info["location"], "fire", info["fire_intensity"])
                     end
-                    if ParticleSpawner_SpawnLight then
+                    if ParticleSpawner_SpawnLight and ParticleSpawner_OldVersion == false then
                         local tenth = info["fire_intensity"]  / ParticleSpawner_Properties["light_flickering_intensity"]
                         local light_intensity = info["fire_intensity"] + Generic_rnd(tenth * -1, tenth)
                         if light_intensity < 5 then

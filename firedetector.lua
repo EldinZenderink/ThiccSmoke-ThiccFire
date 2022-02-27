@@ -87,9 +87,16 @@ function FireDetector_UpdateSettingsFromSettings()
     SetInt("game.fire.maxcount",  math.floor(FireDetector_Properties["teardown_max_fires"]))
     SetInt("game.fire.spread",  math.floor(FireDetector_Properties["teardown_fire_spread"]))
 
-    if FireDetector_Properties["soot_sim"] == nil or FireDetector_Properties["soot_sim"] == "" or GetVersion() ~= "0.9.4" then
+    local version = GetVersion()
+    local splittedversion = Generic_SplitString(version, ".")
+    if tonumber(splittedversion[2]) <= 9 and tonumber(splittedversion[3]) < 4 then
         FireDetector_Properties["soot_sim"] = "NO"
         Settings_SetValue("FireDetector", "soot_sim", "NO")
+    else
+        if FireDetector_Properties["soot_sim"] == nil or FireDetector_Properties["soot_sim"] == "" then
+            FireDetector_Properties["soot_sim"] = "NO"
+            Settings_SetValue("FireDetector", "soot_sim", "NO")
+        end
     end
     if FireDetector_Properties["soot_dithering_max"] == nil or FireDetector_Properties["soot_dithering_max"] == 0 or GetVersion() ~= "0.9.4" then
         FireDetector_Properties["soot_dithering_max"] = 1
@@ -341,11 +348,10 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 
     if size <= size_fire_count and (intensity == nil or intensity == 0) then
         intensity = firecount
-
         local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size_fire_count)
         if hit then
             -- Add slight offset to light to a certain direction to move it outside the shape
-            light_location = {VecAdd(pos, Vec(0.1,0.1,0.1)), size_fire_count}
+            light_location = {pos, size_fire_count}
         else
             light_location = {vecstart, size_fire_count}
         end
@@ -353,7 +359,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 
 
 
-    if size < min_size  then
+    if size < min_size and max_fires > #onfire then
         if min_size > 0.1 then
             local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size )
             if hit then
