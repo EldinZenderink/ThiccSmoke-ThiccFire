@@ -29,7 +29,7 @@ Settings_Template ={
     FireDetector = {
         map_size = "LARGE",
         max_fire_spread_distance=6,
-        fire_reaction_time=20,
+        fire_reaction_time=5,
         fire_update_time=0.5,
         min_fire_distance=4,
         max_group_fire_distance=6,
@@ -83,7 +83,7 @@ Settings_Template ={
         drag_mp = "Use Material Property",
         gravity_mp = "Use Material Property",
         lifetime_mp = "1x",
-        intensity_scale = 1.5,
+        intensity_scale = 1.25,
         randomness = 0.85,
         location_randomness = 0.5,
         duplicator = 1,
@@ -91,7 +91,7 @@ Settings_Template ={
         smoke_fadeout = 1,
         fire_fadein = 0,
         fire_fadeout = 4,
-        fire_emissive = 4,
+        fire_emissive = 5,
         embers = "LOW"
     },
     FireMaterial = {
@@ -845,7 +845,7 @@ Settings_FireDetector_OptionsDetection =
             storage_key="max_group_fire_distance",
             min_max={
                 0.5, -- min
-                10,   -- max
+                20,   -- max
                 0.1, -- steps
                 {
                     {

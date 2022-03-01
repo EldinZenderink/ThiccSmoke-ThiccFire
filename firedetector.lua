@@ -137,7 +137,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     local material_allowed = FireDetector_Properties["material_allowed"]
 
     local max_fires = FireDetector_Properties["max_fire"]
-    local min_fire_distance = FireDetector_Properties["min_fire_distance"] / 100 * FireDetector_LocalDB["fire_intensity"]
+    local min_fire_distance = FireDetector_Properties["min_fire_distance"] / 50 * FireDetector_LocalDB["fire_intensity"]
     if min_fire_distance < 0.5 then
         min_fire_distance = 0.5
     end
@@ -162,6 +162,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     if refresh or fire_count == 0 then
 
         for hash, fire in pairs(FireDetector_SPOF) do
+            fire_count = fire_count + 1
             local intensity = fire["fire_intensity"]
             -- DebugPrint("timer " .. timer .. " timeout " .. fire["timeout"])
             if  timer > fire["timeout"] or fire["delete"] then
@@ -264,7 +265,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             -- if refresh then
             -- Perform fire spread, damage/explosion after timeouts
 
-        if time_elapsed > fire_update_time then
+        if time_elapsed > fire_update_time and fire_count < max_fires then
             time_elapsed = 0
                 -- Search fire locations, onfire = lists with actual fire
             local modifier = 1
@@ -285,7 +286,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             -- FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
             local p = GetPlayerPos()
             local n = FireDetector_FindNearestPoint(p, 409.6 / 10 / modifier)
-            FireDetector_RecursiveBinarySearchFire(Vec(0,0,0), 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires, onfire, 0, nil)
+            FireDetector_RecursiveBinarySearchFire(Vec(0,0,0), 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires - fire_count, onfire, 0, nil)
 
 
             for i=1, #onfire do
