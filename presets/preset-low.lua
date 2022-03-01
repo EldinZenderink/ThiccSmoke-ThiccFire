@@ -8,7 +8,8 @@ Preset_Settings_Low = {
     Settings  = {
         ActivePreset="low",
         description="A preset for low end systems that should provide some enhancement to fires \n without breaking the game. No extra damage, fire amount limited, \n spread disabled etc.",
-        version="v5.4"
+        version="v5.4",
+        type="default"
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -39,7 +40,7 @@ Preset_Settings_Low = {
         fire_damage = "NO",
         spawn_fire = "NO",
         soot_sim = "NO",
-        soot_max_size = 5,
+        soot_max_size = 2.5,
         soot_min_size = 0.1,
         soot_dithering_max = 1,
         soot_dithering_min = 0.5,
@@ -59,19 +60,21 @@ Preset_Settings_Low = {
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        spawn_light = "OFF",
-        legacy = "NO",
-        red_light_divider = 1,
-        green_light_divider = 1.75,
-        blue_light_divider = 4,
-        light_flickering_intensity = 4,
-        light_intensity = 0.5,
         fire_to_smoke_ratio = "1:4",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
         particle_refresh_max = 20,
         particle_refresh_min = 10,
         aggressivenes = 1,
+    },
+    Light={
+        spawn_light = "OFF",
+        legacy = "NO",
+        red_light_offset = 0,
+        green_light_offset = -0.1,
+        blue_light_offset = -0.1,
+        light_intensity = 0.5,
+        light_flickering_intensity = 4,
     },
     Particle = {
         intensity_mp = "Use Material Property",
@@ -92,7 +95,7 @@ Preset_Settings_Low = {
     FireMaterial = {
         wood={
             color={r=0.93,g=0.25,b=0.10,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -101,7 +104,7 @@ Preset_Settings_Low = {
         },
         foliage={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -110,7 +113,7 @@ Preset_Settings_Low = {
         },
         plaster={
             color={r=0.7,g=0.13,b=0.13,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -119,7 +122,7 @@ Preset_Settings_Low = {
         },
         plastic={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.7,
             gravity=2,
             speed=0.1,
@@ -128,7 +131,7 @@ Preset_Settings_Low = {
         },
         masonery={
             color={r=0.38,g=0.11,b=0.03,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.7,
             gravity=2,
             speed=0.1,

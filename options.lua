@@ -1,3 +1,9 @@
+-- options.lua
+-- @date 2021-09-06
+-- @author Eldin Zenderink
+-- @brief Do only basic sewing of functions here, do the logic in the "sub" modules
+-- @note (to self) I need to rewrite all of this again and use some proper "class" like functions ;p
+
 #include "generic.lua"
 #include "generaloptions.lua"
 #include "debug.lua"
@@ -10,12 +16,16 @@
 #include "fire_material.lua"
 #include "particle_spawner.lua"
 #include "particle.lua"
+#include "wind.lua"
+#include "light.lua"
 #include "firedetector.lua"
+#include "light_spawner\lightspawner.lua"
 #include "presets\preset-low.lua"
 #include "presets\preset-medium.lua"
 #include "presets\preset-high.lua"
 #include "presets\preset-ultra.lua"
 #include "presets\preset-slipperygypsy.lua"
+
 
 function init()
     Debug_ClearDebugPrinter()
@@ -36,6 +46,8 @@ function init()
     FireDetector_Init()
     ParticleSpawner_Init()
     Particle_Init()
+    Wind_Init()
+    Light_Init()
     FireMaterial_Init()
     SmokeMaterial_Init()
     Menu_Init()

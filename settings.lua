@@ -10,7 +10,8 @@ Settings_Template ={
     Settings = {
         ActivePreset="medium",
         description="Default preset (medium preset).",
-        version="v5.4"
+        version="v5.4",
+        type="default"
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -41,7 +42,7 @@ Settings_Template ={
         fire_damage = "NO",
         spawn_fire = "YES",
         soot_sim = "YES",
-        soot_max_size = 5,
+        soot_max_size = 2.5,
         soot_min_size = 0.1,
         soot_dithering_max = 1,
         soot_dithering_min = 0.5,
@@ -61,19 +62,21 @@ Settings_Template ={
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        spawn_light = "OFF",
-        legacy = "YES",
-        red_light_divider = 1,
-        green_light_divider = 1.25,
-        blue_light_divider = 4,
-        light_intensity = 0.5,
-        light_flickering_intensity = 4,
         fire_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
         particle_refresh_max = 30,
         particle_refresh_min = 15,
         aggressivenes = 1,
+    },
+    Light={
+        spawn_light = "OFF",
+        legacy = "NO",
+        red_light_offset = 0,
+        green_light_offset = -0.1,
+        blue_light_offset = -0.1,
+        light_intensity = 0.5,
+        light_flickering_intensity = 4,
     },
     Particle = {
         intensity_mp = "Use Material Property",
@@ -94,7 +97,7 @@ Settings_Template ={
     FireMaterial = {
         wood={
             color={r=0.93,g=0.25,b=0.10,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -103,7 +106,7 @@ Settings_Template ={
         },
         foliage={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -112,7 +115,7 @@ Settings_Template ={
         },
         plaster={
             color={r=0.7,g=0.13,b=0.13,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -121,7 +124,7 @@ Settings_Template ={
         },
         plastic={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -130,7 +133,7 @@ Settings_Template ={
         },
         masonery={
             color={r=0.38,g=0.11,b=0.03,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -206,10 +209,11 @@ end
 
 function Settings_LoadMenu()
     Settings_StoreAll()
-    Menu_AppendMenu(Settings_GetPresetMenu())
     Menu_AppendMenu(Settings_GeneralOptions_GetOptionsMenu())
+    Menu_AppendMenu(Settings_GetPresetMenu())
     Menu_AppendMenu(Settings_FireDetector_GetOptionsMenu())
     Menu_AppendMenu(Settings_Wind_GetOptionsMenu())
+    Menu_AppendMenu(Settings_Light_GetOptionsMenu())
     Menu_AppendMenu(Settings_ParticleSpawner_GetOptionsMenu())
     Menu_AppendMenu(Settings_Particle_GetOptionsMenu())
     Menu_AppendMenu(Settings_FireMaterial_GetOptionsMenu())
@@ -219,6 +223,8 @@ end
 function Settings_StoreAll()
     Settings_GeneralOptions_Store()
     Settings_FireDetector_Store()
+    Settings_Wind_Store()
+    Settings_Light_Store()
     Settings_ParticleSpawner_Store()
     Settings_Particle_Store()
     Settings_FireMaterial_Store()
@@ -228,6 +234,8 @@ end
 function Settings_UpdateAll()
     Settings_GeneralOptions_Update()
     Settings_FireDetector_Update()
+    Settings_Wind_Update()
+    Settings_Light_Update()
     Settings_ParticleSpawner_Update()
     Settings_Particle_Update()
     Settings_FireMaterial_Update()
@@ -292,6 +300,15 @@ function Settings_GetStorageValuesRecursive(preset, table)
         end
     end
     _LoadedSettings["Settings"]["ActivePreset"] = preset
+end
+
+function Settings_EditedSettings()
+    if _LoadedSettings["Settings"]["type"] == "default" then
+        _LoadedSettings["Settings"]["ActivePreset"] = _LoadedSettings["Settings"]["ActivePreset"] .. "-editted"
+        Settings_CreatePreset(_LoadedSettings)
+        Settings_SetValue("Settings", "type", "custom")
+        Settings_StoreActivePreset()
+    end
 end
 
 function Settings_GetValue(module, key_to_get)
@@ -583,6 +600,7 @@ Settings_FireMaterial_Options =
 }
 
 function Settings_FireMaterial_Update(material)
+    Settings_EditedSettings()
     Settings_SetValue("FireMaterial", material .. ".color.r", Storage_GetFloat("fire_material", material .. ".color.r"))
     Settings_SetValue("FireMaterial", material .. ".color.g", Storage_GetFloat("fire_material", material .. ".color.g"))
     Settings_SetValue("FireMaterial", material .. ".color.b", Storage_GetFloat("fire_material", material .. ".color.b"))
@@ -733,6 +751,7 @@ Settings_SmokeMaterial_Options =
 }
 
 function Settings_SmokeMaterial_Update(material)
+    Settings_EditedSettings()
     Settings_SetValue("SmokeMaterial", material .. ".color.r", Storage_GetFloat("smoke_material", material .. ".color.r"))
     Settings_SetValue("SmokeMaterial", material .. ".color.g", Storage_GetFloat("smoke_material", material .. ".color.g"))
     Settings_SetValue("SmokeMaterial", material .. ".color.b", Storage_GetFloat("smoke_material", material .. ".color.b"))
@@ -1202,6 +1221,7 @@ Settings_FireDetector_OptionsDebugging =
 }
 
 function Settings_FireDetector_Update()
+    Settings_EditedSettings()
     Settings_SetValue("FireDetector", "map_size", Storage_GetString("firedetector", "map_size"))
     Settings_SetValue("FireDetector", "max_fire_spread_distance", Storage_GetFloat("firedetector", "max_fire_spread_distance"))
     Settings_SetValue("FireDetector", "fire_reaction_time", Storage_GetFloat("firedetector", "fire_reaction_time"))
@@ -1474,89 +1494,12 @@ Settings_ParticleSpawner_Particle_Options =
 	}
 }
 
-Settings_ParticleSpawner_Light_Options =
-{
-	storage_module="particlespawner",
-	storage_prefix_key=nil,
-    buttons={
-		{
-			text = "Set Default",
-			callback=function() Settings_ParticleSpawner_Default() end,
-		},
-    },
-	update=function() Settings_ParticleSpawner_Update() end,
-	option_items={
-        {
-            option_parent_text="",
-            option_text="Enable Light Effect",
-            option_note="Also spawn lights to simulate fire emitting more intense light.",
-            option_type="text",
-            storage_key="spawn_light",
-            options={"ON", "OFF"}
-        },
-        {
-            option_parent_text="",
-            option_text="Legacy",
-            option_note="Use legacy method (pre v0.9.3) for spawning light (performance heavy)!",
-            option_type="text",
-            storage_key="legacy",
-            options={"YES", "NO"}
-        },
-        {
-            optiYES_parent_text="",
-            option_text="Red Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="red_light_divider",
-            min_max={-1, 1, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Green Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="green_light_divider",
-            min_max={-1, 1, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Blue Light Divider",
-            option_note="Note: Light color is based on fire color, dividers can be used to make adjustments to the light specifically!",
-            option_type="float",
-            storage_key="blue_light_divider",
-            min_max={-1, 1, 0.05}
-        },
-        {
-            option_parent_text="",
-            option_text="Light Flickering Intensity",
-            option_note="Note: changes how much the light flickers, which is based on the fire intensity.",
-            option_type="float",
-            storage_key="light_flickering_intensity",
-            min_max={1, 10, 1}
-        },
-        {
-            option_parent_text="",
-            option_text="Light Brightness",
-            option_note="Note: Changes the brightness, 0.1 == 10%, 1 = 100%,  brightness also depends on fire intensity but cannot go > 100%",
-            option_type="float",
-            storage_key="light_intensity",
-            min_max={0.01, 1, 0.01}
-        }
-	}
-}
 
 
 function Settings_ParticleSpawner_Update()
+    Settings_EditedSettings()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
-    Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
-    Settings_SetValue("ParticleSpawner", "legacy", Storage_GetString("particlespawner", "legacy"))
-    Settings_SetValue("ParticleSpawner", "spawn_light", Storage_GetString("particlespawner", "spawn_light"))
-    Settings_SetValue("ParticleSpawner", "red_light_divider", Storage_GetFloat("particlespawner", "red_light_divider"))
-    Settings_SetValue("ParticleSpawner", "green_light_divider", Storage_GetFloat("particlespawner", "green_light_divider"))
-    Settings_SetValue("ParticleSpawner", "blue_light_divider", Storage_GetFloat("particlespawner", "blue_light_divider"))
-    Settings_SetValue("ParticleSpawner", "light_intensity", Storage_GetFloat("particlespawner", "light_intensity"))
-    Settings_SetValue("ParticleSpawner", "light_flickering_intensity", Storage_GetFloat("particlespawner", "light_flickering_intensity"))
-    Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
+    Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps", Storage_GetString("particlespawner", "dynamic_fps"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps_target", Storage_GetFloat("particlespawner", "dynamic_fps_target"))
     Settings_SetValue("ParticleSpawner", "particle_refresh_max", Storage_GetFloat("particlespawner", "particle_refresh_max"))
@@ -1568,13 +1511,6 @@ end
 function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
-    Storage_SetString("particlespawner", "legacy", Settings_GetValue("ParticleSpawner", "legacy"))
-    Storage_SetString("particlespawner", "spawn_light", Settings_GetValue("ParticleSpawner", "spawn_light"))
-    Storage_SetFloat("particlespawner", "red_light_divider", Settings_GetValue("ParticleSpawner", "red_light_divider"))
-    Storage_SetFloat("particlespawner", "green_light_divider", Settings_GetValue("ParticleSpawner", "green_light_divider"))
-    Storage_SetFloat("particlespawner", "blue_light_divider", Settings_GetValue("ParticleSpawner", "blue_light_divider"))
-    Storage_SetFloat("particlespawner", "light_intensity", Settings_GetValue("ParticleSpawner", "light_intensity"))
-    Storage_SetFloat("particlespawner", "light_flickering_intensity", Settings_GetValue("ParticleSpawner", "light_flickering_intensity"))
     Storage_SetString("particlespawner", "fire_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "fire_to_smoke_ratio"))
     Storage_SetString("particlespawner", "dynamic_fps", Settings_GetValue("ParticleSpawner", "dynamic_fps"))
     Storage_SetFloat("particlespawner", "dynamic_fps_target", Settings_GetValue("ParticleSpawner", "dynamic_fps_target"))
@@ -1800,6 +1736,7 @@ Settings_Fire_Particle_Options =
 }
 
 function Settings_Particle_Update()
+    Settings_EditedSettings()
     Settings_SetValue("Particle", "intensity_mp", Storage_GetString("particle", "intensity_mp"))
     Settings_SetValue("Particle", "drag_mp", Storage_GetString("particle", "drag_mp"))
     Settings_SetValue("Particle", "gravity_mp", Storage_GetString("particle", "gravity_mp"))
@@ -1919,6 +1856,7 @@ Settings_Wind_General_Options =
 }
 
 function Settings_Wind_Update()
+    Settings_EditedSettings()
     Settings_SetValue("Wind", "wind", Storage_GetString("wind", "wind"))
     Settings_SetValue("Wind", "winddirection", Storage_GetFloat("wind", "winddirection"))
     Settings_SetValue("Wind", "winddirectionrandom", Storage_GetFloat("wind", "winddirectionrandom"))
@@ -1949,6 +1887,118 @@ function Settings_Wind_GetOptionsMenu()
 				sub_menu_title="General",
 				options=Settings_Wind_General_Options,
                 description="Configure the wind."
+			}
+		}
+	}
+end
+
+Settings_Light_General_Options =
+{
+	storage_module="light",
+	storage_prefix_key=nil,
+    buttons={
+		{
+			text = "Set Default",
+			callback=function() Settings_Light_Default() end,
+		},
+    },
+	update=function() Settings_Light_Update() end,
+	option_items={
+        {
+            option_parent_text="",
+            option_text="Enable Light",
+            option_note="Spawn lights to simulate fire emitting more intense light.",
+            option_type="text",
+            storage_key="spawn_light",
+            options={"ON", "OFF"}
+        },
+        {
+            option_parent_text="",
+            option_text="Legacy",
+            option_note="Use legacy method (pre v0.9.3) for spawning light (performance heavy)!",
+            option_type="text",
+            storage_key="legacy",
+            options={"YES", "NO"}
+        },
+        {
+            option_parent_text="",
+            option_text="Light Flickering Intensity",
+            option_note="Note: changes how much the light flickers, which is based on the fire intensity.",
+            option_type="float",
+            storage_key="light_flickering_intensity",
+            min_max={1, 10, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Light Brightness",
+            option_note="Note: Changes the brightness, 0.1 == 10%, 1 = 100%,  brightness also depends on fire intensity but cannot go > 100%",
+            option_type="float",
+            storage_key="light_intensity",
+            min_max={0.01, 1, 0.01}
+        },
+        {
+            optiYES_parent_text="",
+            option_text="Red Light Offset",
+            option_note="Note: Light color is based on fire color, offset can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="red_light_offset",
+            min_max={-1, 1, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Green Light Offset",
+            option_note="Note: Light color is based on fire color, offset can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="green_light_offset",
+            min_max={-1, 1, 0.05}
+        },
+        {
+            option_parent_text="",
+            option_text="Blue Light Offset",
+            option_note="Note: Light color is based on fire color, offset can be used to make adjustments to the light specifically!",
+            option_type="float",
+            storage_key="blue_light_offset",
+            min_max={-1, 1, 0.05}
+        },
+	}
+}
+
+function Settings_Light_Update()
+    Settings_EditedSettings()
+    Settings_SetValue("Light", "legacy", Storage_GetString("light", "legacy"))
+    Settings_SetValue("Light", "spawn_light", Storage_GetString("light", "spawn_light"))
+    Settings_SetValue("Light", "red_light_offset", Storage_GetFloat("light", "red_light_offset"))
+    Settings_SetValue("Light", "green_light_offset", Storage_GetFloat("light", "green_light_offset"))
+    Settings_SetValue("Light", "blue_light_offset", Storage_GetFloat("light", "blue_light_offset"))
+    Settings_SetValue("Light", "light_intensity", Storage_GetFloat("light", "light_intensity"))
+    Settings_SetValue("Light", "light_flickering_intensity", Storage_GetFloat("light", "light_flickering_intensity"))
+    Settings_StoreActivePreset()
+end
+
+function Settings_Light_Store()
+    Storage_SetString("light", "legacy", Settings_GetValue("Light", "legacy"))
+    Storage_SetString("light", "spawn_light", Settings_GetValue("Light", "spawn_light"))
+    Storage_SetFloat("light", "red_light_offset", Settings_GetValue("Light", "red_light_offset"))
+    Storage_SetFloat("light", "green_light_offset", Settings_GetValue("Light", "green_light_offset"))
+    Storage_SetFloat("light", "blue_light_offset", Settings_GetValue("Light", "blue_light_offset"))
+    Storage_SetFloat("light", "light_intensity", Settings_GetValue("Light", "light_intensity"))
+    Storage_SetFloat("light", "light_flickering_intensity", Settings_GetValue("Light", "light_flickering_intensity"))
+    Settings_StoreActivePreset()
+end
+
+function Settings_Light_Default()
+    _LoadedSettings["Light"] = Settings_Template["Light"]
+    Settings_Light_Store()
+end
+
+function Settings_Light_GetOptionsMenu()
+	return {
+		menu_title = "Light Settings",
+		sub_menus={
+			{
+				sub_menu_title="General",
+				options=Settings_Light_General_Options,
+                description="Configure the Light."
 			}
 		}
 	}

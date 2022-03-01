@@ -17,7 +17,7 @@ FireDetector_Properties = {
     fire_damage_medium = 0.05,
     fire_damage_hard = 0.01,
     soot_sim = "YES",
-    soot_max_size = 5,
+    soot_max_size = 2.5,
     soot_min_size = 0.1,
     soot_dithering_max = 1,
     soot_dithering_min = 0.5,
@@ -36,7 +36,7 @@ FireDetector_Properties = {
 FireDetector_LocalDB = {
     time_elapsed = 0,
     fire_count=0,
-    fire_intensity=0,
+    fire_intensity=1,
     timer=0,
     random_timer=0
 }
@@ -87,30 +87,24 @@ function FireDetector_UpdateSettingsFromSettings()
     SetInt("game.fire.maxcount",  math.floor(FireDetector_Properties["teardown_max_fires"]))
     SetInt("game.fire.spread",  math.floor(FireDetector_Properties["teardown_fire_spread"]))
 
-    local version = GetVersion()
-    local splittedversion = Generic_SplitString(version, ".")
-    if tonumber(splittedversion[2]) <= 9 and tonumber(splittedversion[3]) < 4 then
+    if FireDetector_Properties["soot_sim"] == nil or FireDetector_Properties["soot_sim"] == "" then
         FireDetector_Properties["soot_sim"] = "NO"
         Settings_SetValue("FireDetector", "soot_sim", "NO")
-    else
-        if FireDetector_Properties["soot_sim"] == nil or FireDetector_Properties["soot_sim"] == "" then
-            FireDetector_Properties["soot_sim"] = "NO"
-            Settings_SetValue("FireDetector", "soot_sim", "NO")
-        end
     end
-    if FireDetector_Properties["soot_dithering_max"] == nil or FireDetector_Properties["soot_dithering_max"] == 0 or GetVersion() ~= "0.9.4" then
+
+    if FireDetector_Properties["soot_dithering_max"] == nil or FireDetector_Properties["soot_dithering_max"] == 0 then
         FireDetector_Properties["soot_dithering_max"] = 1
         Settings_SetValue("FireDetector", "soot_dithering_max", 1)
     end
-    if FireDetector_Properties["soot_max_size"] == nil or FireDetector_Properties["soot_max_size"] == 0 or GetVersion() ~= "0.9.4" then
+    if FireDetector_Properties["soot_max_size"] == nil or FireDetector_Properties["soot_max_size"] == 0 then
         FireDetector_Properties["soot_max_size"] = 5
         Settings_SetValue("FireDetector", "soot_max_size", 5)
     end
-    if FireDetector_Properties["soot_dithering_min"] == nil or FireDetector_Properties["soot_dithering_min"] == 0 or GetVersion() ~= "0.9.4" then
+    if FireDetector_Properties["soot_dithering_min"] == nil or FireDetector_Properties["soot_dithering_min"] == 0 then
         FireDetector_Properties["soot_dithering_min"] = 1
         Settings_SetValue("FireDetector", "soot_dithering_min", 1)
     end
-    if FireDetector_Properties["soot_min_size"] == nil or FireDetector_Properties["soot_min_size"] == 0 or GetVersion() ~= "0.9.4" then
+    if FireDetector_Properties["soot_min_size"] == nil or FireDetector_Properties["soot_min_size"] == 0 then
         FireDetector_Properties["soot_min_size"] = 5
         Settings_SetValue("FireDetector", "soot_min_size", 5)
     end
@@ -143,7 +137,10 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     local material_allowed = FireDetector_Properties["material_allowed"]
 
     local max_fires = FireDetector_Properties["max_fire"]
-    local min_fire_distance = FireDetector_Properties["min_fire_distance"]
+    local min_fire_distance = FireDetector_Properties["min_fire_distance"] / 100 * FireDetector_LocalDB["fire_intensity"]
+    if min_fire_distance < 0.5 then
+        min_fire_distance = 0.5
+    end
     local max_group_fire_distance = FireDetector_Properties["max_group_fire_distance"]
     local fire_intensity_multiplier = FireDetector_Properties["fire_intensity_multiplier"]
     local min_fire_intensity = FireDetector_Properties["fire_intensity_minimum"]
@@ -165,10 +162,9 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     if refresh or fire_count == 0 then
 
         for hash, fire in pairs(FireDetector_SPOF) do
-            local del = false
+            local intensity = fire["fire_intensity"]
             -- DebugPrint("timer " .. timer .. " timeout " .. fire["timeout"])
-            if  timer > fire["timeout"] then
-                local intensity = fire["fire_intensity"]
+            if  timer > fire["timeout"] or fire["delete"] then
                 if fire_explosion == "YES" then
                     Explosion(fire["location"], (4 / 100) * fire["fire_intensity"])
                 end
@@ -199,29 +195,72 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                 if soot_sim == "YES" then
                     local point_start = fire["location"]
                     local randomize = Generic_rndInt(soot_min_size, soot_max_size)
-                    for x=0, randomize  do
-                        local direction = Vec(Generic_rnd(-0.5, 0.5), 1, Generic_rnd(-0.5, 0.5))
-                        local newpoint = VecAdd(point_start, VecScale(direction, intensity / (50 / randomize)))
-                        local hit, point, normal, shape_hit = QueryClosestPoint(newpoint, 15)
+                    for x=0, intensity / 100  do
+                        local direction = Vec(Generic_rnd(-0.15, 0.15), 1, Generic_rnd(-0.15, 0.15))
+                        local newpoint = VecAdd(point_start, VecScale(direction, intensity / 20  + randomize))
+                        local hit, point, normal, shape_hit = QueryClosestPoint(newpoint, randomize)
                         if hit then
                             Generic_DrawLine(point_start, point, 0,1,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
-                            Generic_DrawLine(point_start, newpoint, 0,0,1,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
-                            point_start = newpoint
-                            Paint(point, (randomize / 100) * intensity, "explosion", Generic_rnd(soot_dithering_min, soot_dithering_max))
-                        else
-                            Generic_DrawLine(point_start, newpoint, 1,1,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
-                            point_start = newpoint
+                            Paint(point, (Generic_rnd(soot_min_size, soot_max_size) / 100) * intensity, "explosion", Generic_rnd(soot_dithering_min, soot_dithering_max))
+                            if normal[2] < -0.8 then
+                                Generic_DrawLine(point_start, point, 1,0,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
+                                break
+                            else
+                                Generic_DrawLine(point_start, point, 0,1,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
+                            end
+                            point_start = point
                         end
                     end
                 end
                 FireDetector_SPOF[hash] = nil
             else
+
+                local shape_mat = GetShapeMaterialAtPosition(fire["shape"], fire["location"])
+                if shape_mat == "" then
+                    local hit, point, normal, shape_hit = QueryClosestPoint(fire["location"], min_fire_distance)
+                    if hit then
+                        if material_allowed[shape_mat] then
+                            SpawnFire(point)
+                            if soot_sim == "YES" then
+                                Paint(point, (Generic_rnd(soot_min_size, soot_max_size) / 100) * intensity, "explosion", Generic_rnd(soot_dithering_min, soot_dithering_max))
+                            end
+                        end
+                        if fire_damage == "YES" and shape_mat == "glass" then
+                            MakeHole(point, intensity / Generic_rndInt(50, 75), intensity / Generic_rndInt(50, 75), intensity / Generic_rndInt(50, 75), true)
+                            PlaySound(FireDetector_GlassBreakingSnd[Generic_rndInt(1,12)], point, intensity / 200)
+                        end
+                    end
+                    fire["delete"] = true
+                end
+
+                if fire["soot"] == false and soot_sim == "YES" then
+                    fire["soot"] = true
+                    local point_start = fire["location"]
+                    local randomize = Generic_rndInt(soot_min_size, soot_max_size)
+                    for x=0, intensity / 100  do
+                        local direction = Vec(Generic_rnd(-0.15, 0.15), 1, Generic_rnd(-0.15, 0.15))
+                        local newpoint = VecAdd(point_start, VecScale(direction, intensity / 20  + randomize))
+                        local hit, point, normal, shape_hit = QueryClosestPoint(newpoint, randomize)
+                        if hit then
+                            Paint(point, (Generic_rnd(soot_min_size, soot_max_size) / 100) * intensity, "explosion", Generic_rnd(soot_dithering_min, soot_dithering_max))
+                            if normal[2] < -0.8 then
+                                Generic_DrawLine(point_start, point, 1,0,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
+                                break
+                            else
+                                Generic_DrawLine(point_start, point, 0,1,0,  (FireDetector_Properties["visualize_fire_detection"] == "ON"))
+                            end
+                            point_start = point
+                        end
+                    end
+                end
+                if max_intensity < intensity then
+                    max_intensity = intensity
+                end
+                FireDetector_LocalDB["fire_intensity"] = max_intensity
                 fire_count = fire_count + 1
             end
         end
 
-
-        local fires_to_add = max_fires - fire_count
             -- if refresh then
             -- Perform fire spread, damage/explosion after timeouts
 
@@ -245,8 +284,8 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             local onfire = {}
             -- FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
             local p = GetPlayerPos()
-            local n = FireDetector_FindNearestPoint(p, 409.6 / 100)
-            FireDetector_RecursiveBinarySearchFire(n, 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, fires_to_add, onfire, 0, nil)
+            local n = FireDetector_FindNearestPoint(p, 409.6 / 10 / modifier)
+            FireDetector_RecursiveBinarySearchFire(Vec(0,0,0), 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires, onfire, 0, nil)
 
 
             for i=1, #onfire do
@@ -264,7 +303,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                     if hit then
                         local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
                         if material_allowed[shape_mat] then
-                            FireDetector_SPOF[hash] = {location=point, light_location=onfire[i][5], material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i], timeout=Generic_deepCopy(timer) + Generic_rnd(fire_reaction_time, fire_reaction_time * 2)}
+                            FireDetector_SPOF[hash] = {location=point, light_location=onfire[i][5], material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i], timeout=Generic_deepCopy(timer) + Generic_rnd(fire_reaction_time, fire_reaction_time * 2), delete=false, soot=false}
                             if max_intensity < intensity then
                                 max_intensity = intensity
                             end

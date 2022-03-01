@@ -4,7 +4,7 @@
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
 Version_Current = "v5.4"
-Version_CurrentActual = "v6"
+Version_CurrentActual = "v6.1"
 Version_Previous = "v4"
 Version_ModName = ""
 Version_PreviousModName = "ThiccFire"

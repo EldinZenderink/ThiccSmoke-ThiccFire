@@ -6,7 +6,8 @@ Preset_Settings_Ultra = {
     Settings  = {
         ActivePreset="ultra",
         description="This preset is nice for slide shows, with more particles, a lot of dynamic lights, stuff breaking.",
-        version="v5.4"
+        version="v5.4",
+        type="default"
     },
     GeneralOptions = {
         toggle_menu_key="U",
@@ -37,7 +38,7 @@ Preset_Settings_Ultra = {
         fire_damage = "YES",
         spawn_fire = "YES",
         soot_sim = "YES",
-        soot_max_size = 5,
+        soot_max_size = 2.5,
         soot_min_size = 0.1,
         soot_dithering_max = 1,
         soot_dithering_min = 0.5,
@@ -57,19 +58,21 @@ Preset_Settings_Ultra = {
     ParticleSpawner={
         fire = "YES",
         smoke = "YES",
-        spawn_light = "ON",
-        red_light_divider = 1,
-        legacy = "NO",
-        green_light_divider = 1.75,
-        blue_light_divider = 4,
-        light_intensity = 0.5,
-        light_flickering_intensity = 3,
         fire_to_smoke_ratio = "1:1",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
         particle_refresh_max = 60,
         particle_refresh_min = 30,
         aggressivenes = 1,
+    },
+    Light={
+        spawn_light = "ON",
+        legacy = "NO",
+        red_light_offset = 0,
+        green_light_offset = -0.1,
+        blue_light_offset = -0.1,
+        light_intensity = 0.5,
+        light_flickering_intensity = 4,
     },
     Particle = {
         intensity_mp = "Use Material Property",
@@ -90,7 +93,7 @@ Preset_Settings_Ultra = {
     FireMaterial = {
         wood={
             color={r=0.93,g=0.25,b=0.10,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -99,7 +102,7 @@ Preset_Settings_Ultra = {
         },
         foliage={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -108,7 +111,7 @@ Preset_Settings_Ultra = {
         },
         plaster={
             color={r=0.7,g=0.13,b=0.13,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -117,7 +120,7 @@ Preset_Settings_Ultra = {
         },
         plastic={
             color={r=0.86,g=0.23,b=0.09,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,
@@ -126,7 +129,7 @@ Preset_Settings_Ultra = {
         },
         masonery={
             color={r=0.38,g=0.11,b=0.03,a=1},
-            lifetime=1,
+            lifetime=2,
             size=0.9,
             gravity=2,
             speed=0.1,

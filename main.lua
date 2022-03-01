@@ -19,6 +19,7 @@
 #include "wind.lua"
 #include "firedetector.lua"
 #include "light_spawner\lightspawner.lua"
+#include "light.lua"
 #include "presets\preset-low.lua"
 #include "presets\preset-medium.lua"
 #include "presets\preset-high.lua"
@@ -45,6 +46,7 @@ function init()
    ParticleSpawner_Init()
    Particle_Init()
    Wind_Init()
+   Light_Init()
    FireMaterial_Init()
    SmokeMaterial_Init()
    Menu_Init()
