@@ -20,7 +20,6 @@ Preset_Settings_Low = {
     Wind = {
         wind = "YES",
         winddirection = 360,
-        winddirectionrandom = 15,
         windstrength = 5,
         windstrengthrandom = 5
     },

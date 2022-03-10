@@ -18,7 +18,6 @@ Preset_Settings_Ultra = {
     Wind = {
         wind = "YES",
         winddirection = 360,
-        winddirectionrandom = 15,
         windstrength = 5,
         windstrengthrandom = 5
     },

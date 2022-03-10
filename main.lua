@@ -58,7 +58,7 @@ end
 function tick(dt)
     ParticleSpawner_tick(dt)
     ParticleSpawner_update(dt)
-    Particle_MoveWindWall();
+    Menu_GenerateGameMenuTick()
 end
 
 function update(dt)

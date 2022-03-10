@@ -215,9 +215,9 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                 end
                 FireDetector_SPOF[hash] = nil
             else
-
-                local shape_mat = GetShapeMaterialAtPosition(fire["shape"], fire["location"])
-                if shape_mat == "" then
+                local outerpoints = Generic_CreateBox(fire["original"][3], fire["original"][4], nil, {1, 0, 0}, false)
+                local firecount = QueryAabbFireCount(outerpoints[1], outerpoints[7])
+                if firecount == 0 then
                     local hit, point, normal, shape_hit = QueryClosestPoint(fire["location"], min_fire_distance)
                     if hit then
                         if material_allowed[shape_mat] then

@@ -175,6 +175,13 @@ function Menu_GenerateMenu()
     UiText("Version: " .. Version_GetCurrentActual())
 end
 
+
+function Menu_GenerateGameMenuTick()
+    if PauseMenuButton("ThiccSmoke & ThiccFire Settings") then
+		_Menu_UI = not _Menu_UI
+	end
+end
+
 function Menu_GenerateGameMenu()
 
     -- DebugPrinter("Toggle menu button: " .. GeneralOptions_GetToggleMenuKey())
@@ -185,7 +192,6 @@ function Menu_GenerateGameMenu()
             DebugPrinter("Toggle menu button clicked")
         end
     end
-
     if _Menu_UI then
         -- Make ui clickable.
         UiMakeInteractive()

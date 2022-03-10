@@ -19,7 +19,6 @@ Preset_Settings_High = {
     Wind = {
         wind = "YES",
         winddirection = 360,
-        winddirectionrandom = 15,
         windstrength = 5,
         windstrengthrandom = 5
     },

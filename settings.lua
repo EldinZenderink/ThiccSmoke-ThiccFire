@@ -22,7 +22,6 @@ Settings_Template ={
     Wind = {
         wind = "NO",
         winddirection = 360,
-        winddirectionrandom = 15,
         windstrength = 5,
         windstrengthrandom = 5
     },
@@ -1830,14 +1829,6 @@ Settings_Wind_General_Options =
 		},
 		{
 			option_parent_text="",
-			option_text="Wind Direction Randomness",
-			option_note="Direction can change randomly within the direction minus and plus this value",
-			option_type="float",
-			storage_key="winddirectionrandom",
-			min_max={0, 360, 1}
-		},
-		{
-			option_parent_text="",
 			option_text="Wind Strength",
 			option_note="Strength of the wind.",
 			option_type="float",
@@ -1859,7 +1850,6 @@ function Settings_Wind_Update()
     Settings_EditedSettings()
     Settings_SetValue("Wind", "wind", Storage_GetString("wind", "wind"))
     Settings_SetValue("Wind", "winddirection", Storage_GetFloat("wind", "winddirection"))
-    Settings_SetValue("Wind", "winddirectionrandom", Storage_GetFloat("wind", "winddirectionrandom"))
     Settings_SetValue("Wind", "windstrength", Storage_GetFloat("wind", "windstrength"))
     Settings_SetValue("Wind", "windstrengthrandom", Storage_GetFloat("wind", "windstrengthrandom"))
     Settings_StoreActivePreset()
@@ -1868,7 +1858,6 @@ end
 function Settings_Wind_Store()
     Storage_SetString("wind", "wind", Settings_GetValue("Wind", "wind"))
     Storage_SetFloat("wind", "winddirection", Settings_GetValue("Wind", "winddirection"))
-    Storage_SetFloat("wind", "winddirectionrandom", Settings_GetValue("Wind", "winddirectionrandom"))
     Storage_SetFloat("wind", "windstrength", Settings_GetValue("Wind", "windstrength"))
     Storage_SetFloat("wind", "windstrengthrandom",  Settings_GetValue("Wind", "windstrengthrandom"))
     Settings_StoreActivePreset()
