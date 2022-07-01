@@ -16,6 +16,7 @@ FireDetector_Properties = {
     fire_damage_soft = 0.1,
     fire_damage_medium = 0.05,
     fire_damage_hard = 0.01,
+    detect_inside = "YES",
     soot_sim = "YES",
     soot_max_size = 2.5,
     soot_min_size = 0.1,
@@ -31,6 +32,7 @@ FireDetector_Properties = {
         masonery = true,
     }
 }
+
 
 --- Some global properties
 FireDetector_LocalDB = {
@@ -74,6 +76,7 @@ function FireDetector_UpdateSettingsFromSettings()
     FireDetector_Properties["fire_explosion"] = Settings_GetValue("FireDetector", "fire_explosion")
     FireDetector_Properties["fire_damage"] = Settings_GetValue("FireDetector", "fire_damage")
     FireDetector_Properties["spawn_fire"] = Settings_GetValue("FireDetector", "spawn_fire")
+    FireDetector_Properties["detect_inside"] = Settings_GetValue("FireDetector", "detect_inside")
     FireDetector_Properties["soot_sim"] = Settings_GetValue("FireDetector", "soot_sim")
     FireDetector_Properties["soot_dithering_max"] = Settings_GetValue("FireDetector", "soot_dithering_max")
     FireDetector_Properties["soot_dithering_min"] = Settings_GetValue("FireDetector", "soot_dithering_min")
@@ -87,10 +90,16 @@ function FireDetector_UpdateSettingsFromSettings()
     SetInt("game.fire.maxcount",  math.floor(FireDetector_Properties["teardown_max_fires"]))
     SetInt("game.fire.spread",  math.floor(FireDetector_Properties["teardown_fire_spread"]))
 
+    if FireDetector_Properties["detect_inside"] == nil or FireDetector_Properties["detect_inside"] == "" then
+        FireDetector_Properties["detect_inside"] = "YES"
+        Settings_SetValue("FireDetector", "detect_inside", "YES")
+    end
+
     if FireDetector_Properties["soot_sim"] == nil or FireDetector_Properties["soot_sim"] == "" then
         FireDetector_Properties["soot_sim"] = "NO"
         Settings_SetValue("FireDetector", "soot_sim", "NO")
     end
+
 
     if FireDetector_Properties["soot_dithering_max"] == nil or FireDetector_Properties["soot_dithering_max"] == 0 then
         FireDetector_Properties["soot_dithering_max"] = 1
@@ -117,10 +126,14 @@ end
 
 
 
-function FireDetection_DrawDetectedFire(fire)
+function FireDetection_DrawDetectedFire(fire, inside)
     Generic_CreateBox(fire[3], fire[4], nil, {0, fire[2] * 0.01, 0}, true)
     Generic_DrawPoint(fire[3], 1,0,0, true)
-    Generic_DrawPoint(fire[1], 0,0,1, true)
+    if inside then
+        Generic_DrawPoint(fire[1], 1,0,1, true)
+    else
+        Generic_DrawPoint(fire[1], 0,0,1, true)
+    end
 end
 
 function FireDetector_FindFireLocationsV2(time, refresh)
@@ -137,7 +150,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     local material_allowed = FireDetector_Properties["material_allowed"]
 
     local max_fires = FireDetector_Properties["max_fire"]
-    local min_fire_distance = FireDetector_Properties["min_fire_distance"] / 50 * FireDetector_LocalDB["fire_intensity"]
+    local min_fire_distance = FireDetector_Properties["min_fire_distance"]
     if min_fire_distance < 0.5 then
         min_fire_distance = 0.5
     end
@@ -157,14 +170,10 @@ function FireDetector_FindFireLocationsV2(time, refresh)
     local max_intensity = 0
     local fire_count = 0
 
-
-
     if refresh or fire_count == 0 then
-
         for hash, fire in pairs(FireDetector_SPOF) do
             fire_count = fire_count + 1
             local intensity = fire["fire_intensity"]
-            -- DebugPrint("timer " .. timer .. " timeout " .. fire["timeout"])
             if  timer > fire["timeout"] or fire["delete"] then
                 if fire_explosion == "YES" then
                     Explosion(fire["location"], (4 / 100) * fire["fire_intensity"])
@@ -262,8 +271,6 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             end
         end
 
-            -- if refresh then
-            -- Perform fire spread, damage/explosion after timeouts
 
         if time_elapsed > fire_update_time and fire_count < max_fires then
             time_elapsed = 0
@@ -283,11 +290,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
             end
 
             local onfire = {}
-            -- FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
-            local p = GetPlayerPos()
-            local n = FireDetector_FindNearestPoint(p, 409.6 / 10 / modifier)
-            FireDetector_RecursiveBinarySearchFire(Vec(0,0,0), 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires - fire_count, onfire, 0, nil)
-
+            FireDetector_RecursiveBinarySearchFire(Vec(0,0,0), 409.6 / modifier, max_group_fire_distance / modifier, min_fire_distance / modifier, max_fires - fire_count, onfire, 0, nil, 0)
 
             for i=1, #onfire do
                 local hash = ObjectDetector_HashVec(onfire[i][3])
@@ -304,7 +307,7 @@ function FireDetector_FindFireLocationsV2(time, refresh)
                     if hit then
                         local shape_mat = GetShapeMaterialAtPosition(shape_hit, point)
                         if material_allowed[shape_mat] then
-                            FireDetector_SPOF[hash] = {location=point, light_location=onfire[i][5], material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i], timeout=Generic_deepCopy(timer) + Generic_rnd(fire_reaction_time, fire_reaction_time * 2), delete=false, soot=false}
+                            FireDetector_SPOF[hash] = {location=point, light_location=onfire[i][5], material=shape_mat, fire_intensity=intensity, shape=shape_hit, original=onfire[i], timeout=Generic_deepCopy(timer) + Generic_rnd(fire_reaction_time, fire_reaction_time * 2), delete=false, soot=false, inside=nil, normal=normal}
                             if max_intensity < intensity then
                                 max_intensity = intensity
                             end
@@ -323,11 +326,35 @@ function FireDetector_FindFireLocationsV2(time, refresh)
         end
         FireDetector_LocalDB["time_elapsed"] = time_elapsed + time
     end
-    -- end
+
+    if FireDetector_Properties["detect_inside"] == "YES" then
+        for hash, fire in pairs(FireDetector_SPOF) do
+            if FireDetector_SPOF[hash]["inside"] == nil and FireDetector_SPOF[hash]["fire_intensity"] > 50 then
+                local hitcount = 0
+                for x=1, 6  do
+                    local direction = VecAdd(fire["normal"], Vec(Generic_rnd(-0.5, 0.5), Generic_rnd(0, 1), Generic_rnd(-0.5, 0.5)))
+                    local newpoint = VecAdd(fire["location"], VecScale(direction, 15))
+                    QueryRequire("static")
+                    local hit, dist =  QueryRaycast(fire["location"], direction, 15)
+
+                    if hit and dist ~= 0 then
+                        Generic_DrawLine(fire["location"], newpoint, 1,0,1, (FireDetector_Properties["visualize_fire_detection"] == "ON"))
+                        hitcount = hitcount + 1
+                    end
+                end
+                if hitcount > 0  then
+                    FireDetector_SPOF[hash]["fire_intensity"] = 50
+                    FireDetector_SPOF[hash]["inside"] = true
+                else
+                    FireDetector_SPOF[hash]["inside"] = false
+                end
+            end
+        end
+    end
 
     if FireDetector_Properties["visualize_fire_detection"] == "ON" then
         for hash, fire in pairs(FireDetector_SPOF) do
-            FireDetection_DrawDetectedFire(fire["original"])
+            FireDetection_DrawDetectedFire(fire["original"], fire["inside"])
         end
     end
 
@@ -368,6 +395,8 @@ function FireDetector_FindNearestPoint(point, size)
     return {x, z, y}
 end
 
+
+
 --- Determine fire locations by recursively searching for fires in bounding boxes. Thanks to @Thomasims on the official Teardown discord for additional help and input.
 ---@param vecstart Location to start searching from
 ---@param size Size of the bounding box
@@ -376,7 +405,7 @@ end
 ---@param max_fires any Maximum fires it can detected before it stops searching
 ---@param onfire any The list with fires detected.
 ---@param intensity any The intensity, calculated until size_fire_count is  reached and passed along till min_size is reached.
-function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count, min_size, max_fires, onfire, intensity, light_location, previous_fire_amount)
 
     -- Draw bounding box
     local outerpoints = Generic_CreateBox(vecstart, size, nil, {1, 0, 0}, false)
@@ -386,7 +415,11 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
         return
     end
 
-    if size <= size_fire_count and (intensity == nil or intensity == 0) then
+
+    if firecount > 16 then
+        min_size = min_size + 0.4
+    end
+    if (size <= size_fire_count or size <=  min_size) and (intensity == nil or intensity == 0) then
         intensity = firecount
         local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size_fire_count)
         if hit then
@@ -398,8 +431,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
     end
 
 
-
-    if size < min_size and max_fires > #onfire then
+    if size < (min_size / 2) and max_fires > #onfire then
         if min_size > 0.1 then
             local hit, pos = QueryClosestFire(FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7])), size )
             if hit then
@@ -410,6 +442,7 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
                     ll = light_location
                     Generic_CreateBox(ll[1], ll[2], nil, {1,0,1}, false)
                 end
+
                 onfire[#onfire + 1] = {pos, intensity, vecstart, size, ll[1]}
             end
         end
@@ -420,34 +453,34 @@ function FireDetector_RecursiveBinarySearchFire(vecstart, size, size_fire_count,
 -- if QueryAabbFireCount(outerpoints[1], outerpoints[7]) > 0 then
     midpoint = FireDetector_VecMidPoint(outerpoints[1], FireDetector_VecMidPoint(outerpoints[1], outerpoints[7]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
     midpoint = FireDetector_VecMidPoint(outerpoints[2], FireDetector_VecMidPoint(outerpoints[2], outerpoints[8]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[3], FireDetector_VecMidPoint(outerpoints[3], outerpoints[5]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[4], FireDetector_VecMidPoint(outerpoints[4], outerpoints[6]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[5], FireDetector_VecMidPoint(outerpoints[5], outerpoints[3]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[6], FireDetector_VecMidPoint(outerpoints[6], outerpoints[4]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[7], FireDetector_VecMidPoint(outerpoints[7], outerpoints[1]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2,  size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
     midpoint = FireDetector_VecMidPoint(outerpoints[8], FireDetector_VecMidPoint(outerpoints[8], outerpoints[2]))
     -- Generic_CreateBox(midpoint, size / 2, nil, {1, 0, 0}, false)
-    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2, size_fire_count, min_size, max_fires, onfire, intensity, light_location)
+    FireDetector_RecursiveBinarySearchFire(midpoint, size / 2, size_fire_count, min_size, max_fires, onfire, intensity, light_location, firecount)
 
 
 

@@ -117,7 +117,7 @@ end
 
 ---This function should be called in the tick(), it generates a list locations where
 ---assumed there is fire. This is done based on the following logic
---- 1. Query all dynamic physical small shapes: fire is most likely causing debris of small chunks to appear
+--- 1. Query all dynamic physical small shapes: fire is most likely causing ash of small chunks to appear
 --- 1.1 Store all shapes determined to be broken in a global list, together with a time stamp, however chunks are normally not the actual shape on fire.
 ---
 --- 2. (note this step happens before 1.), For every shape in that list, determine if timestamp is within the timeout window (to prevent forever detection)
@@ -174,7 +174,7 @@ function FireDetector_FindFireLocations(time, refresh)
 
 
     -- If the fire count is not at it's max, it may add more fire
-    -- Fire is detected by finding small broken bits. The whole detection is based on the assumption that fire creates small debris
+    -- Fire is detected by finding small broken bits. The whole detection is based on the assumption that fire creates small ash
     -- It is then determined if the shapes found are already part for a body that has been detected earlier.
     -- if the body is not detected yet, add to a global list with potentially bodies that could be on fire.
     -- Also add a timestamp at for detection time.

@@ -40,6 +40,7 @@ Settings_Template ={
         fire_explosion = "NO",
         fire_damage = "NO",
         spawn_fire = "YES",
+        detect_inside = "YES",
         soot_sim = "YES",
         soot_max_size = 2.5,
         soot_min_size = 0.1,
@@ -48,7 +49,7 @@ Settings_Template ={
         fire_damage_soft = 0.1,
         fire_damage_medium = 0.05,
         fire_damage_hard = 0.01,
-        teardown_max_fires = 500,
+        teardown_max_fires = 200,
         teardown_fire_spread = 2,
         material_allowed = {
             wood = true,
@@ -60,8 +61,10 @@ Settings_Template ={
     },
     ParticleSpawner={
         fire = "YES",
+        ash = "YES",
         smoke = "YES",
         fire_to_smoke_ratio = "1:2",
+        ash_to_smoke_ratio = "1:2",
         dynamic_fps = "ON",
         dynamic_fps_target = 35,
         particle_refresh_max = 30,
@@ -91,7 +94,18 @@ Settings_Template ={
         fire_fadein = 0,
         fire_fadeout = 4,
         fire_emissive = 5,
-        embers = "LOW"
+        embers = "LOW",
+        ash_gravity_min = -16,
+        ash_gravity_max = -40,
+        ash_rot_max = 2,
+        ash_rot_min = 1,
+        ash_sticky_max = 0.9,
+        ash_sticky_min = 0.7,
+        ash_drag_max = 0.2,
+        ash_drag_min = 0.1,
+        ash_size_max = 0.04,
+        ash_size_min = 0.01,
+        ash_life = 8
     },
     FireMaterial = {
         wood={
@@ -831,9 +845,18 @@ Settings_FireDetector_OptionsDetection =
 			options={
 				"LARGE",
 				"MEDIUM",
-                "SMALL",
-                "TINY",
-                "ULTRATINY"
+                "SMALL"
+			}
+        },
+        {
+            option_parent_text="",
+            option_text="Detect Inside Convined Space",
+            option_note="Detect if fire is within convined space to limit intensity to 50% (sort of fixes particles to large/glitching)",
+            option_type="text",
+			storage_key="detect_inside",
+			options={
+				"YES",
+				"NO"
 			}
         },
         {
@@ -1240,6 +1263,7 @@ function Settings_FireDetector_Update()
     Settings_SetValue("FireDetector", "fire_damage_hard", Storage_GetFloat("firedetector", "fire_damage_hard"))
     Settings_SetValue("FireDetector", "teardown_max_fires", Storage_GetFloat("firedetector", "teardown_max_fires"))
     Settings_SetValue("FireDetector", "teardown_fire_spread", Storage_GetFloat("firedetector", "teardown_fire_spread"))
+    Settings_SetValue("FireDetector", "detect_inside", Storage_GetString("firedetector", "detect_inside"))
     Settings_SetValue("FireDetector", "soot_sim", Storage_GetString("firedetector", "soot_sim"))
     Settings_SetValue("FireDetector", "soot_dithering_max", Storage_GetFloat("firedetector", "soot_dithering_max"))
     Settings_SetValue("FireDetector", "soot_dithering_min", Storage_GetFloat("firedetector", "soot_dithering_min"))
@@ -1268,6 +1292,7 @@ function Settings_FireDetector_Store()
     Storage_SetFloat("firedetector", "fire_damage_hard", Settings_GetValue("FireDetector", "fire_damage_hard"))
     Storage_SetFloat("firedetector", "teardown_max_fires", Settings_GetValue("FireDetector", "teardown_max_fires"))
     Storage_SetFloat("firedetector", "teardown_fire_spread", Settings_GetValue("FireDetector", "teardown_fire_spread"))
+    Storage_SetString("firedetector", "detect_inside", Settings_GetValue("FireDetector", "detect_inside"))
     Storage_SetString("firedetector", "soot_sim", Settings_GetValue("FireDetector", "soot_sim"))
     Storage_SetFloat("firedetector", "soot_dithering_max", Settings_GetValue("FireDetector", "soot_dithering_max"))
     Storage_SetFloat("firedetector", "soot_max_size", Settings_GetValue("FireDetector", "soot_max_size"))
@@ -1425,7 +1450,7 @@ Settings_ParticleSpawner_FrameRate_Options =
             option_note="Note: only taken into account when your FPS is above this value!",
             option_type="float",
             storage_key="dynamic_fps_target",
-            min_max={35, 60, 1}
+            min_max={29, 60, 1}
         },
         {
             option_parent_text="",
@@ -1484,11 +1509,27 @@ Settings_ParticleSpawner_Particle_Options =
         },
         {
             option_parent_text="",
-            option_text="Fire to Smoke ratio",
-            option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 smoke every 8 fire particles)",
+            option_text="Spawn Ash Particles",
+            option_note="Enable this to spawn ash particles",
             option_type="text",
-            storage_key="toggle_smoke_fire",
-            options={"1:1", "1:2", "1:4", "1:8"}
+            storage_key="ash",
+            options={"YES", "NO"}
+        },
+        {
+            option_parent_text="",
+            option_text="Fire to Smoke ratio",
+            option_note="How many fire particles per spawning of smoke particles should spawn. (e.g. 1 fire every 8 smoke particles)",
+            option_type="text",
+            storage_key="fire_to_smoke_ratio",
+            options={"1:1", "1:2", "1:4", "1:8", "1:15", "1:30", "1:60"}
+        },
+        {
+            option_parent_text="",
+            option_text="Ash to Smoke ratio",
+            option_note="How many ash particles per spawning of smoke particles should spawn. (e.g. 1 ash particle every 8 smoke particles)",
+            option_type="text",
+            storage_key="ash_to_smoke_ratio",
+            options={"1:1", "1:2", "1:4", "1:8", "1:15", "1:30", "1:60"}
         }
 	}
 }
@@ -1498,7 +1539,10 @@ Settings_ParticleSpawner_Particle_Options =
 function Settings_ParticleSpawner_Update()
     Settings_EditedSettings()
     Settings_SetValue("ParticleSpawner", "fire", Storage_GetString("particlespawner", "fire"))
-    Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
+    Settings_SetValue("ParticleSpawner", "smoke", Storage_GetString("particlespawner", "smoke"))
+    Settings_SetValue("ParticleSpawner", "ash", Storage_GetString("particlespawner", "ash"))
+    Settings_SetValue("ParticleSpawner", "fire_to_smoke_ratio", Storage_GetString("particlespawner", "fire_to_smoke_ratio"))
+    Settings_SetValue("ParticleSpawner", "ash_to_smoke_ratio", Storage_GetString("particlespawner", "ash_to_smoke_ratio"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps", Storage_GetString("particlespawner", "dynamic_fps"))
     Settings_SetValue("ParticleSpawner", "dynamic_fps_target", Storage_GetFloat("particlespawner", "dynamic_fps_target"))
     Settings_SetValue("ParticleSpawner", "particle_refresh_max", Storage_GetFloat("particlespawner", "particle_refresh_max"))
@@ -1510,7 +1554,9 @@ end
 function Settings_ParticleSpawner_Store()
     Storage_SetString("particlespawner", "fire", Settings_GetValue("ParticleSpawner", "fire"))
     Storage_SetString("particlespawner", "smoke", Settings_GetValue("ParticleSpawner", "smoke"))
+    Storage_SetString("particlespawner", "ash", Settings_GetValue("ParticleSpawner", "ash"))
     Storage_SetString("particlespawner", "fire_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "fire_to_smoke_ratio"))
+    Storage_SetString("particlespawner", "ash_to_smoke_ratio", Settings_GetValue("ParticleSpawner", "ash_to_smoke_ratio"))
     Storage_SetString("particlespawner", "dynamic_fps", Settings_GetValue("ParticleSpawner", "dynamic_fps"))
     Storage_SetFloat("particlespawner", "dynamic_fps_target", Settings_GetValue("ParticleSpawner", "dynamic_fps_target"))
     Storage_SetFloat("particlespawner", "particle_refresh_max", Settings_GetValue("ParticleSpawner", "particle_refresh_max"))
@@ -1537,11 +1583,6 @@ function Settings_ParticleSpawner_GetOptionsMenu()
 				sub_menu_title="Particle Settings",
 				options=Settings_ParticleSpawner_Particle_Options,
                 description="This menu allows for particle related settings to be changed, e.g. which particles can be spawned and in what ratio!\nNote: go to Particle Settings main menu for more detailed particle settings."
-			},
-			{
-				sub_menu_title="Light Settings",
-				options=Settings_ParticleSpawner_Light_Options,
-                description="This menu allows for adjusting light behavior. (Lights are extremely performance intensive!). \nThe particle spawner also takes care of light hence why it is here."
 			}
 		}
 	}
@@ -1734,6 +1775,169 @@ Settings_Fire_Particle_Options =
 	}
 }
 
+Settings_Ash_Particle_Options =
+{
+	storage_module="particle",
+	storage_prefix_key=nil,
+	buttons={
+		{
+			text="Set default",
+			callback=function() Settings_Particle_Default() end,
+		}
+	},
+	update=function() Settings_Particle_Update() end,
+	option_items={
+        {
+            option_parent_text="",
+            option_text="Lifetime",
+            option_note="How long ash particles may exist in the world (higher == lower fps)",
+            option_type="float",
+            storage_key="ash_life",
+            min_max={1, 50, 1}
+        },
+        {
+            option_parent_text="",
+            option_text="Gravity Min",
+            option_note="Change the minimum gravity that can pull on ash particles. (Always downwards == negative)",
+            option_type="float",
+            storage_key="ash_gravity_min",
+            min_max={-50, 50, 1,
+            {
+                {
+                    related="ash_gravity_max",
+                    type=">"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Gravity Max",
+            option_note="Change the maximum gravity that can pull on ash particles. (Always downwards == negative)",
+            option_type="float",
+            storage_key="ash_gravity_max",
+            min_max={-50, 50, 1,
+            {
+                {
+                    related="ash_gravity_min",
+                    type="<"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Rotational Speed",
+            option_note="Maximum rotational speed of the ash particles",
+            option_type="float",
+            storage_key="ash_rot_max",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_rot_min",
+                    type=">"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Min Rotational Speed",
+            option_note="Minimum rotational speed of the ash particles",
+            option_type="float",
+            storage_key="ash_rot_min",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_rot_max",
+                    type="<"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Stickyness",
+            option_note="Maximum stickyness of ash particles",
+            option_type="float",
+            storage_key="ash_sticky_max",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_sticky_min",
+                    type=">"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Min Stickyness",
+            option_note="Minimum stickyness of ash particles",
+            option_type="float",
+            storage_key="ash_sticky_min",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_sticky_max",
+                    type="<"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Drag",
+            option_note="Maximum drag of ash particles",
+            option_type="float",
+            storage_key="ash_drag_max",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_drag_min",
+                    type=">"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Min Drag",
+            option_note="Minimum drag of ash particles",
+            option_type="float",
+            storage_key="ash_drag_min",
+            min_max={0, 10, 0.1,
+            {
+                {
+                    related="ash_drag_max",
+                    type="<"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Max Size",
+            option_note="Maximum size of ash particles",
+            option_type="float",
+            storage_key="ash_size_max",
+            min_max={0.01, 0.25, 0.01,
+            {
+                {
+                    related="ash_size_min",
+                    type=">"
+                }
+            }}
+        },
+        {
+            option_parent_text="",
+            option_text="Min Size",
+            option_note="Minimum size of ash particles",
+            option_type="float",
+            storage_key="ash_size_min",
+            min_max={0.01, 0.25, 0.01,
+            {
+                {
+                    related="ash_size_max",
+                    type="<"
+                }
+            }}
+        }
+	}
+}
+
 function Settings_Particle_Update()
     Settings_EditedSettings()
     Settings_SetValue("Particle", "intensity_mp", Storage_GetString("particle", "intensity_mp"))
@@ -1750,6 +1954,18 @@ function Settings_Particle_Update()
     Settings_SetValue("Particle", "fire_fadeout", Storage_GetFloat("particle", "fire_fadeout"))
     Settings_SetValue("Particle", "fire_emissive", Storage_GetFloat("particle", "fire_emissive"))
     Settings_SetValue("Particle", "embers", Storage_GetString("particle", "embers"))
+
+    Settings_SetValue("Particle", "ash_gravity_min", Storage_GetFloat("particle", "ash_gravity_min"))
+    Settings_SetValue("Particle", "ash_gravity_max", Storage_GetFloat("particle", "ash_gravity_max"))
+    Settings_SetValue("Particle", "ash_rot_max", Storage_GetFloat("particle", "ash_rot_max"))
+    Settings_SetValue("Particle", "ash_rot_min", Storage_GetFloat("particle", "ash_rot_min"))
+    Settings_SetValue("Particle", "ash_sticky_max", Storage_GetFloat("particle", "ash_sticky_max"))
+    Settings_SetValue("Particle", "ash_sticky_min", Storage_GetFloat("particle", "ash_sticky_min"))
+    Settings_SetValue("Particle", "ash_drag_max", Storage_GetFloat("particle", "ash_drag_max"))
+    Settings_SetValue("Particle", "ash_drag_min", Storage_GetFloat("particle", "ash_drag_min"))
+    Settings_SetValue("Particle", "ash_size_max", Storage_GetFloat("particle", "ash_size_max"))
+    Settings_SetValue("Particle", "ash_size_min", Storage_GetFloat("particle", "ash_size_min"))
+    Settings_SetValue("Particle", "ash_life", Storage_GetFloat("particle", "ash_life"))
     Settings_StoreActivePreset()
 end
 
@@ -1768,6 +1984,18 @@ function Settings_Particle_Store()
     Storage_SetFloat("particle", "fire_fadeout", Settings_GetValue("Particle", "fire_fadeout"))
     Storage_SetFloat("particle", "fire_emissive", Settings_GetValue("Particle", "fire_emissive"))
     Storage_SetString("particle", "embers", Settings_GetValue("Particle", "embers"))
+
+    Storage_SetFloat("particle", "ash_gravity_min", Settings_GetValue("Particle", "ash_gravity_min"))
+    Storage_SetFloat("particle", "ash_gravity_max", Settings_GetValue("Particle", "ash_gravity_max"))
+    Storage_SetFloat("particle", "ash_rot_max", Settings_GetValue("Particle", "ash_rot_max"))
+    Storage_SetFloat("particle", "ash_rot_min", Settings_GetValue("Particle", "ash_rot_min"))
+    Storage_SetFloat("particle", "ash_sticky_max", Settings_GetValue("Particle", "ash_sticky_max"))
+    Storage_SetFloat("particle", "ash_sticky_min", Settings_GetValue("Particle", "ash_sticky_min"))
+    Storage_SetFloat("particle", "ash_drag_max", Settings_GetValue("Particle", "ash_drag_max"))
+    Storage_SetFloat("particle", "ash_drag_min", Settings_GetValue("Particle", "ash_drag_min"))
+    Storage_SetFloat("particle", "ash_size_max", Settings_GetValue("Particle", "ash_size_max"))
+    Storage_SetFloat("particle", "ash_size_min", Settings_GetValue("Particle", "ash_size_min"))
+    Storage_SetFloat("particle", "ash_life", Settings_GetValue("Particle", "ash_life"))
     Settings_StoreActivePreset()
 end
 
@@ -1788,12 +2016,17 @@ function Settings_Particle_GetOptionsMenu()
 			{
 				sub_menu_title="Fire",
 				options=Settings_Fire_Particle_Options,
-                description="These settings are applied to all fire particles (independent of the material), for some quick adjustments if necessary."
+                description="These settings are applied to all fire particles (independent of the material), for some quick adjustments if necessary.\n Note: only available if fire particles is enabled in Particle Spawner Menu."
 			},
 			{
 				sub_menu_title="Smoke",
 				options=Settings_Smoke_Particle_Options,
-                description="These settings are applied to all smoke particles (independent of the material), for some quick adjustments if necessary."
+                description="These settings are applied to all smoke particles (independent of the material), for some quick adjustments if necessary.\n Note: only available if smoke particles is enabled in Particle Spawner Menu."
+			},
+			{
+				sub_menu_title="Ash",
+				options=Settings_Ash_Particle_Options,
+                description="These settings are applied to all ash particles (independent of the material), for some quick adjustments if necessary.\n Note: only available if ash particles is enabled in Particle Spawner Menu."
 			}
 		}
 	}
@@ -1903,14 +2136,6 @@ Settings_Light_General_Options =
         },
         {
             option_parent_text="",
-            option_text="Legacy",
-            option_note="Use legacy method (pre v0.9.3) for spawning light (performance heavy)!",
-            option_type="text",
-            storage_key="legacy",
-            options={"YES", "NO"}
-        },
-        {
-            option_parent_text="",
             option_text="Light Flickering Intensity",
             option_note="Note: changes how much the light flickers, which is based on the fire intensity.",
             option_type="float",
@@ -1954,7 +2179,6 @@ Settings_Light_General_Options =
 
 function Settings_Light_Update()
     Settings_EditedSettings()
-    Settings_SetValue("Light", "legacy", Storage_GetString("light", "legacy"))
     Settings_SetValue("Light", "spawn_light", Storage_GetString("light", "spawn_light"))
     Settings_SetValue("Light", "red_light_offset", Storage_GetFloat("light", "red_light_offset"))
     Settings_SetValue("Light", "green_light_offset", Storage_GetFloat("light", "green_light_offset"))
@@ -1965,7 +2189,6 @@ function Settings_Light_Update()
 end
 
 function Settings_Light_Store()
-    Storage_SetString("light", "legacy", Settings_GetValue("Light", "legacy"))
     Storage_SetString("light", "spawn_light", Settings_GetValue("Light", "spawn_light"))
     Storage_SetFloat("light", "red_light_offset", Settings_GetValue("Light", "red_light_offset"))
     Storage_SetFloat("light", "green_light_offset", Settings_GetValue("Light", "green_light_offset"))
