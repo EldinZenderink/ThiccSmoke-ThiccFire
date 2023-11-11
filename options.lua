@@ -7,6 +7,7 @@
 #include "generic.lua"
 #include "generaloptions.lua"
 #include "debug.lua"
+#include "compatibility.lua"
 #include "storage.lua"
 #include "restoresettings.lua"
 #include "settings.lua"

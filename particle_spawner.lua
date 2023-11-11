@@ -24,9 +24,16 @@ ParticleSpawner_FindNew = true
 ParticleSpawner_FireToSmokeSpawner = 0
 ParticleSpawner_AshToSmokeSpawner = 0
 ParticleSpawner_RefreshTimer = 0
+ParticleSpawner_SpawnTimer = 0
 ParticleSpawner_ParticleRefreshRate = 5.0
 ParticleSpawner_TimeElapsed = 0
 
+-- Optimize dynamic compile time, should compile only once localy?  According to: https://www.lua.org/gems/sample.pdf
+-- local pairs = pairs
+
+local FuncDeepCopy = Generic_deepCopy
+local FuncRndNum = Generic_rnd
+local FuncRndInt = Generic_rndInt
 
 function ParticleSpawner_Init()
     ParticleSpawner_ParticleRefreshRate = ParticleSpawner_Properties["particle_refresh_max"]
@@ -86,25 +93,24 @@ function ParticleSpawner_tick(dt)
     else
         ParticleSpawner_ParticleRefreshRate = Particle_RefreshMax
     end
-    ParticleSpawner_TimeElapsed = ParticleSpawner_TimeElapsed + dt
-end
 
-function ParticleSpawner_update(dt)
+
+    ParticleSpawner_TimeElapsed = ParticleSpawner_TimeElapsed + dt
     local fire = ParticleSpawner_Properties["fire"]
     local smoke = ParticleSpawner_Properties["smoke"]
     local ash = ParticleSpawner_Properties["ash"]
     local toggle = ParticleSpawner_Properties["toggle_smoke_fire"]
     local toggle_ash = ParticleSpawner_Properties["toggle_smoke_ash"]
 
-    local spawn_fire = false
-    local spawn_smoke = true
     local spawn_ash = false
+    local spawn_fire = false
 
     if ParticleSpawner_ParticlesToSpawn then
 
-        if ParticleSpawner_RefreshTimer > (1 / ParticleSpawner_ParticleRefreshRate) then
+        if ParticleSpawner_SpawnTimer > (1 / ParticleSpawner_ParticleRefreshRate) then
 
             if toggle == "1:1" then
+                ParticleSpawner_FireToSmokeSpawner = 0
                 spawn_fire = true
             end
             if toggle_ash == "1:1" then
@@ -112,51 +118,44 @@ function ParticleSpawner_update(dt)
             end
 
             if toggle == "1:2" and ParticleSpawner_FireToSmokeSpawner < 2 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:2" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
+                spawn_fire = true
             end
 
             if toggle == "1:4" and ParticleSpawner_FireToSmokeSpawner < 4 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:4" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
+                spawn_fire = true
             end
 
             if toggle == "1:8" and ParticleSpawner_FireToSmokeSpawner < 8 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:8" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
             end
 
             if toggle == "1:15" and ParticleSpawner_FireToSmokeSpawner < 15 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:15" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
+                spawn_fire = true
             end
 
             if toggle == "1:30" and ParticleSpawner_FireToSmokeSpawner < 30 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:30" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
+                spawn_fire = true
             end
 
             if toggle == "1:60" and ParticleSpawner_FireToSmokeSpawner < 60 then
-                spawn_fire = false
                 ParticleSpawner_FireToSmokeSpawner = ParticleSpawner_FireToSmokeSpawner + 1
             elseif toggle == "1:60" then
-                spawn_fire = true
                 ParticleSpawner_FireToSmokeSpawner = 0
+                spawn_fire = true
             end
 
             if toggle_ash == "1:2" and ParticleSpawner_AshToSmokeSpawner < 2 then
@@ -207,29 +206,42 @@ function ParticleSpawner_update(dt)
                 ParticleSpawner_AshToSmokeSpawner = 0
             end
 
+
+            local lights = {}
             for hash, info in pairs(ParticleSpawner_ParticlesToSpawn) do
                 if info ~= nil then
-                    local firemat = Generic_deepCopy(FireMaterial_GetInfo(info["material"]))
-                    local smokemat = Generic_deepCopy(SmokeMaterial_GetInfo(info["material"]))
-                    if smoke == "YES" and spawn_smoke then
-                        Particle_EmitParticle(smokemat, info["location"], "smoke", info["fire_intensity"])
+                    local firemat = FuncDeepCopy(FireMaterial_GetInfo(info["material"]))
+                    local smokemat = FuncDeepCopy(SmokeMaterial_GetInfo(info["material"]))
+                    if smoke == "YES" then
+                        local fadein =  FuncRndNum(0.1, 0.5)
+                        local fadeout =  FuncRndNum(0.5, 1)
+                        local light = Particle_EmitParticle(smokemat, info["location"], "smoke", info["fire_intensity"], false, fadein + fadeout ,nil, fadein, fadeout)
+                        if light then
+                            lights[hash] = info
+                        end
                     end
-                    if fire == "YES" and spawn_fire then
-                        Particle_EmitParticle(firemat, info["location"], "fire", info["fire_intensity"])
+                    if fire == "YES" then
+                        local fadein =  FuncRndNum(0.1, 0.5)
+                        local fadeout =  FuncRndNum(1, 1.5)
+                        local light = Particle_EmitParticle(firemat, info["location"], "fire", info["fire_intensity"], false, fadein + fadeout ,nil, fadein, fadeout)
+                        if light then
+                            lights[hash] = info
+                        end
                     end
                     if ash == "YES" and spawn_ash then
-                        if Generic_rndInt(0,1) == 1 then
-                            Particle_EmitParticle(smokemat, info["location"], "ash", info["fire_intensity"])
+                        if FuncRndInt(0,1) == 1 then
+                            Particle_EmitParticleOld(smokemat, info["location"], "ash", info["fire_intensity"])
                         end
-                        if Generic_rndInt(0,1) == 1 then
-                            Particle_EmitParticle(firemat, info["location"], "ash_fire", info["fire_intensity"])
+                        if FuncRndInt(0,1) == 1 then
+                            Particle_EmitParticleOld(firemat, info["location"], "ash_fire", info["fire_intensity"])
                         end
                     end
                 end
             end
 
-            Light_SpawnLight(ParticleSpawner_ParticlesToSpawn)
-            ParticleSpawner_RefreshTimer = 0
+            Light_SpawnLight(lights)
+
+            ParticleSpawner_SpawnTimer = 0
             ParticleSpawner_FindNew = true
         end
     else
@@ -239,20 +251,28 @@ function ParticleSpawner_update(dt)
     if ParticleSpawner_FindNew then
         ParticleSpawner_FindNew = false
         ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocationsV2(dt, true)
-        Wind_ChangeWind(dt, true) -- Dont have to do it 60 times a second ;P.
-
     else
         ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocationsV2(dt, false)
-        Wind_ChangeWind(dt, false) -- Dont have to do it 60 times a second ;P.
     end
+
+
+    if ParticleSpawner_RefreshTimer > (1 / ParticleSpawner_ParticleRefreshRate) then
+        Particle_UpdateParticle(ParticleSpawner_RefreshTimer, spawn_fire)
+        spawn_fire = false
+        ParticleSpawner_RefreshTimer = 0
+    end
+
     ParticleSpawner_RefreshTimer = ParticleSpawner_RefreshTimer + dt
+    ParticleSpawner_SpawnTimer = ParticleSpawner_SpawnTimer + dt
+
+
 end
 
 function ParticleSpawner_ShowStatus()
     if GeneralOptions_GetShowUiInGame() == "YES" then
-        DebugWatch(Version_GetName() .. " - ParticleSpawner, Particle Refresh Rate", ParticleSpawner_ParticleRefreshRate)
-        DebugWatch(Version_GetName() .. " - ParticleSpawner, Spawn Period",  (1 / ParticleSpawner_ParticleRefreshRate))
-        DebugWatch(Version_GetName() .. " - ParticleSpawner, Spawn Timer", ParticleSpawner_RefreshTimer)
+        DebugWatch(Version_GetName() .. " - ParticleSpawner Rate", ParticleSpawner_ParticleRefreshRate)
+        DebugWatch(Version_GetName() .. " - ParticleSpawner Period",  (1 / ParticleSpawner_ParticleRefreshRate))
+        DebugWatch(Version_GetName() .. " - ParticleSpawner Timer", ParticleSpawner_SpawnTimer)
         DebugWatch(Version_GetName() .. " - ParticleSpawner, FPS", ParticleSpawner_CurFPS)
         DebugWatch(Version_GetName() .. " - ParticleSpawner, FPS Target", ParticleSpawner_CurFPSTarget)
     end

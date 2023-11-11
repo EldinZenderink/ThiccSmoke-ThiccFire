@@ -3,19 +3,49 @@
 -- @author Teardown devs
 -- @brief Helper functions originaly part of SmokeGun mode by Teardown
 
+
+-- Optimize dynamic compile time according to  https://www.lua.org/gems/sample.pdf
+local FuncVec = Vec
+local FuncVecNormalize = VecNormalize
+local FuncVecScale = VecScale
+local FuncMathRandom = math.random
+local FuncSetMetaTable = setmetatable
+local FuncGetMetaTable = getmetatable
+local FuncSum = sum
+local FuncAverage = average
+local FuncTableRemove = table.remove
+local FuncStringGmatch = string.gmatch
+local FuncUnpack = unpack
+local FuncTableInsert = table.insert
+local FuncTableConcat = table.concat
+local FuncPairs = pairs
+local FuncToString = tostring
+local FuncType = type
+local FuncNext = next
+local FuncMathFloor = math.floor
+local FuncDebugCross = DebugCross
+local FuncDebugLine  = DebugLine
+local FuncVecLength = VecLength
+local FuncVecSub = VecSub
+local FuncVecDot = VecDot
+-- local Generic_deepCopy = Generic_deepCopy
+-- local Generic_DrawLine = Generic_DrawLine
+-- local Generic_DrawPoint = Generic_DrawPoint
+
+
 --Helper to return a random vector of particular length
 function Generic_rndVec(length)
-	local v = VecNormalize(Vec(math.random(-100,100), math.random(-100,100), math.random(-100,100)))
-	return VecScale(v, length)
+	local v = FuncVecNormalize(FuncVec(FuncMathRandom(-100,100), FuncMathRandom(-100,100), FuncMathRandom(-100,100)))
+	return FuncVecScale(v, length)
 end
 
 --Helper to return a random number in range mi to ma
 function Generic_rnd(mi, ma)
-	return math.random(1000)/1000*(ma-mi) + mi
+	return FuncMathRandom(1000)/1000*(ma-mi) + mi
 end
 
 function Generic_rndInt(mi, ma)
-	return math.random(mi, ma)
+	return FuncMathRandom(mi, ma)
 end
 
 -- Deep copy helper
@@ -25,14 +55,14 @@ function Generic_deepCopy(o, seen)
 	if seen[o] then return seen[o] end
 
 	local no
-	if type(o) == 'table' then
+	if FuncType(o) == 'table' then
 		no = {}
 		seen[o] = no
 
-		for k, v in next, o, nil do
+		for k, v in FuncNext, o, nil do
 		no[Generic_deepCopy(k, seen)] = Generic_deepCopy(v, seen)
 		end
-		setmetatable(no, Generic_deepCopy(getmetatable(o), seen))
+		FuncSetMetaTable(no, Generic_deepCopy(FuncGetMetaTable(o), seen))
 	else -- number, string, boolean, etc
 		no = o
 	end
@@ -43,15 +73,15 @@ end
 
 function Generic_sma(period)
 	local t = {}
-	function sum(a, ...)
-		if a then return a+sum(...) else return 0 end
+	function FuncSum(a, ...)
+		if a then return a+FuncSum(...) else return 0 end
 	end
-	function average(n)
-		if #t == period then table.remove(t, 1) end
+	function FuncAverage(n)
+		if #t == period then FuncTableRemove(t, 1) end
 		t[#t + 1] = n
-		return sum(unpack(t)) / #t
+		return FuncSum(FuncUnpack(t)) / #t
 	end
-	return average
+	return FuncAverage
 end
 
 function Generic_bool_to_number(value)
@@ -67,8 +97,8 @@ function Generic_SplitString(inputstr, sep)
 		sep = "%s"
 	end
 	local t={}
-	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-		table.insert(t, str)
+	for str in FuncStringGmatch(inputstr, "([^"..sep.."]+)") do
+		FuncTableInsert(t, str)
 	end
 	return t
 end
@@ -84,7 +114,7 @@ end
 
 function Generic_TableContainsTable(t1,contains)
     for i=1,#t1 do
-        if table.concat(t1[i]) == table.concat(contains)  then
+        if FuncTableConcat(t1[i]) == FuncTableConcat(contains)  then
 			return true
 		end
     end
@@ -103,18 +133,18 @@ function Generic_TableToStr(t1, prefix)
 	if prefix == nil then
 		prefix = ""
 	end
-	for key, value in pairs(t1) do
+	for key, value in FuncPairs(t1) do
 		if i == 1 then
-			if type(value) == "table" then
-				str = prefix .. "key: " .. tostring(key) .. " => "
+			if FuncType(value) == "table" then
+				str = prefix .. "key: " .. FuncToString(key) .. " => "
 			else
-				str = prefix .. tostring(value)
+				str = prefix .. FuncToString(value)
 			end
 		else
-			if type(value) == "table" then
-				str = str .. "; key: " .. tostring(key) .. " => "
+			if FuncType(value) == "table" then
+				str = str .. "; key: " .. FuncToString(key) .. " => "
 			else
-				str = str .. ',' .. tostring(value)
+				str = str .. ',' .. FuncToString(value)
 			end
 		end
 	end
@@ -125,18 +155,26 @@ function Generic_RGBConv(r, g, b)
 	return {255 / r, 255 / g, 255 / b}
 end
 
-local floor = math.floor
 function Generic_xor(a, b)
   local r = 0
   for i = 0, 31 do
     local x = a / 2 + b / 2
-    if x ~= floor (x) then
+    if x ~= FuncMathFloor(x) then
       r = r + 2^i
     end
-    a = floor (a / 2)
-    b = floor (b / 2)
+    a = FuncMathFloor(a / 2)
+    b = FuncMathFloor(b / 2)
   end
   return r
+end
+
+function Generic_HashVec(vec)
+    local p1 = 73856093
+    local p2 = 19349663
+    local p3 = 83492791
+    local xor_p1_p2 = Generic_xor((vec[1] * p1), vec[3] * p2)
+    local xored_p1_2wp3 = Generic_xor(xor_p1_p2, (vec[2] * p3))
+    return xored_p1_2wp3
 end
 
 function ObjectDetector_HashVec(vec)
@@ -156,7 +194,7 @@ end
 ---@param b float intensity of the color blue
 function Generic_DrawPoint(point, r, g, b, draw)
     if draw then
-        DebugCross(point,  r, g, b)
+        FuncDebugCross(point,  r, g, b)
     end
 end
 
@@ -169,7 +207,7 @@ end
 ---@param b float intensity of the color blue
 function Generic_DrawLine(vec1, vec2, r, g, b, draw)
     if draw then
-        DebugLine(vec1, vec2, r, g, b)
+        FuncDebugLine(vec1, vec2, r, g, b)
     end
 end
 
@@ -178,7 +216,7 @@ end
 ---@param vec2 Vec (array of 3 values) containing the position
 ---@return number value of the distance
 function Generic_VecDistance(vec1, vec2)
-    return VecLength(VecSub(vec1, vec2))
+    return FuncVecLength(FuncVecSub(vec1, vec2))
 end
 
 function Generic_VecCompare(vec1, vec2)
@@ -217,22 +255,22 @@ function Generic_CreateBox(point, size, point2, color, draw)
 
     if point2 ~= nil then
 
-        local u = VecSub(p5, p1)
-        local v = VecSub(p5, p6)
-        local w = VecSub(p5, p8)
+        local u = FuncVecSub(p5, p1)
+        local v = FuncVecSub(p5, p6)
+        local w = FuncVecSub(p5, p8)
 
-        local ud = VecDot(u, point2)
-        local vd = VecDot(v, point2)
-        local wd = VecDot(w, point2)
+        local ud = FuncVecDot(u, point2)
+        local vd = FuncVecDot(v, point2)
+        local wd = FuncVecDot(w, point2)
 
-        local u1 = VecDot(u, p5)
-        local u2 = VecDot(u, p1)
+        local u1 = FuncVecDot(u, p5)
+        local u2 = FuncVecDot(u, p1)
 
-        local v1 = VecDot(v, p5)
-        local v2 = VecDot(v, p6)
+        local v1 = FuncVecDot(v, p5)
+        local v2 = FuncVecDot(v, p6)
 
-        local w1 = VecDot(w, p5)
-        local w2 = VecDot(w, p8)
+        local w1 = FuncVecDot(w, p5)
+        local w2 = FuncVecDot(w, p8)
 
         if  (ud > u2 and ud < u1) and (vd > v2 and vd < v1) and (wd > w2 and wd < w1) then
 
@@ -247,4 +285,35 @@ function Generic_CreateBox(point, size, point2, color, draw)
     else
         return {p1,p2,p3,p4,p5,p6,p7,p8}
     end
+end
+
+function Generic_SpawnLight(point, material, intensity)
+    material = Generic_deepCopy(material)
+	material["color"]["r"] =  material["color"]["r"] - 0
+    material["color"]["g"] =  material["color"]["g"] - 0.1
+    material["color"]["b"] =  material["color"]["b"] - 0.1
+
+    if  material["color"]["r"] > 1 then
+        material["color"]["r"] = 1
+    end
+    if  material["color"]["r"] < 0 then
+        material["color"]["r"] = 0
+    end
+
+    if  material["color"]["g"] > 1 then
+        material["color"]["g"] = 1
+    end
+    if  material["color"]["g"] < 0 then
+        material["color"]["g"] = 0
+    end
+
+    if  material["color"]["b"] > 1 then
+        material["color"]["b"] = 1
+    end
+    if  material["color"]["b"] < 0 then
+        material["color"]["b"] = 0
+    end
+    local color = FuncVec(material["color"]["r"], material["color"]["g"], material["color"]["b"])
+    intensity = intensity
+    return {point, intensity, intensity, color, true}
 end

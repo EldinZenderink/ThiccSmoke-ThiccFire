@@ -4,6 +4,7 @@
 -- @brief Menu generator  {Module}_GetOptionsMenu()
 
 #include "ui.lua"
+#include "compatibility.lua"
 
 _Menu_UI = false
 _Menu_List = {}
@@ -126,6 +127,10 @@ function Menu_GenerateSubMenu(title, submenus, x, y)
 	-- UiTranslate(-x, -y)
 end
 
+-- https://steamcommunity.com/sharedfiles/filedetails/?id=2622040244&searchtext=fire
+
+
+
 function Menu_GenerateMenu()
     -- Setup UI
     local offset_px = 44
@@ -170,8 +175,24 @@ function Menu_GenerateMenu()
         end
     end
 
+    UiTranslate(0, 600)
+    for x=1, #CompatibilityIssues do
+        local issue = CompatibilityIssues[x]
+        if GetBool("mods.available.steam-" .. issue["steam_id"] .. ".active") then
+            UiColor(1,0,0)
+            UiFont("regular.ttf", 16)
+            UiText("Detected Incompatible Mod: " .. issue["steam_name"])
+            for y=1, #issue["note"] do
+                UiTranslate(0, 22)
+                UiText("    Note: " .. issue["note"][y])
+            end
+            UiTranslate(0, 22)
+            UiColor(1,1,1)
+        end
+    end
+
     UiFont("regular.ttf", 16)
-    UiTranslate(0, 800)
+    UiTranslate(0, 44)
     UiText("Version: " .. Version_GetCurrentActual())
 end
 
@@ -188,8 +209,7 @@ function Menu_GenerateGameMenu()
     if Storage_GetBool("global", "keyselector.text_input_field_pending") == false and Storage_GetBool("global", "keyselector.text_input_pending") == false then
         if InputPressed(GeneralOptions_GetToggleMenuKey()) then
             _Menu_UI = not _Menu_UI
-            -- Debug_ClearDebugPrinter()
-            DebugPrinter("Toggle menu button clicked")
+            Debug_ClearDebugPrinter()
         end
     end
     if _Menu_UI then

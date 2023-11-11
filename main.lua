@@ -7,6 +7,7 @@
 #include "generic.lua"
 #include "generaloptions.lua"
 #include "debug.lua"
+#include "compatibility.lua"
 #include "storage.lua"
 #include "restoresettings.lua"
 #include "settings.lua"
@@ -38,6 +39,7 @@ function init()
         set_default = true
         restore = true
    end
+
    Storage_Init(Version_GetName(), Version_GetCurrent())
    Settings_Init(set_default)
    GeneralOptions_Init()
@@ -53,17 +55,19 @@ function init()
    RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
    Settings_LoadMenu()
    DebugPrinter("version state: " .. version_state)
+   Compatibility_Init()
 end
 
 function tick(dt)
     ParticleSpawner_tick(dt)
-    ParticleSpawner_update(dt)
-    Menu_GenerateGameMenuTick()
 end
 
 function update(dt)
     FireDetector_ShowStatus()
     ParticleSpawner_ShowStatus()
+    Menu_GenerateGameMenuTick()
+    Wind_ChangeWind(dt, true)
+    Light_UpdateLights(dt)
 end
 
 function draw()

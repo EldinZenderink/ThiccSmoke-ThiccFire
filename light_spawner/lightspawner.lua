@@ -3,6 +3,8 @@
 -- @author Eldin Zenderink
 -- @brief Spawn FPS friendly lights using spawning of light points (instead of spotlight), side effect it looks a bit worse than spotlights (affects global illumination less), but faster and better than none ;P.
 
+-- Needs to be set to true if update is called periodically
+LightSpawner_DeleteFadeEnabled = false
 
 -- List to keep track of light instance
 LightSpawner_Lights = {}
@@ -94,16 +96,33 @@ end
 ---@param color Vec color of the light (can be RGB 0-255 values!)
 ---@param enabled boolean if the light should emit or not (can be toggled)
 ---@return number id reference compatible with Teardown functions such as SetLightColor, SetLightIntensity, SetLightEnabled, also used as reference for LightSpawner, remember them!
-function LightSpawner_Spawn(location, size, intensity, color, enabled)
+function LightSpawner_Spawn(location, size, intensity, color, enabled, tag)
+    if tag == nil then
+        tag = ""
+    end
     local light_instance = {
         location=location,
+        locationstart=location,
+        locationend=nil,
+        animaterotation=0.5,
+speed=nil,
+        animatejitter=nil,
+        animateinvert=false,
+        animating=false,
+        animate=false,
+        animatecurtime=0,
+        animatesteps=nil,
         size=size,
         color=color,
         intensity=intensity,
         enabled=enabled,
         entity=nil,
         entity_index=nil,
-        light=nil
+        light=nil,
+        tag=tag,
+        fadedelete=false,
+        fadetime=1,
+        fadereduction=nil
     }
 
     if color[1] > 1 or color[2] > 1 or color[3] > 1 then
@@ -118,7 +137,7 @@ function LightSpawner_Spawn(location, size, intensity, color, enabled)
         new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
     end
 
-    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. "' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
+    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
 
     local light = FindLight("ls_light_" .. tostring(new_id), true)
     if LightSpawner_Lights[new_id] == nil then
@@ -131,6 +150,127 @@ function LightSpawner_Spawn(location, size, intensity, color, enabled)
         return new_id
     end
     return nil
+end
+
+--- Spawn and animate light
+---@param locationstart start position
+---@param locationend end position
+---@param jitter jitter during interpolation
+---@param speed speed of animation
+---@param size any
+---@param intensity any
+---@param color any
+---@param enabled any
+---@param tag any
+function LightSpawner_SpawnAnimate(locationstart, locationend, jitter, speed, size, intensity, color, enabled, tag)
+    if tag == nil then
+        tag = ""
+    end
+    local light_instance = {
+        location=locationstart,
+        locationstart=locationstart,
+        locationend=locationend,
+        animaterotation=0.5,
+speed=speed,
+        animatejitter=jitter,
+        animateinvert=false,
+        animating=false,
+        animate=true,
+        animatecurtime=0,
+        animatesteps=nil,
+        size=size,
+        color=color,
+        intensity=intensity,
+        enabled=enabled,
+        entity=nil,
+        entity_index=nil,
+        light=nil,
+        tag=tag,
+        fadedelete=false,
+        fadetime=1,
+        fadereduction=nil
+    }
+
+    if color[1] > 1 or color[2] > 1 or color[3] > 1 then
+        color = LightSpawner_RGBConv(color[1], color[2], color[3])
+    end
+
+    -- Generate random id
+    local new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
+
+    -- Make sure no duplicates exist
+    while LightSpawner_Lights[new_id] ~= nil do
+        new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
+    end
+
+    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
+
+    local light = FindLight("ls_light_" .. tostring(new_id), true)
+    if LightSpawner_Lights[new_id] == nil then
+        light_instance = light_instance
+        light_instance["light"] = LightSpawner_deepCopy(light)
+        SetLightColor(light, color[1], color[2], color[3])
+        SetLightIntensity(light, intensity)
+        SetLightEnabled(light, enabled)
+        LightSpawner_Lights[new_id] = light_instance
+        return new_id
+    end
+    return nil
+end
+
+function LightSpawner_Status()
+    local count = 0
+    for id, instance in pairs(LightSpawner_Lights) do
+        DebugPrint("Found: " .. count)
+        count = count + 1
+    end
+    DebugWatch("Lights Spawned", count)
+end
+
+--- Needs to be called periodically to allow for fadeout timing
+---@param dt time delta
+function LightSpawner_Update(dt)
+    LightSpawner_DeleteFadeEnabled = true
+    for id, instance in pairs(LightSpawner_Lights) do
+        if instance["fadedelete"] then
+            if instance["intensity"] > 0 then
+                if instance["fadereduction"] == nil then
+                    instance["fadereduction"] = instance["intensity"] / (instance["fadetime"] / dt)
+                end
+                -- DebugWatch(id.."in", instance["intensity"])
+                -- DebugWatch(id.."fr", instance["fadereduction"])
+                local newintensity = instance["intensity"] - instance["fadereduction"]
+                LightSpawner_ForceUpdateLightIntensity(id, newintensity)
+            else
+                LightSpawner_DeleteLight(id)
+            end
+        end
+
+        if instance["animate"] then
+            if instance["animatesteps"] == nil then
+                instance["animatesteps"] = 1 / (instance["animatespeed"] / dt)
+            end
+
+            instance["animatecurtime"] = instance["animatecurtime"] + instance["animatesteps"]
+
+            instance["animating"] = true
+            if instance["animatecurtime"] >= 1 then
+                instance["animatesteps"] = -instance["animatesteps"]
+            end
+
+            if instance["animatecurtime"] <= 0 then
+                LightSpawner_ForceSetNewLightLocation(id, instance["location"])
+                instance["locationstart"] = instance["location"]
+                instance["animatecurtime"] = 0
+                instance["animatesteps"] = nil
+            else
+                local newloc = VecLerp(instance["locationstart"], instance["locationend"], instance["animatecurtime"])
+                newloc = VecAdd(newloc, Generic_rndVec(instance["animatejitter"]))
+                LightSpawner_ForceSetNewLightLocation(id, newloc)
+            end
+
+        end
+    end
 end
 
 ---Spawns a new light point.
@@ -174,6 +314,16 @@ function LightSpawner_DeleteAll()
     end
 end
 
+--- Delete all tagged lights spawned
+--- @note Make sure if you store light handles locally to remove those as well!
+function LightSpawner_DeleteTagged(tag)
+    local lights = FindLights(tag, true)
+    for l=1, #lights do
+        SetLightEnabled(lights[l], false)
+        LightSpawner_DeleteLight(tonumber(GetTagValue(lights[l], "id")))
+    end
+end
+
 --- Delete a specific light (disables and removes light, then removes spawned entity)
 ---@param id number light reference returned from LightSpawner_Spawn function
 ---@return boolean -- Succeed or failed  (true or false) (failure could mean that the light reference has already been deleted once!)
@@ -190,6 +340,41 @@ function LightSpawner_DeleteLight(id)
         return false
     end
 end
+
+--- Delete fade all lights spawned
+--- @param fadetime = how much to bleed off intensity per call
+--- @note Make sure if you store light handles locally to remove those as well!
+function LightSpawner_DeleteFadeAll(fadetime)
+    if LightSpawner_DeleteFadeEnabled == false then
+        return LightSpawner_DeleteAll()
+    end
+    for id, instance in pairs(LightSpawner_Lights) do
+        LightSpawner_Lights[id]["fadedelete"] = true
+        LightSpawner_Lights[id]["fadetime"] = fadetime
+    end
+end
+
+--- Delete all tagged lights spawned
+--- @note Make sure if you store light handles locally to remove those as well!
+function LightSpawner_DeleteTaggedFade(tag, fadetime)
+    local lights = FindLights(tag, true)
+    for l=1, #lights do
+        LightSpawner_DeleteLightFade(tonumber(GetTagValue(lights[l], "id")), fadetime)
+    end
+end
+
+--- Delete fade all lights spawned
+--- @param id number light reference returned from LightSpawner_Spawn function
+--- @param fadetime = how much to bleed off intensity per call
+--- @note Make sure if you store light handles locally to remove those as well!
+function LightSpawner_DeleteLightFade(id, fadetime)
+    if LightSpawner_DeleteFadeEnabled == false then
+        return LightSpawner_DeleteLight(id)
+    end
+    LightSpawner_Lights[id]["fadedelete"] = true
+    LightSpawner_Lights[id]["fadetime"] = fadetime
+end
+
 
 --- Update light color.
 ---@param light number light reference returned from LightSpawner_Spawn function
@@ -214,9 +399,40 @@ end
 ---@return number The original light reference upon success, or nil on failure (light reference unknown)
 function LightSpawner_UpdateLightIntensity(id, intensity)
     if LightSpawner_Lights[id] ~= nil then
+        if LightSpawner_Lights[id]["fadedelete"] == false then
+            local light_instance = LightSpawner_Lights[id]
+            light_instance["intensity"] = intensity
+            SetLightIntensity(light_instance["light"], intensity)
+            return id
+        end
+        return nil
+    end
+    return nil
+end
+
+--- Force Update light intensity (ignores if it is supposed to fade out!)
+---@param id number light reference returned from LightSpawner_Spawn function
+---@param intensity number Intensity value (normally between 0 and 1)
+---@return number The original light reference upon success, or nil on failure (light reference unknown)
+function LightSpawner_ForceUpdateLightIntensity(id, intensity)
+    if LightSpawner_Lights[id] ~= nil then
         local light_instance = LightSpawner_Lights[id]
         light_instance["intensity"] = intensity
         SetLightIntensity(light_instance["light"], intensity)
+        return id
+    end
+    return nil
+end
+
+--- Enable/Disable light
+---@param id number light reference returned from LightSpawner_Spawn function
+---@param enable boolean Enable or disable light
+---@return number The original light reference upon success, or nil on failure (light reference unknown)
+function LightSpawner_UpdateLightEnabled(id, enable)
+    if LightSpawner_Lights[id] ~= nil then
+        local light_instance = LightSpawner_Lights[id]
+        light_instance["enabled"] = enable
+        SetLightEnabled(light_instance["light"], enable)
         return id
     end
     return nil
@@ -232,12 +448,31 @@ function LightSpawner_SetNewLightLocation(id, location)
         local light_instance = LightSpawner_Lights[id]
         if LightSpawner_VecCompare(light_instance["location"], location) == false then
             light_instance["location"] = location
+            if light_instance["animating"] == false then
+                LightSpawner_ReplaceSpawn(id)
+            end
+        end
+        return id
+    end
+    return nil
+end
+
+--- Update light location
+---@param id number light reference returned from LightSpawner_Spawn function
+---@param location Vec Location of the light source.
+---@return number The original light reference if no update has happend, updated light reference if changed or nil on failure (light reference unknown)
+function LightSpawner_ForceSetNewLightLocation(id, location)
+    if LightSpawner_Lights[id] ~= nil then
+        local light_instance = LightSpawner_Lights[id]
+        if LightSpawner_VecCompare(light_instance["location"], location) == false then
+            light_instance["location"] = location
             LightSpawner_ReplaceSpawn(id)
         end
         return id
     end
     return nil
 end
+
 
 --- Update light size
 ---@param id number light reference returned from LightSpawner_Spawn function

@@ -10,55 +10,61 @@
 --      lifetime=[int],                                     <= How long should the smoke particle exist (unlimited, recommended 1 .. 30)
 --      size=[float],                                       <= Size of the smoke particle (0 .. 1.0),
 --      gravity=[int],                                      <= How much gravity pulls the smoke up (positive) or down (negative) (unlimited, recommended -10 .. 10)
+--      rotation=0.5,
 --      speed=[int],                                        <= The speed it goes up initially (unlimited, recommended 1 .. 5)
 --      drag=[float],                                       <= How much the particle affects other particle movements (0 .. 1)
 --      transparancy_variation=[float],                     <= How much variation in transparancy there can be (0 .. 1)
 
 _FireMaterialConfiguration = {
-    wood={
-        color={r=0.15,g=0.15,b=0.15,a=0.8},
-        lifetime=8,
-        size=1,
-        gravity=3,
-        speed=2.5,
-        drag=0.4,
-        variation=1,
+    wood = {
+        color = { r = 0.15, g = 0.15, b = 0.15, a = 0.8 },
+        lifetime = 8,
+        size = 1,
+        gravity = 3,
+        rotation = 0.5,
+        speed = 2.5,
+        drag = 0.4,
+        variation = 1,
     },
-    foliage={
-        color={r=0.3,g=0.31,b=0.3,a=0.8},
-        lifetime=8,
-        size=1,
-        gravity=2,
-        speed=1.5,
-        drag=0.7,
-        variation=0.8,
+    foliage = {
+        color = { r = 0.3, g = 0.31, b = 0.3, a = 0.8 },
+        lifetime = 8,
+        size = 1,
+        gravity = 1.5,
+        rotation = 0.5,
+        speed = 1.5,
+        drag = 0.7,
+        variation = 0.8,
     },
-    plaster={
-        color={r=0.2,g=0.2,b=0.22,a=0.8},
-        lifetime=8,
-        size=1,
-        gravity=2,
-        speed=1,
-        drag=0.9,
-        variation=0.4,
+    plaster = {
+        color = { r = 0.2, g = 0.2, b = 0.22, a = 0.8 },
+        lifetime = 8,
+        size = 1,
+        gravity = 1.5,
+        rotation = 0.5,
+        speed = 1,
+        drag = 0.9,
+        variation = 0.4,
     },
-    plastic={
-        color={r=0.1,g=0.1,b=0.12,a=0.8},
-        lifetime=8,
-        size=1,
-        gravity=1,
-        speed=0.5,
-        drag=1,
-        variation=0.1,
+    plastic = {
+        color = { r = 0.1, g = 0.1, b = 0.12, a = 0.8 },
+        lifetime = 8,
+        size = 1,
+        gravity = 1.5,
+        rotation = 0.5,
+        speed = 0.5,
+        drag = 1,
+        variation = 0.1,
     },
-    masonery={
-        color={r=0.4,g=0.4,b=0.4,a=0.8},
-        lifetime=8,
-        size=1,
-        gravity=2,
-        speed=2,
-        drag=0.6,
-        variation=0.3,
+    masonery = {
+        color = { r = 0.4, g = 0.4, b = 0.4, a = 0.8 },
+        lifetime = 8,
+        size = 1,
+        gravity = 1.5,
+        rotation = 0.5,
+        speed = 2,
+        drag = 0.6,
+        variation = 0.3,
     },
 }
 
@@ -79,6 +85,11 @@ function FireMaterial_UpdateSettingsFromSettingsMaterial(material)
     _FireMaterialConfiguration[material]["speed"] = Settings_GetValue("FireMaterial", material .. ".speed")
     _FireMaterialConfiguration[material]["drag"] = Settings_GetValue("FireMaterial", material .. ".drag")
     _FireMaterialConfiguration[material]["variation"] = Settings_GetValue("FireMaterial", material .. ".variation")
+    if  Settings_GetValue("FireMaterial", material .. ".rotation") == 0 or Settings_GetValue("FireMaterial", material .. ".rotation") == nil then
+        Settings_SetValue("FireMaterial", material .. ".rotation", 0.5)
+    end
+    _FireMaterialConfiguration[material]["rotation"] = Settings_GetValue("FireMaterial", material .. ".rotation")
+
 end
 
 --- Update the configuration for all materials from storage at once
