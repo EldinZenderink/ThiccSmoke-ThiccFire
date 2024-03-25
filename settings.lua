@@ -29,7 +29,7 @@ Settings_Template ={
         windstrengthrandom = 0,
         windstrengthrandomrate = 1
     },
-    FireDetector    = {
+    FireSim    = {
         map_size = "LARGE",
         max_fire_spread_distance = 3,
         fire_reaction_time = 25,
@@ -59,8 +59,7 @@ Settings_Template ={
             wood = true,
             foliage = true,
             plaster = true,
-            plastic = true,
-            masonery = true,
+            plastic = true
         },
         despawn_td_fire = "YES"
     },
@@ -154,16 +153,6 @@ Settings_Template ={
             speed = 0.1,
             drag = 0.2,
             variation = 0.4,
-        },
-        masonery = {
-            color = { r = 0.38, g = 0.11, b = 0.03, a = 1 },
-            lifetime = 1,
-            size = 0.9,
-            gravity = 1.5,
-            rotation = 0.5,
-            speed = 0.1,
-            drag = 0.2,
-            variation = 0.4,
         }
     },
     SmokeMaterial   = {
@@ -206,17 +195,7 @@ Settings_Template ={
             speed = 0.15,
             drag = 1,
             variation = 0.1,
-        },
-        masonery = {
-            color = { r = 0.21, g = 0.2, b = 0.2, a = 1 },
-            lifetime = 4,
-            size = 1,
-            gravity = 4,
-            rotation = 0.5,
-            speed = 1,
-            drag = 0.2,
-            variation = 0.3,
-        },
+        }
     }
 }
 
@@ -241,7 +220,7 @@ function Settings_LoadMenu()
     Settings_StoreAll()
     Menu_AppendMenu(Settings_GeneralOptions_GetOptionsMenu())
     Menu_AppendMenu(Settings_GetPresetMenu())
-    Menu_AppendMenu(Settings_FireDetector_GetOptionsMenu())
+    Menu_AppendMenu(Settings_FireSim_GetOptionsMenu())
     Menu_AppendMenu(Settings_Wind_GetOptionsMenu())
     Menu_AppendMenu(Settings_Light_GetOptionsMenu())
     Menu_AppendMenu(Settings_ParticleSpawner_GetOptionsMenu())
@@ -252,7 +231,7 @@ end
 
 function Settings_StoreAll()
     Settings_GeneralOptions_Store()
-    Settings_FireDetector_Store()
+    Settings_FireSim_Store()
     Settings_Wind_Store()
     Settings_Light_Store()
     Settings_ParticleSpawner_Store()
@@ -263,7 +242,7 @@ end
 
 function Settings_UpdateAll()
     Settings_GeneralOptions_Update()
-    Settings_FireDetector_Update()
+    Settings_FireSim_Update()
     Settings_Wind_Update()
     Settings_Light_Update()
     Settings_ParticleSpawner_Update()
@@ -860,17 +839,17 @@ function Settings_SmokeMaterial_GetOptionsMenu()
 end
 
 -- Fire Detector Module Settings
-Settings_FireDetector_OptionsDetection =
+Settings_FireSim_OptionsDetection =
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
 
         {
@@ -943,17 +922,17 @@ Settings_FireDetector_OptionsDetection =
 	}
 }
 
-Settings_FireDetector_OptionsFireSpread=
+Settings_FireSim_OptionsFireSpread=
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
         {
             option_parent_text="",
@@ -1020,17 +999,17 @@ Settings_FireDetector_OptionsFireSpread=
 	}
 }
 
-Settings_FireDetector_OptionsFireDamage =
+Settings_FireSim_OptionsFireDamage =
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
         {
             option_parent_text="",
@@ -1123,17 +1102,17 @@ Settings_FireDetector_OptionsFireDamage =
 	}
 }
 
-Settings_FireDetector_OptionsFireSoot =
+Settings_FireSim_OptionsFireSoot =
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
         {
             option_parent_text="",
@@ -1221,17 +1200,17 @@ Settings_FireDetector_OptionsFireSoot =
 	}
 }
 
-Settings_FireDetector_OptionsFireIntensity =
+Settings_FireSim_OptionsFireIntensity =
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
 		{
 			option_parent_text="",
@@ -1264,17 +1243,17 @@ Settings_FireDetector_OptionsFireIntensity =
 }
 
 
-Settings_FireDetector_OptionsDebugging =
+Settings_FireSim_OptionsDebugging =
 {
-	storage_module="firedetector",
+	storage_module="FireSim",
 	storage_prefix_key=nil,
     buttons={
 		{
 			text = "Set Default",
-			callback=function() Settings_FireDetector_Default() end,
+			callback=function() Settings_FireSim_Default() end,
 		},
     },
-	update=function() Settings_FireDetector_Update() end,
+	update=function() Settings_FireSim_Update() end,
 	option_items={
 		{
 			option_parent_text="",
@@ -1290,104 +1269,104 @@ Settings_FireDetector_OptionsDebugging =
 	}
 }
 
-function Settings_FireDetector_Update()
+function Settings_FireSim_Update()
     Settings_EditedSettings()
-    Settings_SetValue("FireDetector", "map_size", Storage_GetString("firedetector", "map_size"))
-    Settings_SetValue("FireDetector", "max_fire_spread_distance", Storage_GetFloat("firedetector", "max_fire_spread_distance"))
-    Settings_SetValue("FireDetector", "fire_reaction_time", Storage_GetFloat("firedetector", "fire_reaction_time"))
-    Settings_SetValue("FireDetector", "fire_update_time", Storage_GetFloat("firedetector", "fire_update_time"))
-    Settings_SetValue("FireDetector", "min_fire_distance", Storage_GetFloat("firedetector", "min_fire_distance"))
-    Settings_SetValue("FireDetector", "max_group_fire_distance", Storage_GetFloat("firedetector", "max_group_fire_distance"))
-    Settings_SetValue("FireDetector", "max_fire", Storage_GetFloat("firedetector", "max_fire"))
-    Settings_SetValue("FireDetector", "fire_intensity", Storage_GetString("firedetector", "fire_intensity"))
-    Settings_SetValue("FireDetector", "fire_intensity_multiplier", Storage_GetFloat("firedetector", "fire_intensity_multiplier"))
-    Settings_SetValue("FireDetector", "fire_intensity_minimum", Storage_GetFloat("firedetector", "fire_intensity_minimum"))
-    Settings_SetValue("FireDetector", "visualize_fire_detection", Storage_GetString("firedetector", "visualize_fire_detection"))
-    Settings_SetValue("FireDetector", "fire_explosion", Storage_GetString("firedetector", "fire_explosion"))
-    Settings_SetValue("FireDetector", "fire_damage", Storage_GetString("firedetector", "fire_damage"))
-    Settings_SetValue("FireDetector", "spawn_fire", Storage_GetString("firedetector", "spawn_fire"))
-    Settings_SetValue("FireDetector", "fire_damage_soft", Storage_GetFloat("firedetector", "fire_damage_soft"))
-    Settings_SetValue("FireDetector", "fire_damage_medium", Storage_GetFloat("firedetector", "fire_damage_medium"))
-    Settings_SetValue("FireDetector", "fire_damage_hard", Storage_GetFloat("firedetector", "fire_damage_hard"))
-    Settings_SetValue("FireDetector", "teardown_max_fires", Storage_GetFloat("firedetector", "teardown_max_fires"))
-    Settings_SetValue("FireDetector", "teardown_fire_spread", Storage_GetFloat("firedetector", "teardown_fire_spread"))
-    Settings_SetValue("FireDetector", "detect_inside", Storage_GetString("firedetector", "detect_inside"))
-    Settings_SetValue("FireDetector", "soot_sim", Storage_GetString("firedetector", "soot_sim"))
-    Settings_SetValue("FireDetector", "soot_dithering_max", Storage_GetFloat("firedetector", "soot_dithering_max"))
-    Settings_SetValue("FireDetector", "soot_dithering_min", Storage_GetFloat("firedetector", "soot_dithering_min"))
-    Settings_SetValue("FireDetector", "soot_max_size", Storage_GetFloat("firedetector", "soot_max_size"))
-    Settings_SetValue("FireDetector", "soot_min_size", Storage_GetFloat("firedetector", "soot_min_size"))
-    Settings_SetValue("FireDetector", "despawn_td_fire", Storage_GetString("firedetector", "despawn_td_fire"))
+    Settings_SetValue("FireSim", "map_size", Storage_GetString("FireSim", "map_size"))
+    Settings_SetValue("FireSim", "max_fire_spread_distance", Storage_GetFloat("FireSim", "max_fire_spread_distance"))
+    Settings_SetValue("FireSim", "fire_reaction_time", Storage_GetFloat("FireSim", "fire_reaction_time"))
+    Settings_SetValue("FireSim", "fire_update_time", Storage_GetFloat("FireSim", "fire_update_time"))
+    Settings_SetValue("FireSim", "min_fire_distance", Storage_GetFloat("FireSim", "min_fire_distance"))
+    Settings_SetValue("FireSim", "max_group_fire_distance", Storage_GetFloat("FireSim", "max_group_fire_distance"))
+    Settings_SetValue("FireSim", "max_fire", Storage_GetFloat("FireSim", "max_fire"))
+    Settings_SetValue("FireSim", "fire_intensity", Storage_GetString("FireSim", "fire_intensity"))
+    Settings_SetValue("FireSim", "fire_intensity_multiplier", Storage_GetFloat("FireSim", "fire_intensity_multiplier"))
+    Settings_SetValue("FireSim", "fire_intensity_minimum", Storage_GetFloat("FireSim", "fire_intensity_minimum"))
+    Settings_SetValue("FireSim", "visualize_fire_detection", Storage_GetString("FireSim", "visualize_fire_detection"))
+    Settings_SetValue("FireSim", "fire_explosion", Storage_GetString("FireSim", "fire_explosion"))
+    Settings_SetValue("FireSim", "fire_damage", Storage_GetString("FireSim", "fire_damage"))
+    Settings_SetValue("FireSim", "spawn_fire", Storage_GetString("FireSim", "spawn_fire"))
+    Settings_SetValue("FireSim", "fire_damage_soft", Storage_GetFloat("FireSim", "fire_damage_soft"))
+    Settings_SetValue("FireSim", "fire_damage_medium", Storage_GetFloat("FireSim", "fire_damage_medium"))
+    Settings_SetValue("FireSim", "fire_damage_hard", Storage_GetFloat("FireSim", "fire_damage_hard"))
+    Settings_SetValue("FireSim", "teardown_max_fires", Storage_GetFloat("FireSim", "teardown_max_fires"))
+    Settings_SetValue("FireSim", "teardown_fire_spread", Storage_GetFloat("FireSim", "teardown_fire_spread"))
+    Settings_SetValue("FireSim", "detect_inside", Storage_GetString("FireSim", "detect_inside"))
+    Settings_SetValue("FireSim", "soot_sim", Storage_GetString("FireSim", "soot_sim"))
+    Settings_SetValue("FireSim", "soot_dithering_max", Storage_GetFloat("FireSim", "soot_dithering_max"))
+    Settings_SetValue("FireSim", "soot_dithering_min", Storage_GetFloat("FireSim", "soot_dithering_min"))
+    Settings_SetValue("FireSim", "soot_max_size", Storage_GetFloat("FireSim", "soot_max_size"))
+    Settings_SetValue("FireSim", "soot_min_size", Storage_GetFloat("FireSim", "soot_min_size"))
+    Settings_SetValue("FireSim", "despawn_td_fire", Storage_GetString("FireSim", "despawn_td_fire"))
     Settings_StoreActivePreset()
 end
 
-function Settings_FireDetector_Store()
-    Storage_SetString("firedetector", "map_size", Settings_GetValue("FireDetector", "map_size"))
-    Storage_SetFloat("firedetector", "max_fire_spread_distance", Settings_GetValue("FireDetector", "max_fire_spread_distance"))
-    Storage_SetFloat("firedetector", "fire_reaction_time", Settings_GetValue("FireDetector", "fire_reaction_time"))
-    Storage_SetFloat("firedetector", "fire_update_time", Settings_GetValue("FireDetector", "fire_update_time"))
-    Storage_SetFloat("firedetector", "min_fire_distance", Settings_GetValue("FireDetector", "min_fire_distance"))
-    Storage_SetFloat("firedetector", "max_group_fire_distance", Settings_GetValue("FireDetector", "max_group_fire_distance"))
-    Storage_SetFloat("firedetector", "max_fire", Settings_GetValue("FireDetector", "max_fire"))
-    Storage_SetString("firedetector", "fire_intensity", Settings_GetValue("FireDetector", "fire_intensity"))
-    Storage_SetFloat("firedetector", "fire_intensity_multiplier", Settings_GetValue("FireDetector", "fire_intensity_multiplier"))
-    Storage_SetFloat("firedetector", "fire_intensity_minimum", Settings_GetValue("FireDetector", "fire_intensity_minimum"))
-    Storage_SetString("firedetector", "visualize_fire_detection", Settings_GetValue("FireDetector", "visualize_fire_detection"))
-    Storage_SetString("firedetector", "fire_explosion", Settings_GetValue("FireDetector", "fire_explosion"))
-    Storage_SetString("firedetector", "fire_damage", Settings_GetValue("FireDetector", "fire_damage"))
-    Storage_SetString("firedetector", "spawn_fire", Settings_GetValue("FireDetector", "spawn_fire"))
-    Storage_SetFloat("firedetector", "fire_damage_soft", Settings_GetValue("FireDetector", "fire_damage_soft"))
-    Storage_SetFloat("firedetector", "fire_damage_medium", Settings_GetValue("FireDetector", "fire_damage_medium"))
-    Storage_SetFloat("firedetector", "fire_damage_hard", Settings_GetValue("FireDetector", "fire_damage_hard"))
-    Storage_SetFloat("firedetector", "teardown_max_fires", Settings_GetValue("FireDetector", "teardown_max_fires"))
-    Storage_SetFloat("firedetector", "teardown_fire_spread", Settings_GetValue("FireDetector", "teardown_fire_spread"))
-    Storage_SetString("firedetector", "detect_inside", Settings_GetValue("FireDetector", "detect_inside"))
-    Storage_SetString("firedetector", "soot_sim", Settings_GetValue("FireDetector", "soot_sim"))
-    Storage_SetFloat("firedetector", "soot_dithering_max", Settings_GetValue("FireDetector", "soot_dithering_max"))
-    Storage_SetFloat("firedetector", "soot_max_size", Settings_GetValue("FireDetector", "soot_max_size"))
-    Storage_SetFloat("firedetector", "soot_dithering_min", Settings_GetValue("FireDetector", "soot_dithering_min"))
-    Storage_SetFloat("firedetector", "soot_min_size", Settings_GetValue("FireDetector", "soot_min_size"))
-    Storage_SetString("firedetector", "despawn_td_fire", Settings_GetValue("FireDetector", "despawn_td_fire"))
+function Settings_FireSim_Store()
+    Storage_SetString("FireSim", "map_size", Settings_GetValue("FireSim", "map_size"))
+    Storage_SetFloat("FireSim", "max_fire_spread_distance", Settings_GetValue("FireSim", "max_fire_spread_distance"))
+    Storage_SetFloat("FireSim", "fire_reaction_time", Settings_GetValue("FireSim", "fire_reaction_time"))
+    Storage_SetFloat("FireSim", "fire_update_time", Settings_GetValue("FireSim", "fire_update_time"))
+    Storage_SetFloat("FireSim", "min_fire_distance", Settings_GetValue("FireSim", "min_fire_distance"))
+    Storage_SetFloat("FireSim", "max_group_fire_distance", Settings_GetValue("FireSim", "max_group_fire_distance"))
+    Storage_SetFloat("FireSim", "max_fire", Settings_GetValue("FireSim", "max_fire"))
+    Storage_SetString("FireSim", "fire_intensity", Settings_GetValue("FireSim", "fire_intensity"))
+    Storage_SetFloat("FireSim", "fire_intensity_multiplier", Settings_GetValue("FireSim", "fire_intensity_multiplier"))
+    Storage_SetFloat("FireSim", "fire_intensity_minimum", Settings_GetValue("FireSim", "fire_intensity_minimum"))
+    Storage_SetString("FireSim", "visualize_fire_detection", Settings_GetValue("FireSim", "visualize_fire_detection"))
+    Storage_SetString("FireSim", "fire_explosion", Settings_GetValue("FireSim", "fire_explosion"))
+    Storage_SetString("FireSim", "fire_damage", Settings_GetValue("FireSim", "fire_damage"))
+    Storage_SetString("FireSim", "spawn_fire", Settings_GetValue("FireSim", "spawn_fire"))
+    Storage_SetFloat("FireSim", "fire_damage_soft", Settings_GetValue("FireSim", "fire_damage_soft"))
+    Storage_SetFloat("FireSim", "fire_damage_medium", Settings_GetValue("FireSim", "fire_damage_medium"))
+    Storage_SetFloat("FireSim", "fire_damage_hard", Settings_GetValue("FireSim", "fire_damage_hard"))
+    Storage_SetFloat("FireSim", "teardown_max_fires", Settings_GetValue("FireSim", "teardown_max_fires"))
+    Storage_SetFloat("FireSim", "teardown_fire_spread", Settings_GetValue("FireSim", "teardown_fire_spread"))
+    Storage_SetString("FireSim", "detect_inside", Settings_GetValue("FireSim", "detect_inside"))
+    Storage_SetString("FireSim", "soot_sim", Settings_GetValue("FireSim", "soot_sim"))
+    Storage_SetFloat("FireSim", "soot_dithering_max", Settings_GetValue("FireSim", "soot_dithering_max"))
+    Storage_SetFloat("FireSim", "soot_max_size", Settings_GetValue("FireSim", "soot_max_size"))
+    Storage_SetFloat("FireSim", "soot_dithering_min", Settings_GetValue("FireSim", "soot_dithering_min"))
+    Storage_SetFloat("FireSim", "soot_min_size", Settings_GetValue("FireSim", "soot_min_size"))
+    Storage_SetString("FireSim", "despawn_td_fire", Settings_GetValue("FireSim", "despawn_td_fire"))
     Settings_StoreActivePreset()
 end
 
-function Settings_FireDetector_Default()
-    _LoadedSettings["FireDetector"] = Settings_Template["FireDetector"]
-    Settings_FireDetector_Store()
+function Settings_FireSim_Default()
+    _LoadedSettings["FireSim"] = Settings_Template["FireSim"]
+    Settings_FireSim_Store()
 end
 
-function Settings_FireDetector_GetOptionsMenu()
+function Settings_FireSim_GetOptionsMenu()
     return {
         menu_title = "Fire Settings",
         sub_menus={
             {
                 sub_menu_title="Fire Detection",
-                options=Settings_FireDetector_OptionsDetection,
+                options=Settings_FireSim_OptionsDetection,
                 description="Change settings regarding fire detection, e.g. minimum distance, or the maximum size arround a fire it may use to detect intensity.\nNote: the size of the box to count fires is used to spawn lights in! Setting this 1:1 to minimum fire distance will make lights spawn for each detected fire!\n. Note: Teardown Max Fire and Fire Spread is part of the base game and has no relation to other fire spread settings in this mod!"
             },
             {
                 sub_menu_title="Fire Intensity",
-                options=Settings_FireDetector_OptionsFireIntensity,
+                options=Settings_FireSim_OptionsFireIntensity,
                 description="Intensity settings that determine how big fire particles/smoke particles are when spawned. \n Intensity also influences the damage if enabled, light intensity if enabled, \n and spreading if enabled (spawn fire), which are configured in the other menus!"
             },
             {
                 sub_menu_title="Fire Spread",
-                options=Settings_FireDetector_OptionsFireSpread,
+                options=Settings_FireSim_OptionsFireSpread,
                 description="The fire spread menu contains options that influence the fire spreading behavior. \n Note: Teardown Max Fire and Fire Spread is part of the base game and has no relation to other fire spread settings in this mod!\nNote: The Despawn Teardown Fire allows for more ThiccSmoke & ThiccFire particles to be spawned but can be buggy! Disable if experiencing issues!."
             },
             {
                 sub_menu_title="Fire Damage",
-                options=Settings_FireDetector_OptionsFireDamage,
+                options=Settings_FireSim_OptionsFireDamage,
                 description="This mode allows fires to do extra damage to buildings, beyond the existing fire damage model. \nNote that to much damage can actually put out flames. "
             },
             {
                 sub_menu_title="Fire Soot",
-                options=Settings_FireDetector_OptionsFireSoot,
+                options=Settings_FireSim_OptionsFireSoot,
                 description="Fire soot simulation settings, since update 0.9.4 teardown this mod is able to simulate soot trails created by smoke \neven though no fire is really near. \nNote, only available in Teardown 0.9.4 and up, will be disabled otherwise."
             },
             {
                 sub_menu_title="Debugging",
-                options=Settings_FireDetector_OptionsDebugging,
+                options=Settings_FireSim_OptionsDebugging,
                 description="If your settings are behaving weird, fire is spawning weird, \nyou can see where fires are detected and the intensity of the fire \n (how greener the box, the more intense the fire).,"
             }
         }

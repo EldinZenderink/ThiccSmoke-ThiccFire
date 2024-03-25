@@ -1,4 +1,4 @@
--- firedetector.lua
+-- FireSim.lua
 -- @date 2021-09-13
 -- @author Eldin Zenderink
 -- @brief This module spawns particles and adjust dynamically based on FPS, it can however be adjusted
@@ -67,6 +67,9 @@ function ParticleSpawner_UpdateSettingsFromSettings()
 
     ParticleSpawner_ParticleRefreshRate =  ParticleSpawner_Properties["particle_refresh_max"]
     ParticleSpawner_CurFPSTarget = ParticleSpawner_Properties["dynamic_fps_target"]
+
+    -- Register callback with fire sim
+    FireSim_RegisterUpdateFireCallback("particle", ParticleSpawner_SpawnFireCallback, (1 / ParticleSpawner_ParticleRefreshRate))
 end
 
 function ParticleSpawner_tick(dt)
@@ -213,20 +216,14 @@ function ParticleSpawner_tick(dt)
                     local firemat = FuncDeepCopy(FireMaterial_GetInfo(info["material"]))
                     local smokemat = FuncDeepCopy(SmokeMaterial_GetInfo(info["material"]))
                     if smoke == "YES" then
-                        local fadein =  FuncRndNum(0.1, 0.5)
-                        local fadeout =  FuncRndNum(0.5, 1)
-                        local light = Particle_EmitParticle(smokemat, info["location"], "smoke", info["fire_intensity"], false, fadein + fadeout ,nil, fadein, fadeout)
-                        if light then
-                            lights[hash] = info
-                        end
+                        ParticleSpawner_SpawnParticle(info["location"], smokemat, "smoke", info["fire_intensity"], false)
                     end
-                    if fire == "YES" then
-                        local fadein =  FuncRndNum(0.1, 0.5)
-                        local fadeout =  FuncRndNum(1, 1.5)
-                        local light = Particle_EmitParticle(firemat, info["location"], "fire", info["fire_intensity"], false, fadein + fadeout ,nil, fadein, fadeout)
-                        if light then
-                            lights[hash] = info
-                        end
+                    if fire == "YES" and spawn_fire then
+                        ParticleSpawner_SpawnParticle(info["location"],firemat,  "fire", info["fire_intensity"], false)
+                        -- if light then
+                        --     lights[hash] = info
+                        -- end
+                        lights[hash] = info
                     end
                     if ash == "YES" and spawn_ash then
                         if FuncRndInt(0,1) == 1 then
@@ -239,7 +236,6 @@ function ParticleSpawner_tick(dt)
                 end
             end
 
-            Light_SpawnLight(lights)
 
             ParticleSpawner_SpawnTimer = 0
             ParticleSpawner_FindNew = true
@@ -248,16 +244,14 @@ function ParticleSpawner_tick(dt)
         ParticleSpawner_FindNew = true
     end
 
+    ParticleSpawner_ParticlesToSpawn =  FireSim_GetFires(ParticleSpawner_FindNew)
+
     if ParticleSpawner_FindNew then
         ParticleSpawner_FindNew = false
-        ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocationsV2(dt, true)
-    else
-        ParticleSpawner_ParticlesToSpawn = FireDetector_FindFireLocationsV2(dt, false)
     end
 
 
     if ParticleSpawner_RefreshTimer > (1 / ParticleSpawner_ParticleRefreshRate) then
-        Particle_UpdateParticle(ParticleSpawner_RefreshTimer, spawn_fire)
         spawn_fire = false
         ParticleSpawner_RefreshTimer = 0
     end
@@ -266,6 +260,24 @@ function ParticleSpawner_tick(dt)
     ParticleSpawner_SpawnTimer = ParticleSpawner_SpawnTimer + dt
 
 
+end
+
+--- Spawn particles for specific fires
+---@param fire table object containing fire info.
+function ParticleSpawner_SpawnFireCallback(hash, fire)
+    local firemat = FireMaterial_GetInfo(fire["material"])
+    local smokemat = SmokeMaterial_GetInfo(fire["material"])
+    if ParticleSpawner_Properties["smoke"] == "YES" then
+        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), smokemat, "smoke", fire["fire_intensity"], false)
+    end
+    if ParticleSpawner_Properties["fire"] == "YES" then
+        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), firemat,  "fire", fire["fire_intensity"], false)
+    end
+    if ParticleSpawner_Properties["ash"] == "YES" then
+        if FuncRndInt(0,1) == 1 then
+            Particle_EmitParticleOld(firemat, VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), "ash_fire", fire["fire_intensity"])
+        end
+    end
 end
 
 function ParticleSpawner_ShowStatus()

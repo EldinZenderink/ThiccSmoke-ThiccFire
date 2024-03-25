@@ -297,7 +297,8 @@ function Particle_EmitParticleOld(emitter, location, particle, fire_intensity)
 			else
 				FuncParticleRadius(FuncRndNum(Particle_ash_size_min, (fire_intensity / 2000)))
 			end
-			FuncParticleGravity(FuncRndNum(Particle_ash_gravity_min, Particle_ash_gravity_max))
+			local updown = Generic_rndInt(-1, 1);
+			FuncParticleGravity(FuncRndNum(Particle_ash_gravity_min * updown, Particle_ash_gravity_max * updown))
 			FuncParticleDrag(FuncRndNum(Particle_ash_drag_min, Particle_ash_drag_max))
 			FuncParticleRotation(FuncRndNum(Particle_ash_rot_min, Particle_ash_rot_max), 0, "easein", 1)
 			if  v == nil then
@@ -563,11 +564,9 @@ function Particle_UpdateParticle(dt, spawnfire)
 				if particlespawner["previoustypes"][type] == nil then
 
 					if spawnfire and type == "fire" then
-
 						ParticleSpawner_SpawnParticle(location, emitter, type, fire_intensity, explosion)
 					elseif type == "smoke" then
 						ParticleSpawner_SpawnParticle(location, emitter, type, fire_intensity, explosion)
-
 					end
 
 					if Particle_AlternateEmitters then
@@ -582,12 +581,19 @@ function Particle_UpdateParticle(dt, spawnfire)
 			-- Timeout the particle
 
 			if deleted == false then
+				local hit, p, n, s = QueryClosestPoint(ParticleSpawnerList[hash]["location"], 0.1)
+				if hit == false then
+					ParticleSpawnerList[hash]["fire_intensity"] = 0
+					ParticleSpawnerList[hash] = nil
+					deleted = true
+					LightSpawner_DeleteLight(particlespawner["lightinstance"])
+				end
+
 				if ParticleSpawnerList[hash]["timeout"] < ParticleSpawnerList[hash]["timer"] and ParticleSpawnerList[hash]["fadeout"] == false then
 					ParticleSpawnerList[hash]["fadeout"] = true
 					ParticleSpawnerList[hash]["fadein"] = false
 					if particlespawner["lightinstance"] ~= nil then
 						FuncLightSpawnerDeleteLightFade(particlespawner["lightinstance"], ParticleSpawnerList[hash]["fadeouttime"])
-
 					end
 				elseif ParticleSpawnerList[hash]["fadeout"] and ParticleSpawnerList[hash]["fire_intensity"] > 0 then
 					if ParticleSpawnerList[hash]["fadeoutreduction"] == nil then
@@ -595,6 +601,7 @@ function Particle_UpdateParticle(dt, spawnfire)
 					end
 					ParticleSpawnerList[hash]["fadein"] = false
 					ParticleSpawnerList[hash]["fire_intensity"] = ParticleSpawnerList[hash]["fire_intensity"] - ParticleSpawnerList[hash]["fadeoutreduction"]
+
 				elseif ParticleSpawnerList[hash]["fadein"] then
 					if ParticleSpawnerList[hash]["fadeinreduction"] == nil then
 						ParticleSpawnerList[hash]["fadeinreduction"] = ParticleSpawnerList[hash]["fire_intensity_orig"] / (ParticleSpawnerList[hash]["fadeintime"] / dt)
@@ -641,111 +648,111 @@ function ParticleSpawner_SpawnParticle(location, emitter, type, fire_intensity, 
 	local custom_direction = emitter["custom_direction"]
 	local location_random = Particle_LocationRandomness
 
-	alpha = alpha +  FuncRndNum( -variation, variation)
-	-- gravity = gravity + FuncRndNum(gravity / 20 , gravity * 2)
-	if alpha > 1 then
-		alpha = 1
-	end
-
-	if alpha < 0 then
-		alpha = 0.2
-	end
-
-	local randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	drag = (drag * randomness)
-	if drag > 1 then
-		drag = 1
-	end
-
-	if drag < 0 then
-		drag = 0
-	end
-	randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	radius = ((radius * (fire_intensity / 100)) * randomness)
-	if radius > 1 then
-		radius = 1
-	end
-	if radius < 0 then
-		radius = 0
-	end
-
-	location_random = ((location_random * (fire_intensity / 100)) * randomness)
-
-	randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	vel = vel * randomness
-	randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	rot = rot * randomness
-	randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	gravity = ((gravity) * randomness)
-
-	randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-	life = ((life * (fire_intensity / 100)) * randomness)
-
-
-	--Set up the particle state
-	FuncParticleReset()
-	FuncParticleType("smoke")
-	FuncParticleDrag(0.1, drag, "easein")
-	FuncParticleCollide(1, 1, "constant", 0.01)
 	local iterator = Particle_Duplicator
-	if type == "fire" then
-		local rand = FuncRndInt(1, #Particle_TypeFire)
-		local particle_type = Particle_TypeFire[rand]
-		FuncParticleTile(particle_type)
-		local s_random = Particle_FireGradient[FuncRndInt(1, #Particle_FireGradient)]
-		local s_red =  0.8 + s_random[1]
-		local s_green = 0.6 + s_random[2]
-		local s_blue =  0.3 + s_random[3]
-		-- 3 - 5 - 13 -  14
-		-- 8 = fire embers
-		if life < 0.25 then
-			life = 0.25
-		end
-		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-		local firefadein = (Particle_FireFadeIn / 100) * randomness
-		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-		local firefadeout = (Particle_FireFadeOut / 100) * randomness
-
-		FuncParticleColor(s_red, s_green, s_blue, red, green, blue)
-		FuncParticleAlpha(alpha, 0, "easein",  firefadein,  firefadeout)	-- Ramp up fast, ramp down after 50%
-
-		local emissive = FuncRndNum(Particle_FireEmissive / 2, Particle_FireEmissive)
-		if particle_type == 5 then
-			-- life = radius * life * 2
-		elseif particle_type == 8 then
-			gravity = gravity +  FuncRndNum(1, 3)
-			vel = vel + FuncRndNum(2 , 4)
-		end
-
-
-		FuncParticleEmissive(emissive, 1, "easein", firefadein, firefadeout)
-		FuncParticleRadius(0.05, radius, "easein", firefadein, firefadeout)
-
-		if explosion then
-			FuncParticleEmissive(emissive, 1, "easein", 0, firefadeout)
-			FuncParticleRadius(radius, radius, "easein", 0, firefadeout)
-		end
-		iterator = 1
-	else
-		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-		local smokefadein = (Particle_SmokeFadeIn / 100) * randomness
-		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-		local smokefadeout = (Particle_SmokeFadeOut / 100) * randomness
-
-		local rand = FuncRndInt(1, #Particle_TypeSmoke)
-		local particle_type = Particle_TypeSmoke[rand]
-		FuncParticleTile(particle_type)
-
-		FuncParticleAlpha(alpha / 2, alpha, "easein", smokefadein, smokefadeout)
-		FuncParticleRadius(radius, radius / 2, "easeout", smokefadein, smokefadeout)
-		if explosion then
-			FuncParticleAlpha(alpha, alpha / 2, "easeout", 0, smokefadeout)
-			FuncParticleRadius(radius, radius / 2, "easeout", 0, smokefadeout)
-		end
-		FuncParticleColor(red, green, blue, red + 0.2, green + 0.2, blue + 0.2)
-	end
-
 	for d=1, iterator do
+		alpha = alpha +  FuncRndNum( -variation, variation)
+		-- gravity = gravity + FuncRndNum(gravity / 20 , gravity * 2)
+		if alpha > 1 then
+			alpha = 1
+		end
+
+		if alpha < 0 then
+			alpha = 0.2
+		end
+
+		local randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		drag = (drag * randomness)
+		if drag > 1 then
+			drag = 1
+		end
+
+		if drag < 0 then
+			drag = 0
+		end
+		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		radius = ((radius * (fire_intensity / 100)) * randomness)
+		if radius > 1 then
+			radius = 1
+		end
+		if radius < 0 then
+			radius = 0
+		end
+
+		location_random = ((location_random * (fire_intensity / 100)) * randomness)
+
+		-- randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		-- vel = vel * randomness
+		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		rot = rot * randomness
+		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		gravity = ((gravity) * randomness)
+
+		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+		life = ((life * (fire_intensity / 100)) * randomness)
+
+
+		--Set up the particle state
+		FuncParticleReset()
+		FuncParticleType("smoke")
+		FuncParticleDrag(0.1, drag, "easein")
+		FuncParticleCollide(1, 1, "constant", 0.05)
+		if type == "fire" then
+			local rand = FuncRndInt(1, #Particle_TypeFire)
+			local particle_type = Particle_TypeFire[rand]
+			FuncParticleTile(particle_type)
+			local s_random = Particle_FireGradient[FuncRndInt(1, #Particle_FireGradient)]
+			local s_red =  0.8 + s_random[1]
+			local s_green = 0.6 + s_random[2]
+			local s_blue =  0.3 + s_random[3]
+			-- 3 - 5 - 13 -  14
+			-- 8 = fire embers
+			if life < 0.25 then
+				life = 0.25
+			end
+			randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+			local firefadein = (Particle_FireFadeIn / 100) * randomness
+			randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+			local firefadeout = (Particle_FireFadeOut / 100) * randomness
+
+			FuncParticleColor(s_red, s_green, s_blue, red, green, blue)
+			FuncParticleAlpha(alpha, 0, "easein",  firefadein,  firefadeout)	-- Ramp up fast, ramp down after 50%
+
+			local emissive = FuncRndNum(Particle_FireEmissive / 2, Particle_FireEmissive)
+			if particle_type == 5 then
+				-- life = radius * life * 2
+			elseif particle_type == 8 then
+				gravity = gravity +  FuncRndNum(1, 3)
+				vel = vel + FuncRndNum(2 , 4)
+			end
+
+
+			FuncParticleEmissive(emissive, 1, "easein", firefadein, firefadeout)
+			FuncParticleRadius(0.05, radius, "easein", firefadein, firefadeout)
+
+			if explosion then
+				FuncParticleEmissive(emissive, 1, "easein", 0, firefadeout)
+				FuncParticleRadius(radius, radius, "easein", 0, firefadeout)
+			end
+			iterator = 1
+		else
+			randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+			local smokefadein = (Particle_SmokeFadeIn / 100) * randomness
+			randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
+			local smokefadeout = (Particle_SmokeFadeOut / 100) * randomness
+
+			local rand = FuncRndInt(1, #Particle_TypeSmoke)
+			local particle_type = Particle_TypeSmoke[rand]
+			FuncParticleTile(particle_type)
+
+			FuncParticleAlpha(alpha / 2, alpha, "easein", smokefadein, smokefadeout)
+			FuncParticleRadius(radius, radius / 2, "easeout", smokefadein, smokefadeout)
+			if explosion then
+				FuncParticleAlpha(alpha, alpha / 2, "easeout", 0, smokefadeout)
+				FuncParticleRadius(radius, radius / 2, "easeout", 0, smokefadeout)
+			end
+			FuncParticleColor(red, green, blue, red + 0.2, green + 0.2, blue + 0.2)
+		end
+
 		local grava = FuncRndNum(gravity * 2, gravity * 8)
 		local gravb = FuncRndNum(gravity, gravity * 2)
 		local gravc= FuncRndNum(gravity / 8, gravity/16)
@@ -829,9 +836,12 @@ function Particle_CloseToLocation(newlocation, newintenisty)
 end
 
 
-function Particle_EmitParticle(emitter, location, type, fire_intensity, explosion, timeout, id, fadeintime, fadeouttime)
+function Particle_EmitParticle(emitter, location, type, fire_intensity, explosion, timeout, id, fadeintime, fadeouttime, customhash)
 	Particle_CloseToLocationUpdate()
-	local locationhash = FuncHashVec(location)
+	local locationhash = customhash
+	if locationhash == nil then
+		locationhash = FuncHashVec(location)
+	end
 
 	-- If there is already a particle emitting of same type near (not at) that location, we do not add it to the list
 	-- if the particle is near but already exists we may update that particle
@@ -859,6 +869,7 @@ function Particle_EmitParticle(emitter, location, type, fire_intensity, explosio
 	ParticleSpawnerList[locationhash]["location"] = location
 	ParticleSpawnerList[locationhash]["explosion"] = explosion
 	ParticleSpawnerList[locationhash]["fire_intensity_orig"] = fire_intensity
+	ParticleSpawnerList[locationhash]["fire_intensity"] = fire_intensity
 	ParticleSpawnerList[locationhash]["timer"] = 0  -- reset the timeout timer for existing locations
 
 

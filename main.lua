@@ -18,7 +18,8 @@
 #include "particle_spawner.lua"
 #include "particle.lua"
 #include "wind.lua"
-#include "firedetector.lua"
+#include "FireSim.lua"
+#include "fireextinguishertool.lua"
 #include "light_spawner\lightspawner.lua"
 #include "light.lua"
 #include "presets\preset-low.lua"
@@ -44,7 +45,7 @@ function init()
    Settings_Init(set_default)
    GeneralOptions_Init()
    Debug_Init()
-   FireDetector_Init()
+   FireSim_Init()
    ParticleSpawner_Init()
    Particle_Init()
    Wind_Init()
@@ -59,15 +60,20 @@ function init()
 end
 
 function tick(dt)
-    ParticleSpawner_tick(dt)
+    FireSim_SpawnFireOnButtonPress(dt)
+    FireSim_SimulateFire(dt)
+
+    DebugWatch("tickdt", dt)
 end
 
 function update(dt)
-    FireDetector_ShowStatus()
+    -- FireSim_FindFireLocationsV3(dt, true)
+    FireSim_ShowStatus()
     ParticleSpawner_ShowStatus()
     Menu_GenerateGameMenuTick()
     Wind_ChangeWind(dt, true)
-    Light_UpdateLights(dt)
+    FireExtinguisherTool_Update()
+    DebugWatch("updatedt", dt)
 end
 
 function draw()

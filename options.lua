@@ -19,7 +19,7 @@
 #include "particle.lua"
 #include "wind.lua"
 #include "light.lua"
-#include "firedetector.lua"
+#include "FireSim.lua"
 #include "light_spawner\lightspawner.lua"
 #include "presets\preset-low.lua"
 #include "presets\preset-medium.lua"
@@ -44,7 +44,7 @@ function init()
     Settings_Init(set_default)
     GeneralOptions_Init()
     Debug_Init()
-    FireDetector_Init()
+    FireSim_Init()
     ParticleSpawner_Init()
     Particle_Init()
     Wind_Init()

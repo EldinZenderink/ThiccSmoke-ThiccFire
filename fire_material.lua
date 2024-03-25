@@ -55,17 +55,7 @@ _FireMaterialConfiguration = {
         speed = 0.5,
         drag = 1,
         variation = 0.1,
-    },
-    masonery = {
-        color = { r = 0.4, g = 0.4, b = 0.4, a = 0.8 },
-        lifetime = 8,
-        size = 1,
-        gravity = 1.5,
-        rotation = 0.5,
-        speed = 2,
-        drag = 0.6,
-        variation = 0.3,
-    },
+    }
 }
 
 function FireMaterial_Init()

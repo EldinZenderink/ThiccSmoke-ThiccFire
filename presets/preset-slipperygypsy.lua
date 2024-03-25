@@ -24,7 +24,7 @@ Preset_Settings_SlipperyGypsy = {
         windstrengthrandom = 0,
         windstrengthrandomrate = 1
     },
-    FireDetector    = {
+    FireSim    = {
         map_size = "LARGE",
         max_fire_spread_distance = 12,
         fire_reaction_time = 5,
@@ -54,8 +54,7 @@ Preset_Settings_SlipperyGypsy = {
             wood = true,
             foliage = true,
             plaster = true,
-            plastic = true,
-            masonery = true,
+            plastic = true
         },
         despawn_td_fire = "YES"
     },
@@ -149,16 +148,6 @@ Preset_Settings_SlipperyGypsy = {
             speed = 1,
             drag = 0.2,
             variation = 0.1,
-        },
-        masonery = {
-            color = { r = 0.38, g = 0.11, b = 0.03, a = 1 },
-            lifetime = 1.25,
-            size = 0.9,
-            gravity = 2,
-            rotation = 0.5,
-            speed = 1,
-            drag = 0.2,
-            variation = 0.1,
         }
     },
     SmokeMaterial   = {
@@ -201,16 +190,6 @@ Preset_Settings_SlipperyGypsy = {
             speed = 0.15,
             drag = 1,
             variation = 0.1,
-        },
-        masonery = {
-            color = { r = 0.21, g = 0.2, b = 0.2, a = 1 },
-            lifetime = 16,
-            size = 1,
-            gravity = 8,
-            rotation = 0.5,
-            speed = 1,
-            drag = 0.2,
-            variation = 0.3,
-        },
+        }
     }
 }

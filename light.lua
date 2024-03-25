@@ -33,6 +33,7 @@ local FuncDeepCopy = Generic_deepCopy
 
 local FuncLightSpawnerSpawn = LightSpawner_Spawn
 local FuncLightSpawnerDeleteAll = LightSpawner_DeleteAll
+local FuncLightSpawnerSetNewLightLocation = LightSpawner_SetNewLightLocation
 local FuncLightSpawnerUpdateLightIntensity = LightSpawner_UpdateLightIntensity
 local FuncLightSpawnerDeleteLight = LightSpawner_DeleteLight
 
@@ -84,57 +85,8 @@ function Light_UpdateSettingsFromSettings()
         Settings_SetValue("Light", "legacy",  Light_Properties["legacy"])
         Settings_StoreActivePreset()
     end
-end
-
-function Light_SpawnLight(lightstospawn)
-    if Light_Properties["legacy"] == "NO" and Light_Properties["spawn_light"] == "ON" then
-
-        for hash, info in pairs(Light_LightEntities) do
-            if lightstospawn[hash] == nil and (Light_LightEntities[hash]["state"] ~= "lightdown" and Light_LightEntities[hash]["state"] ~= "delete") then
-                Light_LightEntities[hash]["state"] = "lightdown"
-            end
-        end
-
-        for hash, fire_info in pairs(lightstospawn) do
-            local tenth = fire_info["fire_intensity"]  / 10
-            tenth = Light_Properties["light_flickering_intensity"] * tenth
-            local light_intensity = fire_info["fire_intensity"] + Generic_rnd(tenth * -1, tenth)
-            light_intensity = light_intensity * Light_Properties["light_intensity"]
-            if Light_LightEntities[hash] == nil then
-                local firemat = FuncDeepCopy(FireMaterial_GetInfo(fire_info["material"]))
-                firemat["color"]["r"] =  firemat["color"]["r"] + Light_Properties["red_light_offset"]
-                firemat["color"]["g"] =  firemat["color"]["g"] + Light_Properties["green_light_offset"]
-                firemat["color"]["b"] =  firemat["color"]["b"] + Light_Properties["blue_light_offset"]
-
-                if  firemat["color"]["r"] > 1 then
-                    firemat["color"]["r"] = 1
-                end
-                if  firemat["color"]["r"] < 0 then
-                    firemat["color"]["r"] = 0
-                end
-
-                if  firemat["color"]["g"] > 1 then
-                    firemat["color"]["g"] = 1
-                end
-                if  firemat["color"]["g"] < 0 then
-                    firemat["color"]["g"] = 0
-                end
-
-                if  firemat["color"]["b"] > 1 then
-                    firemat["color"]["b"] = 1
-                end
-                if  firemat["color"]["b"] < 0 then
-                    firemat["color"]["b"] = 0
-                end
-                local id = FuncLightSpawnerSpawn(fire_info["location"], light_intensity, light_intensity, FuncVec(firemat["color"]["r"],firemat["color"]["g"],firemat["color"]["n"]), true)
-                Light_LightEntities[hash] = {id=id, current_intensity=0, current_intensity_max=light_intensity, state="lightup"}
-            else
-                Light_LightEntities[hash]["current_intensity_max"] = light_intensity
-            end
-        end
-    else
-        FuncLightSpawnerDeleteAll()
-    end
+    FireSim_RegisterUpdateFireCallback("updatelight", Light_UpdateFireCallback, 0.1)
+    FireSim_RegisterDeleteFireCallback("spawnlight", Light_DeleteFireCallback, 0)
 end
 
 
@@ -170,4 +122,55 @@ function Light_UpdateLights(dt)
         end
     end
     -- DebugWatch("lights", count)
+end
+
+
+function Light_UpdateFireCallback(hash, fire)
+
+    if  Light_Properties["spawn_light"] == "ON" then
+        -- local tenth = fire["fire_intensity"]  / 10
+        -- tenth = Light_Properties["light_flickering_intensity"] * tenth
+        -- local light_intensity = fire["fire_intensity"] + Generic_rnd(tenth * -1, tenth)
+        -- light_intensity = light_intensity * Light_Properties["light_intensity"]
+        if fire["light"] == nil then
+            local firemat = FireMaterial_GetInfo(fire["material"])
+            firemat["color"]["r"] =  firemat["color"]["r"] + Light_Properties["red_light_offset"]
+            firemat["color"]["g"] =  firemat["color"]["g"] + Light_Properties["green_light_offset"]
+            firemat["color"]["b"] =  firemat["color"]["b"] + Light_Properties["blue_light_offset"]
+
+            if  firemat["color"]["r"] > 1 then
+                firemat["color"]["r"] = 1
+            end
+            if  firemat["color"]["r"] < 0 then
+                firemat["color"]["r"] = 0
+            end
+
+            if  firemat["color"]["g"] > 1 then
+                firemat["color"]["g"] = 1
+            end
+            if  firemat["color"]["g"] < 0 then
+                firemat["color"]["g"] = 0
+            end
+
+            if  firemat["color"]["b"] > 1 then
+                firemat["color"]["b"] = 1
+            end
+            if  firemat["color"]["b"] < 0 then
+                firemat["color"]["b"] = 0
+            end
+
+            fire["light"] = FuncLightSpawnerSpawn(fire["location"], fire["fire_intensity"] / 20, fire["fire_intensity"] / 2, FuncVec(firemat["color"]["r"],firemat["color"]["g"],firemat["color"]["n"]), true)
+        else
+
+            -- fire["light"] = FuncLightSpawnerSetNewLightLocation(fire["light"], VecAdd(fire["location"], VecScale(fire["normal"], 0.05)))
+            FuncLightSpawnerUpdateLightIntensity(fire["light"], fire["fire_intensity"] / 2)
+            LightSpawner_SetNewLightSize(fire["light"], fire["fire_intensity"] / 10)
+            -- fire["light"] = LightSpawner_SetNewLightLocation(fire["light"],fire["location"] )
+        end
+    end
+
+end
+
+function Light_DeleteFireCallback(hash, fire)
+    FuncLightSpawnerDeleteLight(fire["light"])
 end
