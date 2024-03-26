@@ -177,14 +177,6 @@ function Generic_HashVec(vec)
     return xored_p1_2wp3
 end
 
-function ObjectDetector_HashVec(vec)
-    local p1 = 73856093
-    local p2 = 19349663
-    local p3 = 83492791
-    local xor_p1_p2 = Generic_xor((vec[1] * p1), vec[3] * p2)
-    local xored_p1_2wp3 = Generic_xor(xor_p1_p2, (vec[2] * p3))
-    return xored_p1_2wp3
-end
 
 
 ---Draw a point if visualize fire detection is turned on

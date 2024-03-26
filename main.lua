@@ -50,6 +50,7 @@ function init()
    Particle_Init()
    Wind_Init()
    Light_Init()
+   FireExtinguisherTool_Init()
    FireMaterial_Init()
    SmokeMaterial_Init()
    Menu_Init()
@@ -60,19 +61,19 @@ function init()
 end
 
 function tick(dt)
-    FireSim_SpawnFireOnButtonPress(dt)
     FireSim_SimulateFire(dt)
-
+    LightSpawner_Update(dt)
     DebugWatch("tickdt", dt)
 end
 
 function update(dt)
     -- FireSim_FindFireLocationsV3(dt, true)
+    FireExtinguisherTool_Update(dt)
+    FireSim_SpawnFireOnButtonPress(dt)
     FireSim_ShowStatus()
     ParticleSpawner_ShowStatus()
     Menu_GenerateGameMenuTick()
     Wind_ChangeWind(dt, true)
-    FireExtinguisherTool_Update()
     DebugWatch("updatedt", dt)
 end
 

@@ -268,14 +268,14 @@ function ParticleSpawner_SpawnFireCallback(hash, fire)
     local firemat = FireMaterial_GetInfo(fire["material"])
     local smokemat = SmokeMaterial_GetInfo(fire["material"])
     if ParticleSpawner_Properties["smoke"] == "YES" then
-        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), smokemat, "smoke", fire["fire_intensity"], false)
+        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.01)), smokemat, "smoke", fire["fire_intensity"], false)
     end
     if ParticleSpawner_Properties["fire"] == "YES" then
-        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), firemat,  "fire", fire["fire_intensity"], false)
+        ParticleSpawner_SpawnParticle(VecAdd(fire["location"], VecScale(fire["normal"], 0.01)), firemat,  "fire", fire["fire_intensity"], false)
     end
     if ParticleSpawner_Properties["ash"] == "YES" then
         if FuncRndInt(0,1) == 1 then
-            Particle_EmitParticleOld(firemat, VecAdd(fire["location"], VecScale(fire["normal"], 0.05)), "ash_fire", fire["fire_intensity"])
+            Particle_EmitParticleOld(firemat, VecAdd(fire["location"], VecScale(fire["normal"], 0.01)), "ash_fire", fire["fire_intensity"])
         end
     end
 end

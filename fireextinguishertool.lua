@@ -9,7 +9,7 @@ known_tools_index = {
     extinguisher={
         name="extinguisher",
         effective_range=0.25,
-        extinguish_rate=0.25
+        extinguish_rate=2
     },
     firefighter={
         name="mycresta-firefighter",
@@ -18,11 +18,17 @@ known_tools_index = {
     },
 }
 
-FireExtinguisherTool_UpdateRate = 0.25
+FireExtinguisherTool_UpdateRate = 0.05
 FireExtinguisherTool_Timer = 0
 FireExtinguisherTool_Active = false
 FireExtinguisherTool_ActiveTool = nil
 FireExtinguisherTool_LocationHit = nil
+
+
+
+function FireExtinguisherTool_Init()
+    FireSim_RegisterUpdateFireCallback("CheckFireExtinguisher", FireExtinguisherTool_CheckFireCallback, 0.1)
+end
 
 function FireExtinguisherTool_Update(dt)
     FireExtinguisherTool_Active = false
@@ -66,10 +72,9 @@ end
 function FireExtinguisherTool_CheckFireCallback(hash, fire)
     if FireExtinguisherTool_Active then
         if Generic_VecDistance(fire["original"][3], FireExtinguisherTool_LocationHit) <= (fire["original"][4] * 2 ) + FireExtinguisherTool_ActiveTool["effective_range"] then
-            DebugPrint("Extinguishing fire, intensity: " .. tostring(fire["fire_intensity"]) .. " canspawnfire(nil if not): " .. tostring(fire["spawnnew"]))
-            DebugCross(fire["original"][3],  1, 1, 0)
-            fire["fire_intensity"] = fire["fire_intensity"] - FireExtinguisherTool_ActiveTool["extinguish_rate"]
-            fire["spawnnew"] = nil
+            -- fire["fire_intensity"] = fire["fire_intensity"] - FireExtinguisherTool_ActiveTool["extinguish_rate"]
+            -- fire["spawnnew"] = nil
+            FireSim_ExtinguishFire(hash, FireExtinguisherTool_ActiveTool["extinguish_rate"])
         end
     end
 end

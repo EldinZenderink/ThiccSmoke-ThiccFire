@@ -688,14 +688,14 @@ function ParticleSpawner_SpawnParticle(location, emitter, type, fire_intensity, 
 		gravity = ((gravity) * randomness)
 
 		randomness = 1 + FuncRndNum(-Particle_Randomness, Particle_Randomness)
-		life = ((life * (fire_intensity / 100)) * randomness)
+		life = ((life * (fire_intensity / 50)) * randomness)
 
 
 		--Set up the particle state
 		FuncParticleReset()
+		FuncParticleCollide(1, 1, "constant", 0.1)
 		FuncParticleType("smoke")
 		FuncParticleDrag(0.1, drag, "easein")
-		FuncParticleCollide(1, 1, "constant", 0.05)
 		if type == "fire" then
 			local rand = FuncRndInt(1, #Particle_TypeFire)
 			local particle_type = Particle_TypeFire[rand]

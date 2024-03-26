@@ -963,8 +963,8 @@ Settings_FireSim_OptionsFireSpread=
         },
         {
             option_parent_text="",
-            option_text="Max Fires Detected",
-            option_note="How many fires may be detected at once by this mod, spawns particles on detected fires.",
+            option_text="Max Fires",
+            option_note="How many fires can be active.",
             option_type="float",
             storage_key="max_fire",
             min_max={1, 1000, 1}

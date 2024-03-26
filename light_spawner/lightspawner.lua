@@ -4,7 +4,7 @@
 -- @brief Spawn FPS friendly lights using spawning of light points (instead of spotlight), side effect it looks a bit worse than spotlights (affects global illumination less), but faster and better than none ;P.
 
 -- Needs to be set to true if update is called periodically
-LightSpawner_DeleteFadeEnabled = false
+LightSpawner_DeleteFadeEnabled = true
 
 -- List to keep track of light instance
 LightSpawner_Lights = {}
@@ -105,7 +105,7 @@ function LightSpawner_Spawn(location, size, intensity, color, enabled, tag)
         locationstart=location,
         locationend=nil,
         animaterotation=0.5,
-speed=nil,
+        speed=nil,
         animatejitter=nil,
         animateinvert=false,
         animating=false,
@@ -130,11 +130,14 @@ speed=nil,
     end
 
     -- Generate random id
-    local new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
 
-    -- Make sure no duplicates exist
-    while LightSpawner_Lights[new_id] ~= nil do
-        new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
+    local new_id = LightSpawner_HashVec(location)
+
+    -- Make sure no duplicates exist, if already exist respawn with new info
+    if LightSpawner_Lights[new_id] ~= nil then
+        LightSpawner_Lights[new_id] = light_instance
+        LightSpawner_ReplaceSpawn(new_id)
+        return new_id
     end
 
     light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
@@ -171,7 +174,7 @@ function LightSpawner_SpawnAnimate(locationstart, locationend, jitter, speed, si
         locationstart=locationstart,
         locationend=locationend,
         animaterotation=0.5,
-speed=speed,
+        speed=speed,
         animatejitter=jitter,
         animateinvert=false,
         animating=false,
@@ -221,10 +224,8 @@ end
 function LightSpawner_Status()
     local count = 0
     for id, instance in pairs(LightSpawner_Lights) do
-        DebugPrint("Found: " .. count)
         count = count + 1
     end
-    DebugWatch("Lights Spawned", count)
 end
 
 --- Needs to be called periodically to allow for fadeout timing
