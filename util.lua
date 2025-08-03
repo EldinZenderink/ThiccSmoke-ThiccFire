@@ -63,7 +63,7 @@ local VEC_MAX = Vec(math.huge, math.huge, math.huge)
 			UiColor(sliderColor[1], sliderColor[2], sliderColor[3], sliderColor[4])
 			UiRect(x - 8, h)
 
-			UiTranslate(x - 8)
+			UiTranslate(x - 8, h)
 			UiColor(sliderColor[1] + .1, sliderColor[2] + .1, sliderColor[3] + .1, sliderColor[4])
 			UiRect(16, h)
 		UiPop()

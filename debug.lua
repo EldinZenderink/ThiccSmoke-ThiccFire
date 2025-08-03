@@ -3,20 +3,22 @@
 -- @author Eldin Zenderink
 -- @brief Helper module debug printer
 
-_DebugPrevious = ""
+Debug = {}
 
-function Debug_Init()
+Debug.DebugPrevious = ""
+
+function Debug.Init()
 end
 
 -- Debug helper functions
-function Debug_ClearDebugPrinter()
-	for i = 0, 20 do
-		DebugPrint("")
-	end
+function Debug.ClearDebug()
+	-- for i = 0, 20 do
+	-- 	DebugPrint("")
+	-- end
 end
 
 
-function DebugPrinter(line)
+function Debug.Printer(line)
 	local enabled = false
 	-- if  GeneralOptions_GetDebug() == "YES" then
 	-- 	enabled = true
@@ -25,10 +27,11 @@ function DebugPrinter(line)
 		enabled = false
 	end
 	if enabled then
-		if line == _DebugPrevious then
+		if line == Debug.DebugPrevious then
 			return false
 		end
 		DebugPrint(line)
-		_DebugPrevious = line
+		Debug.DebugPrevious = line
 	end
+	return true
 end

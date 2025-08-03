@@ -58,37 +58,39 @@ _SmokeMaterialConfiguration = {
     }
 }
 
+SmokeMaterial = {}
 
-function SmokeMaterial_Init()
-    Settings_RegisterUpdateSettingsCallback(SmokeMaterial_UpdateSettingsFromSettings)
+function SmokeMaterial.Init(argSettings)
+    SmokeMaterial.Settings = argSettings
+    SmokeMaterial.Settings.RegisterUpdateSettingsCallback(SmokeMaterial.UpdateSettingsFromSettings)
 end
 
 --- Apply material configuration stored in storage to a specific material
 ---@param material string -- the material to store the data for
-function SmokeMaterial_UpdateSettingsFromSettingsMaterial(material)
-    _SmokeMaterialConfiguration[material]["color"]["r"] = Settings_GetValue("SmokeMaterial", material .. ".color.r")
-    _SmokeMaterialConfiguration[material]["color"]["g"] = Settings_GetValue("SmokeMaterial", material .. ".color.g")
-    _SmokeMaterialConfiguration[material]["color"]["b"] = Settings_GetValue("SmokeMaterial", material .. ".color.b")
-    _SmokeMaterialConfiguration[material]["color"]["a"] = Settings_GetValue("SmokeMaterial", material .. ".color.a")
-    _SmokeMaterialConfiguration[material]["lifetime"] = Settings_GetValue("SmokeMaterial", material .. ".lifetime")
-    _SmokeMaterialConfiguration[material]["size"] = Settings_GetValue("SmokeMaterial", material .. ".size")
-    _SmokeMaterialConfiguration[material]["gravity"] = Settings_GetValue("SmokeMaterial", material .. ".gravity")
-    _SmokeMaterialConfiguration[material]["speed"] = Settings_GetValue("SmokeMaterial", material .. ".speed")
-    _SmokeMaterialConfiguration[material]["drag"] = Settings_GetValue("SmokeMaterial", material .. ".drag")
-    _SmokeMaterialConfiguration[material]["variation"] = Settings_GetValue("SmokeMaterial", material .. ".variation")
+function SmokeMaterial.UpdateSettingsFromSettingsMaterial(material)
+    _SmokeMaterialConfiguration[material]["color"]["r"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".color.r")
+    _SmokeMaterialConfiguration[material]["color"]["g"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".color.g")
+    _SmokeMaterialConfiguration[material]["color"]["b"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".color.b")
+    _SmokeMaterialConfiguration[material]["color"]["a"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".color.a")
+    _SmokeMaterialConfiguration[material]["lifetime"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".lifetime")
+    _SmokeMaterialConfiguration[material]["size"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".size")
+    _SmokeMaterialConfiguration[material]["gravity"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".gravity")
+    _SmokeMaterialConfiguration[material]["speed"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".speed")
+    _SmokeMaterialConfiguration[material]["drag"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".drag")
+    _SmokeMaterialConfiguration[material]["variation"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".variation")
 
     -- Update old presets if it does not contain this property
-    if  Settings_GetValue("SmokeMaterial", material .. ".rotation") == 0 or Settings_GetValue("SmokeMaterial", material .. ".rotation") == nil then
-        Settings_SetValue("SmokeMaterial", material .. ".rotation", 0.5)
+    if  SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".rotation") == 0 or SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".rotation") == nil then
+        SmokeMaterial.Settings.SetValue("SmokeMaterial", material .. ".rotation", 0.5)
     end
-    _SmokeMaterialConfiguration[material]["rotation"] = Settings_GetValue("SmokeMaterial", material .. ".rotation")
+    _SmokeMaterialConfiguration[material]["rotation"] = SmokeMaterial.Settings.GetValue("SmokeMaterial", material .. ".rotation")
 
 end
 
 --- Update the configuration for all materials from storage at once
-function SmokeMaterial_UpdateSettingsFromSettings()
+function SmokeMaterial.UpdateSettingsFromSettings()
     for material, properties in pairs(_SmokeMaterialConfiguration) do
-        SmokeMaterial_UpdateSettingsFromSettingsMaterial(material)
+        SmokeMaterial.UpdateSettingsFromSettingsMaterial(material)
 	end
 end
 
@@ -104,6 +106,6 @@ end
 ---  These properties are used by the particle generator
 ---@param material any
 ---@return table
-function SmokeMaterial_GetInfo(material)
+function SmokeMaterial.GetInfo(material)
     return _SmokeMaterialConfiguration[material]
 end

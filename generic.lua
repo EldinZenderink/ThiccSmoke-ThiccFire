@@ -28,28 +28,50 @@ local FuncDebugLine  = DebugLine
 local FuncVecLength = VecLength
 local FuncVecSub = VecSub
 local FuncVecDot = VecDot
--- local Generic_deepCopy = Generic_deepCopy
--- local Generic_DrawLine = Generic_DrawLine
--- local Generic_DrawPoint = Generic_DrawPoint
+-- local Generic.deepCopy = Generic.deepCopy
+-- local Generic.DrawLine = Generic.DrawLine
+-- local Generic.DrawPoint = Generic.DrawPoint
+
+Generic = {}
+
+-- Function to calculate the Euclidean distance between two vectors
+function Generic.euclideanDistance(v1, v2)
+    return math.sqrt((v1[1] - v2[1])^2 + (v1[2] - v2[2])^2 + (v1[3] - v2[3])^2)
+end
+
+-- Function to check if a vector is within range of any vectors in a list
+function Generic.isWithinRange(target, vectors, range)
+    local result = nil
+    for i, vector in ipairs(vectors) do
+        if Generic.euclideanDistance(target, vector) <= range then
+            if result == nil then
+                result = {i}
+            else
+                result[#result+1] = i
+            end
+        end
+    end
+    return result
+end
 
 
 --Helper to return a random vector of particular length
-function Generic_rndVec(length)
+function Generic.rndVec(length)
 	local v = FuncVecNormalize(FuncVec(FuncMathRandom(-100,100), FuncMathRandom(-100,100), FuncMathRandom(-100,100)))
 	return FuncVecScale(v, length)
 end
 
 --Helper to return a random number in range mi to ma
-function Generic_rnd(mi, ma)
+function Generic.rnd(mi, ma)
 	return FuncMathRandom(1000)/1000*(ma-mi) + mi
 end
 
-function Generic_rndInt(mi, ma)
+function Generic.rndInt(mi, ma)
 	return FuncMathRandom(mi, ma)
 end
 
 -- Deep copy helper
-function Generic_deepCopy(o, seen)
+function Generic.deepCopy(o, seen)
 	seen = seen or {}
 	if o == nil then return nil end
 	if seen[o] then return seen[o] end
@@ -60,9 +82,9 @@ function Generic_deepCopy(o, seen)
 		seen[o] = no
 
 		for k, v in FuncNext, o, nil do
-		no[Generic_deepCopy(k, seen)] = Generic_deepCopy(v, seen)
+		no[Generic.deepCopy(k, seen)] = Generic.deepCopy(v, seen)
 		end
-		FuncSetMetaTable(no, Generic_deepCopy(FuncGetMetaTable(o), seen))
+		FuncSetMetaTable(no, Generic.deepCopy(FuncGetMetaTable(o), seen))
 	else -- number, string, boolean, etc
 		no = o
 	end
@@ -71,7 +93,7 @@ end
 
 --- A moving average calculator
 
-function Generic_sma(period)
+function Generic.sma(period)
 	local t = {}
 	function FuncSum(a, ...)
 		if a then return a+FuncSum(...) else return 0 end
@@ -84,15 +106,15 @@ function Generic_sma(period)
 	return FuncAverage
 end
 
-function Generic_bool_to_number(value)
+function Generic.bool_to_number(value)
 	return value and 1 or 0
 end
 
-function Generic_number_to_bool(value)
+function Generic.number_to_bool(value)
 	return value and true or false
 end
 
-function Generic_SplitString(inputstr, sep)
+function Generic.SplitString(inputstr, sep)
 	if sep == nil then
 		sep = "%s"
 	end
@@ -103,64 +125,56 @@ function Generic_SplitString(inputstr, sep)
 	return t
 end
 
-function Generic_TableContains(t1,contains)
-    for i=1,#t1 do
-        if t1[i] == contains then
+function Generic.TableContains(t1,contains)
+    for index=1,#t1 do
+        if t1[index] == contains then
 			return true
 		end
     end
     return false
 end
 
-function Generic_TableContainsTable(t1,contains)
-    for i=1,#t1 do
-        if FuncTableConcat(t1[i]) == FuncTableConcat(contains)  then
+function Generic.TableContainsTable(t1,contains)
+    for index=1,#t1 do
+        if FuncTableConcat(t1[index]) == FuncTableConcat(contains)  then
 			return true
 		end
     end
     return false
 end
 
-function Generic_TableConcat(t1,t2)
-    for i=1,#t2 do
-        t1[#t1+1] = t2[i]
+function Generic.TableConcat(t1,t2)
+    for index=1,#t2 do
+        t1[#t1+1] = t2[index]
     end
     return t1
 end
 
-function Generic_TableToStr(t1, prefix)
+function Generic.TableToStr(t1, prefix)
 	local str = ""
 	if prefix == nil then
 		prefix = ""
 	end
 	for key, value in FuncPairs(t1) do
-		if i == 1 then
-			if FuncType(value) == "table" then
-				str = prefix .. "key: " .. FuncToString(key) .. " => "
-			else
-				str = prefix .. FuncToString(value)
-			end
-		else
-			if FuncType(value) == "table" then
-				str = str .. "; key: " .. FuncToString(key) .. " => "
-			else
-				str = str .. ',' .. FuncToString(value)
-			end
-		end
+        if FuncType(value) == "table" then
+            str = str .. "; key: " .. FuncToString(key) .. " => "
+        else
+            str = str .. ',' .. FuncToString(value)
+        end
 	end
     return str
 end
 
-function Generic_RGBConv(r, g, b)
+function Generic.RGBConv(r, g, b)
 	return {255 / r, 255 / g, 255 / b}
 end
 
-function Generic_xor(a, b)
+function Generic.xor(a, b)
   local r = 0
-  for i = 0, 31 do
+  for index = 0, 31 do
     local x = a / 2 + b / 2
     if x ~= FuncMathFloor(x) then
-      r = r + 2^i
+      r = r + 2^index
     end
     a = FuncMathFloor(a / 2)
     b = FuncMathFloor(b / 2)
@@ -168,12 +182,12 @@ function Generic_xor(a, b)
   return r
 end
 
-function Generic_HashVec(vec)
+function Generic.HashVec(vec)
     local p1 = 73856093
     local p2 = 19349663
     local p3 = 83492791
-    local xor_p1_p2 = Generic_xor((vec[1] * p1), vec[3] * p2)
-    local xored_p1_2wp3 = Generic_xor(xor_p1_p2, (vec[2] * p3))
+    local xor_p1_p2 = Generic.xor((vec[1] * p1), vec[3] * p2)
+    local xored_p1_2wp3 = Generic.xor(xor_p1_p2, (vec[2] * p3))
     return xored_p1_2wp3
 end
 
@@ -184,7 +198,7 @@ end
 ---@param r float intensity of the color red
 ---@param g float intensity of the color green
 ---@param b float intensity of the color blue
-function Generic_DrawPoint(point, r, g, b, draw)
+function Generic.DrawPoint(point, r, g, b, draw)
     if draw then
         FuncDebugCross(point,  r, g, b)
     end
@@ -197,7 +211,7 @@ end
 ---@param r float intensity of the color red
 ---@param g float intensity of the color green
 ---@param b float intensity of the color blue
-function Generic_DrawLine(vec1, vec2, r, g, b, draw)
+function Generic.DrawLine(vec1, vec2, r, g, b, draw)
     if draw then
         FuncDebugLine(vec1, vec2, r, g, b)
     end
@@ -207,15 +221,15 @@ end
 ---@param vec1 Vec (array of 3 values) containing the position
 ---@param vec2 Vec (array of 3 values) containing the position
 ---@return number value of the distance
-function Generic_VecDistance(vec1, vec2)
+function Generic.VecDistance(vec1, vec2)
     return FuncVecLength(FuncVecSub(vec1, vec2))
 end
 
-function Generic_VecCompare(vec1, vec2)
+function Generic.VecCompare(vec1, vec2)
     return ((vec1[1] and vec2[1]) and (vec1[2] and vec2[2]) and (vec1[3] and vec2[3]))
 end
 
-function Generic_CreateBox(point, size, point2, color, draw)
+function Generic.CreateBox(point, size, point2, color, draw)
     local p1 = {point[1] - size, point[2] - size, point[3] - size}
     local p2 = {point[1] - size, point[2] + size, point[3] - size}
     local p3 = {point[1] - size, point[2] + size, point[3] + size}
@@ -227,22 +241,22 @@ function Generic_CreateBox(point, size, point2, color, draw)
     local p8 = {point[1] + size, point[2] - size, point[3] + size}
 
     if draw then
-        Generic_DrawLine(p1, p2, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p2, p3, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p3, p4, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p4, p1, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p1, p2, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p2, p3, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p3, p4, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p4, p1, color[1], color[2], color[3], draw)
 
 
-        Generic_DrawLine(p5, p6, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p6, p7, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p7, p8, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p8, p5, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p5, p6, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p6, p7, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p7, p8, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p8, p5, color[1], color[2], color[3], draw)
 
 
-        Generic_DrawLine(p1, p5, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p2, p6, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p3, p7, color[1], color[2], color[3], draw)
-        Generic_DrawLine(p4, p8, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p1, p5, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p2, p6, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p3, p7, color[1], color[2], color[3], draw)
+        Generic.DrawLine(p4, p8, color[1], color[2], color[3], draw)
     end
 
     if point2 ~= nil then
@@ -267,11 +281,11 @@ function Generic_CreateBox(point, size, point2, color, draw)
         if  (ud > u2 and ud < u1) and (vd > v2 and vd < v1) and (wd > w2 and wd < w1) then
 
 
-            Generic_DrawPoint(point2, 1,0,0, draw)
+            Generic.DrawPoint(point2, 1,0,0, draw)
             return true
         else
-            Generic_DrawPoint(point2, 0,1,0, draw)
-            -- Generic_DrawPoint(point2, 1,0,0)
+            Generic.DrawPoint(point2, 0,1,0, draw)
+            -- Generic.DrawPoint(point2, 1,0,0)
             return false
         end
     else
@@ -279,8 +293,8 @@ function Generic_CreateBox(point, size, point2, color, draw)
     end
 end
 
-function Generic_SpawnLight(point, material, intensity)
-    material = Generic_deepCopy(material)
+function Generic.SpawnLight(point, material, intensity)
+    material = Generic.deepCopy(material)
 	material["color"]["r"] =  material["color"]["r"] - 0
     material["color"]["g"] =  material["color"]["g"] - 0.1
     material["color"]["b"] =  material["color"]["b"] - 0.1

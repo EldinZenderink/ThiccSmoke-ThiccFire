@@ -58,34 +58,36 @@ _FireMaterialConfiguration = {
     }
 }
 
-function FireMaterial_Init()
-    Settings_RegisterUpdateSettingsCallback(FireMaterial_UpdateSettingsFromSettings)
+FireMaterial = {}
+
+function FireMaterial.Init(argSettings)
+    FireMaterial.Settings = argSettings
+    FireMaterial.Settings.RegisterUpdateSettingsCallback(FireMaterial.UpdateSettingsFromSettings)
 end
 
 --- Apply material configuration stored in storage to a specific material
 ---@param material string -- the material to store the data for
-function FireMaterial_UpdateSettingsFromSettingsMaterial(material)
-    _FireMaterialConfiguration[material]["color"]["r"] = Settings_GetValue("FireMaterial", material .. ".color.r")
-    _FireMaterialConfiguration[material]["color"]["g"] = Settings_GetValue("FireMaterial", material .. ".color.g")
-    _FireMaterialConfiguration[material]["color"]["b"] = Settings_GetValue("FireMaterial", material .. ".color.b")
-    _FireMaterialConfiguration[material]["color"]["a"] = Settings_GetValue("FireMaterial", material .. ".color.a")
-    _FireMaterialConfiguration[material]["lifetime"] = Settings_GetValue("FireMaterial", material .. ".lifetime")
-    _FireMaterialConfiguration[material]["size"] = Settings_GetValue("FireMaterial", material .. ".size")
-    _FireMaterialConfiguration[material]["gravity"] = Settings_GetValue("FireMaterial", material .. ".gravity")
-    _FireMaterialConfiguration[material]["speed"] = Settings_GetValue("FireMaterial", material .. ".speed")
-    _FireMaterialConfiguration[material]["drag"] = Settings_GetValue("FireMaterial", material .. ".drag")
-    _FireMaterialConfiguration[material]["variation"] = Settings_GetValue("FireMaterial", material .. ".variation")
-    if  Settings_GetValue("FireMaterial", material .. ".rotation") == 0 or Settings_GetValue("FireMaterial", material .. ".rotation") == nil then
-        Settings_SetValue("FireMaterial", material .. ".rotation", 0.5)
+function FireMaterial.UpdateSettingsFromSettingsMaterial(material)
+    _FireMaterialConfiguration[material]["color"]["r"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".color.r")
+    _FireMaterialConfiguration[material]["color"]["g"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".color.g")
+    _FireMaterialConfiguration[material]["color"]["b"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".color.b")
+    _FireMaterialConfiguration[material]["color"]["a"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".color.a")
+    _FireMaterialConfiguration[material]["lifetime"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".lifetime")
+    _FireMaterialConfiguration[material]["size"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".size")
+    _FireMaterialConfiguration[material]["gravity"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".gravity")
+    _FireMaterialConfiguration[material]["speed"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".speed")
+    _FireMaterialConfiguration[material]["drag"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".drag")
+    _FireMaterialConfiguration[material]["variation"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".variation")
+    if  FireMaterial.Settings.GetValue("FireMaterial", material .. ".rotation") == 0 or FireMaterial.Settings.GetValue("FireMaterial", material .. ".rotation") == nil then
+        FireMaterial.Settings.SetValue("FireMaterial", material .. ".rotation", 0.5)
     end
-    _FireMaterialConfiguration[material]["rotation"] = Settings_GetValue("FireMaterial", material .. ".rotation")
-
+    _FireMaterialConfiguration[material]["rotation"] = FireMaterial.Settings.GetValue("FireMaterial", material .. ".rotation")
 end
 
 --- Update the configuration for all materials from storage at once
-function FireMaterial_UpdateSettingsFromSettings()
+function FireMaterial.UpdateSettingsFromSettings()
     for material, properties in pairs(_FireMaterialConfiguration) do
-        FireMaterial_UpdateSettingsFromSettingsMaterial(material)
+        FireMaterial.UpdateSettingsFromSettingsMaterial(material)
 	end
 end
 
@@ -101,6 +103,6 @@ end
 ---  These properties are used by the particle generator
 ---@param material any
 ---@return table
-function FireMaterial_GetInfo(material)
+function FireMaterial.GetInfo(material)
     return _FireMaterialConfiguration[material]
 end

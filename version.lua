@@ -3,65 +3,72 @@
 -- @author Eldin Zenderink
 -- @brief Store the current version and in case of changes try to move over older settings to the newer
 
-Version_Current = "v5.4"
-Version_CurrentActual = "v9"
-Version_Previous = "v4"
-Version_ModName = ""
-Version_PreviousModName = "ThiccFire"
 
-function Version_GetName()
-    return Version_ModName
+#include "storage.lua"
+
+Version = {}
+
+Version.Current = "v5.4"
+Version.CurrentActual = "v9"
+Version.Previous = "v4"
+Version.ModName = ""
+Version.PreviousModName = "ThiccFire"
+
+function Version.GetName()
+    return Version.ModName
 end
 
-function Version_GetCurrentActual()
-    return Version_CurrentActual
+function Version.GetCurrentActual()
+    return Version.CurrentActual
 end
 
-function Version_GetCurrent()
-    return Version_Current
+function Version.GetCurrent()
+    return Version.Current
 end
 
-function Version_GetPrevious()
-    return Version_Previous
+function Version.GetPrevious()
+    return Version.Previous
 end
 
-function Version_GetStored()
-    local stored = GetString("savegame.mod." .. Version_GetName().. ".version")
+function Version.GetStored()
+    local stored = GetString("savegame.mod." .. Version.GetName().. ".version")
     return stored
 end
 
-function Version_GetStoredPrevious()
-    local stored = GetString("savegame.mod." .. Version_PreviousModName .. ".version")
+function Version.GetStoredPrevious()
+    local stored = GetString("savegame.mod." .. Version.PreviousModName .. ".version")
     return stored
 end
 
-function Version_Init(modname)
-	Version_ModName = modname
-	local storedVersion = Version_GetStored()
-	SetString("level.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+function Version.Init(modname)
+	Version.ModName = modname
+	DebugPrint("Loaded: " .. Version.ModName)
+	local storedVersion = Version.GetStored()
+	Storage.SetString("level.mod." .. Version.GetName().. ".version", Version.GetCurrent())
 
 	if storedVersion == "" or storedVersion == nil then
-		if Version_GetStored() == Version_Previous or Version_GetStoredPrevious() == Version_Previous then
-			SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+		if Version.GetStored() == Version.Previous or Version.GetStoredPrevious() == Version.Previous then
+			Storage.SetString("savegame.mod." .. Version.GetName().. ".version", Version.GetCurrent())
 			return "transfer_stored"
 		end
-		SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
-		storedVersion = Version_GetCurrent()
+		Storage.SetString("savegame.mod." .. Version.GetName().. ".version", Version.GetCurrent())
+		storedVersion = Version.GetCurrent()
 		return "store_default"
 	end
 
-	if storedVersion == Version_Current then
+	if storedVersion == Version.Current then
 		return "current"
 	elseif storedVersion ~= "" then
-		if Version_GetStored() == Version_Previous or Version_GetStoredPrevious() == Version_Previous then
-			SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+		if Version.GetStored() == Version.Previous or Version.GetStoredPrevious() == Version.Previous then
+			Storage.SetString("savegame.mod." .. Version.GetName().. ".version", Version.GetCurrent())
 			return "transfer_stored"
 		end
-		SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+		Storage.SetString("savegame.mod." .. Version.GetName().. ".version", Version.GetCurrent())
 		return "store_default"
 	else
-		SetString("savegame.mod." .. Version_GetName().. ".version", Version_GetCurrent())
+		Storage.SetString("savegame.mod." .. Version.GetName().. ".version", Version.GetCurrent())
 		return "store_default"
 	end
+
 end
 

@@ -8,7 +8,6 @@ LightSpawner_DeleteFadeEnabled = true
 
 -- List to keep track of light instance
 LightSpawner_Lights = {}
-LightSpawner_Entities = {}
 
 ---Deep copy function to create a unreferenced copy of a value (e.g. if you don't want the value you get to upate a existing referenced value in a table)
 ---@param o any
@@ -140,9 +139,9 @@ function LightSpawner_Spawn(location, size, intensity, color, enabled, tag)
         return new_id
     end
 
-    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
+    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
 
-    local light = FindLight("ls_light_" .. tostring(new_id), true)
+    local light = FindLight("" .. tostring(new_id), true)
     if LightSpawner_Lights[new_id] == nil then
         light_instance = light_instance
         light_instance["light"] = LightSpawner_deepCopy(light)
@@ -206,9 +205,9 @@ function LightSpawner_SpawnAnimate(locationstart, locationend, jitter, speed, si
         new_id = LightSpawner_HashVec(LightSpawner_rndVec(10000))
     end
 
-    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='ls_light_" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
+    light_instance["entity"] = Spawn("<light name='light_" .. tostring(new_id) .. "' tags='" .. tostring(new_id) .. " " .. tag .. " id="..tostring(new_id).."' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
 
-    local light = FindLight("ls_light_" .. tostring(new_id), true)
+    local light = FindLight("" .. tostring(new_id), true)
     if LightSpawner_Lights[new_id] == nil then
         light_instance = light_instance
         light_instance["light"] = LightSpawner_deepCopy(light)
@@ -291,9 +290,9 @@ function LightSpawner_ReplaceSpawn(id)
 
         LightSpawner_DeleteLight(id)
 
-        light_instance["entity"] = Spawn("<light name='light_" .. tostring(id) .. "' tags='ls_light_" .. tostring(id) .. "' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
+        light_instance["entity"] = Spawn("<light name='light_" .. tostring(id) .. "' tags='" .. tostring(id) .. "' color='1.0 1.0 1.0' scale='" .. tostring(size / 10) .. "' size='" ..  tostring(size / 100) .. "'/>", Transform(location))
 
-        local light = FindLight("ls_light_" .. tostring(id), true)
+        local light = FindLight("" .. tostring(id), true)
         if LightSpawner_Lights[id] == nil then
             light_instance["light"] = LightSpawner_deepCopy(light)
             LightSpawner_Lights[id] = light_instance

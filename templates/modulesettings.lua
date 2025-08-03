@@ -106,7 +106,7 @@ end
 
 -- This function is required to apply the properites of the module from storage
 function Module_UpdateSettingsFromSettings()
-    DebugPrinter("Updating Module from storage")
+    Debug.Printer("Updating Module from storage")
 	Module_Properties["string"] = Storage_GetString("module", "string")
 	Module_Properties["int"] = Storage_GetInt("module", "int")
 	Module_Properties["float"] = Storage_GetFloat("module", "float")

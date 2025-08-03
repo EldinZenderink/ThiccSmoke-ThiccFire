@@ -29,7 +29,7 @@
 
 
 function init()
-    Debug_ClearDebugPrinter()
+    Debug_ClearDebug.Printer()
     -- Determine version and if maybe the previous stored data should be transferred
     local version_state = Version_Init("ThiccSmokeThiccFire")
     local set_default = false
@@ -54,7 +54,7 @@ function init()
     Menu_Init()
     -- RestoreSettings_Init(restore, Version_GetPrevious(), "ThiccFire")
     Settings_LoadMenu()
-    DebugPrinter("version state: " .. version_state)
+    Debug.Printer("version state: " .. version_state)
 end
 
 function draw()

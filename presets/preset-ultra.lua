@@ -57,7 +57,12 @@ Preset_Settings_Ultra = {
             plaster = true,
             plastic = true
         },
-        despawn_td_fire = "YES"
+        despawn_td_fire = "YES",
+        enable_sound = "ON",
+        fire_sound_volume = 0.5,
+        fire_sound_volume_random = 0,
+        damage_sound_volume = 0.5,
+        damage_sound_volume_random = 0
     },
     ParticleSpawner = {
         fire = "YES",
